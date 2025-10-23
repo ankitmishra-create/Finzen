@@ -1,0 +1,25 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>net9.0</TargetFramework>
+    <ImplicitUsings>enable</ImplicitUsings>
+    <Nullable>enable</Nullable>
+  </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="BCrypt.Net-Next" Version="4.0.3" />
+    <PackageReference Include="MailKit" Version="4.14.0" />
+    <PackageReference Include="mailslurp" Version="17.0.0" />
+    <PackageReference Include="mailslurp_netstandard_2x" Version="15.19.22" />
+    <PackageReference Include="Microsoft.AspNetCore.Http.Abstractions" Version="2.3.0" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.9" />
+    <PackageReference Include="MimeKit" Version="4.14.0" />
+    <PackageReference Include="xunit.assert" Version="2.9.3" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\FinanceManagement.Core\FinanceManagement.Core.csproj" />
+    <ProjectReference Include="..\FinanceManagement.Infrastructure\FinanceManagement.Infrastructure.csproj" />
+  </ItemGroup>
+
+</Project>

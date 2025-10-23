@@ -1,0 +1,87 @@
+﻿@model FinanceManagement.Application.ViewModels.AddTransactionVM
+
+<h1>Create Transaction</h1>
+
+<div asp-validation-summary="All" class="text-danger mb-3"></div>
+<form method="post" asp-action="Create">
+    <input type="hidden" asp-for="UserId" />
+
+    <div class="form-group">
+        <label asp-for="Amount"></label>
+        <input asp-for="Amount" class="form-control" value="" /> 
+        <span asp-validation-for="Amount" class="text-danger"></span>
+    </div>
+
+    <div class="col-md-6 mb-3">
+        <label asp-for="TransactionDate" class="form-label"></label>
+        <input asp-for="TransactionDate" type="date" class="form-control"
+               value="@(Model.TransactionDate == default(DateTime)
+                                            ? DateTime.Today.ToString("yyyy-MM-dd")
+                                            : Model.TransactionDate.ToString("yyyy-MM-dd"))"
+               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="TransactionDate" class="text-danger small"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryType"></label>
+        <select asp-for="CategoryType" class="form-control" id="categoryTypeSelect">
+            <option value="">-- Select Type --</option>
+            <option value="Income">Income</option>
+            <option value="Expense">Expense</option>
+        </select>
+        <span asp-validation-for="CategoryType" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryId"></label>
+        <select asp-for="CategoryId" class="form-control" id="categorySelect">
+            <option value="">-- Select Category --</option>
+            @if (Model.Categories != null && Model.Categories.Any())
+            {
+                foreach (var category in Model.Categories)
+                {
+                    <option value="@category.CategoryId" data-type="@category.CategoryType">
+                        @category.CategoryName
+                    </option>
+                }
+            }
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Transaction</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const typeSelect = document.getElementById('categoryTypeSelect');
+            const categorySelect = document.getElementById('categorySelect');
+            const allOptions = Array.from(categorySelect.options);
+
+            function filterCategories() {
+                const selectedType = typeSelect.value;
+                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+
+                allOptions.forEach(option => {
+                    if (!option.value) return; 
+                    if (!selectedType || option.getAttribute('data-type') === selectedType) {
+                        categorySelect.appendChild(option);
+                    }
+                });
+
+                categorySelect.value = "";
+            }
+
+            typeSelect.addEventListener('change', filterCategories);
+
+            filterCategories();
+        });
+    </script>
+}

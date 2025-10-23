@@ -1,0 +1,26 @@
+﻿@{
+    ViewData["Title"] = "Home Page";
+}
+    
+<div class="text-center my-5">
+    <h1 class="display-4 fw-bold">Welcome to Personal Finance Manager</h1>
+    <p class="lead mt-3">
+        Track your expenses, set budgets, and achieve your financial goals—all in one place.
+    </p>
+    <p>
+        @if (!User.Identity?.IsAuthenticated ?? true)
+        {
+            <a class="btn btn-primary btn-lg mt-4"
+               asp-controller="Register"
+               asp-action="Index">
+                Get Started
+            </a>
+            <a class="btn btn-outline-secondary btn-lg mt-4 ms-2"
+               asp-controller="Login"
+               asp-action="Index">
+                Already have an account? Log In
+            </a>
+        }
+        
+    </p>
+</div>

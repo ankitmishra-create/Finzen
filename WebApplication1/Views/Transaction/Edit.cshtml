@@ -1,0 +1,93 @@
+﻿@model FinanceManagement.Application.ViewModels.AddTransactionVM
+
+<h1>Create Transaction</h1>
+
+<form method="post" asp-action="Edit">
+    <input type="hidden" asp-for="UserId" />
+    <input type="hidden" asp-for="TransactionId"></input>
+    <div class="form-group mb-3">
+        <label asp-for="Amount" class="form-label"></label>
+        <input asp-for="Amount" class="form-control" />
+        <span asp-validation-for="Amount" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3 col-md-6">
+        <label asp-for="TransactionDate" class="form-label"></label>
+        <input asp-for="TransactionDate" type="date" class="form-control"
+               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+        <span asp-validation-for="TransactionDate" class="text-danger small"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryType"></label>
+        <select asp-for="CategoryType" class="form-control" id="categoryTypeSelect">
+            <option value="">-- Select Type --</option>
+            <option value="Income" selected="@(Model.CategoryType == FinanceManagement.Core.Enums.CategoryType.Income ? "selected" : null)">Income</option>
+            <option value="Expense" selected="@(Model.CategoryType == FinanceManagement.Core.Enums.CategoryType.Expense ? "selected" : null)">Expense</option>
+        </select>
+        <span asp-validation-for="CategoryType" class="text-danger"></span>
+    </div>
+
+
+    <div class="form-group mb-3">
+        <label asp-for="CategoryId"></label>
+        <select asp-for="CategoryId" class="form-control" id="categorySelect">
+            <option value="">-- Select Category --</option>
+            @if (Model.Categories != null && Model.Categories.Any())
+            {
+                foreach (var category in Model.Categories)
+                {
+                    <option value="@category.CategoryId"
+                            data-type="@category.CategoryType"
+                            selected="@(Model.CategoryId == category.CategoryId ? "selected" : null)">
+                        @category.CategoryName
+                    </option>
+                }
+            }
+        </select>
+        <span asp-validation-for="CategoryId" class="text-danger"></span>
+    </div>
+
+    <div class="form-group mb-3">
+        <label asp-for="Description"></label>
+        <textarea asp-for="Description" class="form-control"></textarea>
+        <span asp-validation-for="Description" class="text-danger"></span>
+    </div>
+
+    <button type="submit" class="btn btn-primary">Save Transaction</button>
+</form>
+
+@section Scripts {
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            const typeSelect = document.getElementById('categoryTypeSelect');
+            const categorySelect = document.getElementById('categorySelect');
+
+            const allOptions = Array.from(categorySelect.options).map(o => o.cloneNode(true));
+
+            function filterCategories() {
+                const selectedType = typeSelect.value;
+                const currentValue = categorySelect.value;
+
+                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+
+                allOptions.forEach(option => {
+                    if (!option.value) return;
+                    if (!selectedType || option.getAttribute('data-type') === selectedType) {
+                        categorySelect.appendChild(option);
+                    }
+                });
+
+                if (Array.from(categorySelect.options).some(o => o.value === currentValue)) {
+                    categorySelect.value = currentValue;
+                } else {
+                    categorySelect.value = "";
+                }
+            }
+
+            typeSelect.addEventListener('change', filterCategories);
+
+            filterCategories();
+        });
+    </script>
+}

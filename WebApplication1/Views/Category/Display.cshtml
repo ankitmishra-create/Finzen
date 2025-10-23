@@ -1,0 +1,53 @@
+﻿@using FinanceManagement.Core.Entities
+@model IEnumerable<Category>
+
+    <h1>Income Category</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+            
+            @foreach (var item in Model)
+            {
+            <tr>
+                @if (item.CategoryType.ToString() == "Income")
+                {
+                       <td>@item.CategoryName</td>
+                       <td><a asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a></td>
+                        <td><a asp-action="Delete" asp-route-id="@item.CategoryId">Delete</a></td>
+                }
+                </tr>
+            }
+        </tbody>
+    </table>
+
+<h1>Expense Category</h1>
+    <table class="table table-bordered">
+        <thead>
+            <tr>
+                <th>Category Name</th>
+                <th>Edit</th>
+                <th>Delete</th>
+            </tr>
+        </thead>
+        <tbody>
+        @foreach (var item in Model)
+        {
+            <tr>
+                @if (item.CategoryType.ToString() == "Expense")
+                {
+                    <td> @item.CategoryName</td>
+                    <td><a asp-action="Edit" asp-route-id="@item.CategoryId">Edit</a></td>
+                    <td><a asp-action="Delete" asp-route-id="@item.CategoryId">Delete</a></td>
+                }
+            </tr>
+            
+        }
+    </tbody>
+    </table>
+
