@@ -1,5 +1,4 @@
-﻿using AspNetCoreGeneratedDocument;
-using FinanceManagement.Application.Interfaces;
+﻿using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.ViewModels;
 using Microsoft.AspNetCore.Authentication;
 using Microsoft.AspNetCore.Mvc;

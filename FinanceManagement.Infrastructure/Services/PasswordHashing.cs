@@ -6,7 +6,7 @@ namespace FinanceManagement.Application.Services
     {
         public string HashPassword(string password)
         {
-            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 12);
+            return BCrypt.Net.BCrypt.HashPassword(password, workFactor: 4);
         }
         public bool VerifyPassword(string password, string storedPassword)
         {

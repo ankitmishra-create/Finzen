@@ -5,13 +5,13 @@ namespace FinanceManagement.Application.ViewModels
 {
     public class UserRegistrationVM
     {
-        [Required(ErrorMessage = "Name is required")]
+        [Required(ErrorMessage = "Name is required"),Display(Name ="Full Name")]
         public string FullName { get; set; }
 
         [Required(ErrorMessage = "Gender is required"),Display(Name ="Gender")]
         public Gender? Gender { get; set; }
 
-        [Required(ErrorMessage = "Date Of Birth is required")]
+        [Required(ErrorMessage = "Date Of Birth is required"),Display(Name ="Date Of Birth")]
         public DateTime DateOfBirth { get; set; }
 
         [Required(ErrorMessage = "Email is required.")]
@@ -23,7 +23,9 @@ namespace FinanceManagement.Application.ViewModels
         public string Password { get; set; }
 
         [Required(ErrorMessage = "Confirm Password is required")]
-        [Compare("Password", ErrorMessage = "The password and confirmation password do not match")]
+        [Compare("Password", ErrorMessage = "The password and confirmation password do not match"),Display(Name ="Confirm Password")]
         public string ConfirmPassword { get; set; }
+
+        public string CurrencyId { get; set; }
     }
 }

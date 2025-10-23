@@ -9,7 +9,7 @@ namespace FinanceManagement.Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
-        public GenerateToken(IUnitOfWork unitOfWork,IEmailService emailService)
+        public GenerateToken(IUnitOfWork unitOfWork, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;

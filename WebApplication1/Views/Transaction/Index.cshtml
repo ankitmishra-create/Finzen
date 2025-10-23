@@ -1,3 +1,137 @@
-﻿<a asp-action="Create">Add Transactions</a>
-<hr />
-<a asp-action="Display">Display All Transactions</a>
+﻿@using FinanceManagement.Core.Entities
+
+@using FinanceManagement.Core.Enums
+
+@model IEnumerable<Transaction>
+
+
+
+@{
+
+    ViewData["Title"] = "All Transactions";
+
+}
+
+
+
+<!-- Page Header -->
+
+<div class="d-flex justify-content-between align-items-center mb-4">
+    <h1 class="mb-0">All Transactions</h1>
+
+    <div class="d-flex gap-2">
+        <a asp-controller="RecurringTransaction"
+           asp-action="Index"
+           class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-repeat me-2"></i>Manage Recurring Transactions
+        </a>
+
+        <a asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create New Transaction
+        </a>
+    </div>
+</div>
+
+
+
+<!-- Main Content Card -->
+
+<div class="card shadow-sm">
+
+    <div class="card-body">
+
+        <table class="table table-hover align-middle">
+
+            <thead class="table-light">
+
+                <tr>
+
+                    <th>Date</th>
+
+                    <th>Category</th>
+
+                    <th>Description</th>
+
+                    <th class="text-end">Amount</th>
+
+                    <th class="text-end">Actions</th>
+
+                </tr>
+
+            </thead>
+
+            <tbody>
+
+                @if (Model.Any())
+
+                {
+
+                    foreach (var item in Model.OrderByDescending(t => t.TransactionDate))
+
+                    {
+
+                        var amountColorClass = item.Category.CategoryType == CategoryType.Income ? "text-success" : "text-danger";
+
+                        var amountPrefix = item.Category.CategoryType == CategoryType.Income ? "+" : "-";
+
+
+
+                        <tr>
+
+                            <td>@item.TransactionDate?.ToString("MMM dd, yyyy")</td>
+
+                            <td>
+
+                                <span class="badge bg-secondary bg-opacity-25 text-dark-emphasis">
+
+                                    @item.Category.CategoryName
+
+                                </span>
+
+                            </td>
+
+                            <td>@item.Description</td>
+
+                            <td class="text-end fw-bold @amountColorClass">
+
+                                @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString()
+
+                            </td>
+
+                            <td class="text-end">
+
+                                <a asp-action="Edit" asp-route-transactionId="@item.TransactionId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
+
+                                <a asp-action="Delete" asp-route-transactionId="@item.TransactionId" class="btn btn-sm btn-outline-danger">Delete</a>
+
+                            </td>
+
+                        </tr>
+
+                    }
+
+                }
+
+                else
+
+                {
+
+                    <tr>
+
+                        <td colspan="5" class="text-center text-muted py-4">
+
+                            You haven't added any transactions yet.
+
+                        </td>
+
+                    </tr>
+
+                }
+
+            </tbody>
+
+        </table>
+
+    </div>
+
+</div>

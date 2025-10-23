@@ -1,0 +1,12 @@
+﻿using FinanceManagement.Application.ViewModels;
+using FinanceManagement.Core.Entities;
+
+namespace FinanceManagement.Application.Interfaces
+{
+    public interface IRecurringTransactionService
+    {
+        Task<List<RecurringTransactions>> GetRecuringTransactionsAsync();
+        Task DeleteRecurringTransaction(Guid recurringTransactionId);
+
+    }
+}

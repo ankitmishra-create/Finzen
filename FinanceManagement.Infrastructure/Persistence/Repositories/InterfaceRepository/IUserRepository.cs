@@ -6,7 +6,7 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRep
     {
         Task<User> GetByIdAsync(Guid id);
         Task<bool> EmailExistsAsync(string email);
-        Task AddUserAsync(User user);
+        Task AddUserDataAsync(User user);
         Task<User> GetByEmailAsync(string email);
 
     }

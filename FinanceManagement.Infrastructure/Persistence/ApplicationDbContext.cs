@@ -12,6 +12,9 @@ namespace FinanceManagement.Infrastructure.Persistence
         public DbSet<User> Users { get; set; }
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
+        public DbSet<Currency> Currencies { get; set; }
+
+        public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
@@ -25,9 +28,9 @@ namespace FinanceManagement.Infrastructure.Persistence
 
             modelBuilder.Entity<Transaction>()
                 .HasOne(t => t.Category)
-                .WithMany(u => u.Transactions)
+                .WithMany(c => c.Transactions)
                 .HasForeignKey(t => t.CategoryId)
-                .OnDelete(DeleteBehavior.NoAction);
+                .OnDelete(DeleteBehavior.Cascade);
 
             modelBuilder.Entity<Category>()
                 .HasOne(t => t.User)

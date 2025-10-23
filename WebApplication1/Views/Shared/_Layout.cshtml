@@ -7,38 +7,33 @@
     <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.min.css" />
     <link rel="stylesheet" href="~/css/site.css" asp-append-version="true" />
     <link rel="stylesheet" href="~/WebApplication1.styles.css" asp-append-version="true" />
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.10.0/font/bootstrap-icons.css">
 </head>
 <body class="d-flex flex-column min-vh-100">
-    <!-- key classes here -->
-
     <header>
         <nav class="navbar navbar-expand-sm navbar-light bg-white border-bottom box-shadow mb-3">
             <div class="container-fluid">
-                <a class="navbar-brand" asp-controller="Home" asp-action="Index">WebApplication</a>
+                <a class="navbar-brand" asp-controller="Home" asp-action="Index">FinZen</a>
                 <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarMain"
                         aria-controls="navbarMain" aria-expanded="false" aria-label="Toggle navigation">
                     <span class="navbar-toggler-icon"></span>
                 </button>
-
                 <div class="collapse navbar-collapse" id="navbarMain">
-                    <!-- Left-side navigation -->
                     <ul class="navbar-nav me-auto">
                         <li class="nav-item">
                             <a class="nav-link text-dark" asp-controller="Home" asp-action="Index">Home</a>
                         </li>
-                        @if(User.Identity?.IsAuthenticated ?? false)
+                        @if (User.Identity?.IsAuthenticated ?? false)
                         {
                             <li class="nav-item">
                                 <a class="nav-link text-dark" asp-controller="Dashboard" asp-action="Index">Dashboard</a>
                             </li>
-                        }  
+                        }
                     </ul>
 
-                    <!-- Right-side Login/Register -->
                     <ul class="navbar-nav ms-auto">
                         @if (User.Identity?.IsAuthenticated ?? false)
                         {
-                            <!-- Show when logged in -->
                             <li class="nav-item me-2">
                                 <span class="navbar-text">
                                     Hello, @User.Identity.Name
@@ -50,7 +45,6 @@
                         }
                         else
                         {
-                            <!-- Show when NOT logged in -->
                             <li class="nav-item">
                                 <a class="btn btn-outline-primary me-2" asp-controller="Register" asp-action="Index">Register</a>
                             </li>
@@ -60,25 +54,17 @@
                         }
                     </ul>
                 </div>
-
             </div>
         </nav>
     </header>
 
-    <!-- Main content must flex to fill space -->
     <main role="main" class="flex-grow-1">
         <div class="container pb-3">
             @RenderBody()
         </div>
     </main>
 
-    <!-- Sticky footer -->
-    <footer class="border-top footer text-muted mt-auto">
-        <div class="container text-center py-3">
-            &copy; 2025 - WebApplication
-        </div>
-    </footer>
-
+    
     <script src="~/lib/jquery/dist/jquery.min.js"></script>
     <script src="~/lib/bootstrap/dist/js/bootstrap.bundle.min.js"></script>
     <script src="~/js/site.js" asp-append-version="true"></script>

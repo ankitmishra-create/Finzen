@@ -15,10 +15,11 @@ namespace FinanceManagement.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
             UserRegistrationVM userRegistrationVM = new UserRegistrationVM();
-            ViewBag.Gender = new SelectList(Enum.GetValues(typeof(Gender)));
+            await PopulateDropdownsAsync();
+            
             return View(userRegistrationVM);
         }
 
@@ -28,9 +29,10 @@ namespace FinanceManagement.Web.Controllers
             if (!ModelState.IsValid)
             {
                 ViewBag.Gender = new SelectList(Enum.GetValues(typeof(Gender)));
+                await PopulateDropdownsAsync();
                 return View(userRegistrationVM);
             }
-            var result = await _userService.Register(userRegistrationVM);
+            var result = await _userService.Register(userRegistrationVM, null);
             if (result != null)
             {
                 return RedirectToAction("Verify", "Login");
@@ -38,9 +40,32 @@ namespace FinanceManagement.Web.Controllers
             else
             {
                 ModelState.AddModelError(string.Empty, "User already Exists");
+                await PopulateDropdownsAsync();
                 return View(userRegistrationVM);
             }
         }
 
+        private async Task PopulateDropdownsAsync()
+        {
+            var countries = await _userService.PopulateRegisterationPage();
+            var countryList = countries.currencies.Select(c => new SelectListItem
+            {
+                Text = c.CountryName,
+                Value = c.CurrencyId.ToString()
+            }).ToList();
+
+            ViewBag.Country = countryList;
+
+            var genderList = Enum.GetValues(typeof(Gender))
+                         .Cast<Gender>()
+                         .Where(g => g != Gender.NotMentioned)
+                         .Select(g => new SelectListItem
+                         {
+                             Text = g.ToString(),
+                             Value = g.ToString()
+                         })
+                         .ToList();
+            ViewBag.Gender = new SelectList(genderList, "Value", "Text");
+        }
     }
 }

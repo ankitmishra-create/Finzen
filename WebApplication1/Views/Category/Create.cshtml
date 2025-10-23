@@ -1,59 +1,58 @@
 ﻿@model FinanceManagement.Application.ViewModels.AddCategoryVM
 @using FinanceManagement.Core.Enums
+@using Microsoft.AspNetCore.Mvc.Rendering
 
 @{
+    ViewData["Title"] = "Add Category";
+
+    // This C# block prepares the dropdown list for the CategoryType enum.
     var categoryTypes = Enum.GetValues(typeof(CategoryType))
                             .Cast<CategoryType>()
-                            .Select(e => new SelectListItem { Value = ((int)e).ToString(), Text = e.ToString() })
+                            .Select(e => new SelectListItem
+                            {
+                                Value = e.ToString(),
+                                Text = e.ToString()
+                            })
                             .ToList();
-
-    var investmentSubtypes = Enum.GetValues(typeof(SubType))
-                                 .Cast<SubType>()
-                                 .Select(e => new SelectListItem { Value = ((int)e).ToString(), Text = e.ToString() })
-                                 .ToList();
 }
 
-<div class="card p-4 shadow">
-    <h2>Add Category</h2>
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-sm rounded-4 border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="card-title text-center mb-4 fw-bold">Add New Category</h3>
 
-    <form asp-controller="Category" asp-action="Create" method="post">
-        <input hidden asp-for="UserId"" />
-        <div class="mb-3">
-            <label asp-for="CategoryName" class="form-label"></label>
-            <input asp-for="CategoryName" class="form-control" />
-            <span asp-validation-for="CategoryName" class="text-danger small"></span>
+                    <form asp-controller="Category" asp-action="Create" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <input type="hidden" asp-for="UserId" />
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryName" class="form-label required-field"></label>
+                            <input asp-for="CategoryName" class="form-control" placeholder="e.g., Salary, Groceries, Rent" />
+                            <span asp-validation-for="CategoryName" class="text-danger small"></span>
+                        </div>
+
+                        <div class="mb-3">
+                            <label asp-for="CategoryType" class="form-label required-field"></label>
+                            <select asp-for="CategoryType" class="form-select" asp-items="categoryTypes">
+                                <option disabled selected value="">-- Select a Category Type --</option>
+                            </select>
+                            <span asp-validation-for="CategoryType" class="text-danger small"></span>
+                        </div>
+
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg">Save Category</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
         </div>
-
-        <div class="mb-3">
-            <label asp-for="CategoryType" class="form-label"></label>
-            <select asp-for="CategoryType" class="form-select" asp-items="categoryTypes" id="categoryTypeDropdown"></select>
-            <span asp-validation-for="CategoryType" class="text-danger small"></span>
-        </div>
-
-        <div class="mb-3" id="subtypeContainer" style="display:none;">
-            <label asp-for="SubType" class="form-label"></label>
-            <select asp-for="SubType" class="form-select" asp-items="investmentSubtypes"></select>
-            <span asp-validation-for="SubType" class="text-danger small"></span>
-        </div>
-
-        <button type="submit" class="btn btn-primary">Save</button>
-    </form>
+    </div>
 </div>
 
 @section Scripts {
-    <script>
-        const categoryTypeDropdown = document.getElementById("categoryTypeDropdown");
-        const subtypeContainer = document.getElementById("subtypeContainer");
-
-        function toggleSubtype() {
-            if (categoryTypeDropdown.value === "3") { // 3 = Investment
-                subtypeContainer.style.display = "block";
-            } else {
-                subtypeContainer.style.display = "none";
-            }
-        }
-
-        categoryTypeDropdown.addEventListener("change", toggleSubtype);
-        toggleSubtype(); // run on page load
-    </script>
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
 }

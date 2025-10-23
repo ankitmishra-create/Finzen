@@ -17,9 +17,11 @@ namespace FinanceManagement.Web.Controllers
             _categoryService = categoryService;
         }
 
-        public IActionResult Index()
+        public async Task<IActionResult> Index()
         {
-            return View();
+            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
+            IEnumerable<Category> usersCategories = await _categoryService.DisplayCategoryAsync(userId);
+            return View(usersCategories);
         }
 
         [HttpGet]
@@ -52,14 +54,6 @@ namespace FinanceManagement.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Display()
-        {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            IEnumerable<Category> usersCategories = await _categoryService.DisplayCategoryAsync(userId);
-            return View(usersCategories);
-        }
-
-        [HttpGet]
         public IActionResult Edit(Guid id)
         {
             var currentCategoryVM = _categoryService.UpdateBuild(id);
@@ -70,13 +64,13 @@ namespace FinanceManagement.Web.Controllers
         public async Task<IActionResult> Edit(AddCategoryVM addCategoryVM)
         {
             await _categoryService.Update(addCategoryVM);
-            return RedirectToAction("Display");
+            return RedirectToAction("Index");
         }
 
         public async Task<IActionResult> Delete(AddCategoryVM addCategoryVM)
         {
             await _categoryService.Delete(addCategoryVM);
-            return RedirectToAction("Display");
+            return RedirectToAction("Index");
         }
 
     }

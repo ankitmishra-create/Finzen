@@ -15,5 +15,11 @@ namespace WebApplication1.Controllers
         {
             return View();
         }
+
+        public IActionResult Error()
+        {
+            throw new Exception("This is exception");
+        }
+
     }
 }

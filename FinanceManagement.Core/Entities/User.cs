@@ -1,5 +1,6 @@
 ﻿using FinanceManagement.Core.Enums;
 using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
 
 namespace FinanceManagement.Core.Entities
 {
@@ -29,7 +30,7 @@ namespace FinanceManagement.Core.Entities
 
         public string Language { get; set; } = "en";
         public string TimeZone { get; set; } = "Asia/Kolkata";
-        public string PreferredCurrency { get; set; } = "Rupees";
+        public string PreferredCurrency { get; set; } 
 
         
         public bool IsEmailVerified { get; set; }
@@ -41,6 +42,9 @@ namespace FinanceManagement.Core.Entities
         public List<Category> Categories { get; set; } = new List<Category>();
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
+        public Guid? CurrencyId { get; set; }
+        [ForeignKey("CurrencyId")]
+        public Currency? Currency { get; set; }
         
         public void GenerateVerificationToken()
         {
@@ -54,7 +58,5 @@ namespace FinanceManagement.Core.Entities
             EmailVerificationToken = null;
             VerificationTokenExpiresAt = null;
         }
-
-
     }
 }

@@ -1,9 +1,7 @@
-﻿@using FinanceManagement.Application.ViewModels
-@model UserRegistrationVM
+﻿@model FinanceManagement.Application.ViewModels.UserRegistrationVM
 
 @{
-    ViewData["Title"] = "Register";
-    Layout = "_Layout";
+    ViewData["Title"] = "Create an Account";
 }
 
 <div class="container py-5">
@@ -11,44 +9,51 @@
         <div class="col-md-8 col-lg-7">
             <div class="card shadow-sm rounded-4 border-0">
                 <div class="card-body p-4 p-md-5">
-                    <h3 class="card-title text-center mb-4 fw-bold">Create an Account</h3>
+                    <h3 class="card-title text-center mb-4 fw-bold">Create a New Account</h3>
 
-                    <form asp-action="Index" method="post" novalidate>
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
-
-                        
+                    <form asp-action="Index" method="post">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
 
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="FullName" class="form-label"></label>
+                                    <label asp-for="FullName" class="form-label required-field"></label>
                                     <input asp-for="FullName" class="form-control" placeholder="John Doe" />
                                     <span asp-validation-for="FullName" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="DateOfBirth" class="form-label"></label>
-                                    <input asp-for="DateOfBirth" type="date" class="form-control"
-                                           value="@(Model.DateOfBirth == default(DateTime)
-                                                               ? DateTime.Today.ToString("yyyy-MM-dd")
-                                                               : Model.DateOfBirth.ToString("yyyy-MM-dd"))"
-                                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    <label asp-for="DateOfBirth" class="form-label required-field"></label>
+                                    <input asp-for="DateOfBirth" type="date" class="form-control" />
                                     <span asp-validation-for="DateOfBirth" class="text-danger small"></span>
                                 </div>
                             </div>
                         </div>
 
-                        <div class="mb-3">
-                            <label asp-for="Gender" class="form-label"></label>
-                            <select asp-for="Gender" class="form-select" asp-items="@(ViewData["Gender"] as SelectList)">
-                                <option value="">-- Select Gender --</option>
-                            </select>
-                            <span asp-validation-for="Gender" class="text-danger small"></span>
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Gender" class="form-label required-field"></label>
+                                    <select asp-for="Gender" class="form-select" asp-items="ViewBag.Gender">
+                                        <option value="">-- Select Gender --</option>
+                                    </select>
+                                    <span asp-validation-for="Gender" class="text-danger small"></span>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CurrencyId" class="form-label required-field">Country</label>
+                                    <select asp-for="CurrencyId" class="form-select" asp-items="ViewBag.Country">
+                                        <option value="">-- Select Country --</option>
+                                    </select>
+                                    <span asp-validation-for="CurrencyId" class="text-danger small"></span>
+                                </div>
+                            </div>
                         </div>
 
                         <div class="mb-3">
-                            <label asp-for="Email" class="form-label"></label>
+                            <label asp-for="Email" class="form-label required-field"></label>
                             <input asp-for="Email" class="form-control" placeholder="you@example.com" />
                             <span asp-validation-for="Email" class="text-danger small"></span>
                         </div>
@@ -56,15 +61,15 @@
                         <div class="row">
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="Password" class="form-label"></label>
-                                    <input asp-for="Password" type="password" class="form-control"  />
+                                    <label asp-for="Password" class="form-label required-field"></label>
+                                    <input asp-for="Password" type="password" class="form-control" placeholder="••••••••" />
                                     <span asp-validation-for="Password" class="text-danger small"></span>
                                 </div>
                             </div>
                             <div class="col-md-6">
                                 <div class="mb-3">
-                                    <label asp-for="ConfirmPassword" class="form-label"></label>
-                                    <input asp-for="ConfirmPassword" type="password" class="form-control" />
+                                    <label asp-for="ConfirmPassword" class="form-label required-field"></label>
+                                    <input asp-for="ConfirmPassword" type="password" class="form-control" placeholder="••••••••" />
                                     <span asp-validation-for="ConfirmPassword" class="text-danger small"></span>
                                 </div>
                             </div>
@@ -73,13 +78,63 @@
                         <div class="d-grid mt-3">
                             <button type="submit" class="btn btn-primary btn-lg">Register</button>
                         </div>
+                    </form>
 
-                        <div class="text-center mt-4">
-                            <p class="mb-0">Already have an account? <a asp-controller="Login" asp-action="Index">Login here</a></p>
+                    <div class="d-flex align-items-center my-4">
+                        <hr class="flex-grow-1">
+                        <span class="px-3 text-muted">OR</span>
+                        <hr class="flex-grow-1">
+                    </div>
+
+                    <form asp-controller="Account" asp-action="ExternalLogin" asp-route-provider="Google" method="post">
+                        <div class="d-grid">
+                            <button type="submit" class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center">
+                                <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16">
+                                    <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.25C2.806 7.633 2.5 8.537 2.5 9.5c0 .963.306 1.867.834 2.653C3.96 13.592 5.713 15 8 15c1.453 0 2.652-.46 3.568-1.242l2.284 2.284A7.96 7.96 0 0 1 8 16Z" />
+                                </svg>
+                                Sign up with Google
+                            </button>
                         </div>
                     </form>
+
+                    <div class="text-center mt-4">
+                        <p class="mb-0">Already have an account? <a asp-controller="Login" asp-action="Index">Login here</a></p>
+                    </div>
                 </div>
             </div>
         </div>
     </div>
 </div>
+
+@section Scripts {
+    @{
+        <partial name="_ValidationScriptsPartial" />
+    }
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const dobInput = document.getElementById("DateOfBirth");
+            if (dobInput) {
+                const today = new Date();
+
+                // Max date = 18 years ago
+                const maxDate = new Date(today.getFullYear() - 18, today.getMonth(), today.getDate());
+
+                // Min date = 100 years ago
+                const minDate = new Date(today.getFullYear() - 100, today.getMonth(), today.getDate());
+
+                // Format function to yyyy-MM-dd
+                function formatDate(date) {
+                    const yyyy = date.getFullYear();
+                    const mm = String(date.getMonth() + 1).padStart(2, '0');
+                    const dd = String(date.getDate()).padStart(2, '0');
+                    return `${yyyy}-${mm}-${dd}`;
+                }
+
+                // Apply min, max, and default value
+                dobInput.min = formatDate(minDate);
+                dobInput.max = formatDate(maxDate);
+                dobInput.value = formatDate(maxDate); // default selected = 18 years ago
+            }
+        });
+    </script>
+}

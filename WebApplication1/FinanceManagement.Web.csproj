@@ -4,11 +4,13 @@
     <TargetFramework>net9.0</TargetFramework>
     <Nullable>enable</Nullable>
     <ImplicitUsings>enable</ImplicitUsings>
+    <UserSecretsId>f8619ad2-5c6b-4b6b-96f4-b8d151b0cc88</UserSecretsId>
   </PropertyGroup>
 
   <ItemGroup>
     <PackageReference Include="mailslurp" Version="17.0.0" />
     <PackageReference Include="mailslurp_netstandard_2x" Version="15.19.22" />
+    <PackageReference Include="Microsoft.AspNetCore.Authentication.Google" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="9.0.9" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="9.0.9">
       <IncludeAssets>runtime; build; native; contentfiles; analyzers; buildtransitive</IncludeAssets>

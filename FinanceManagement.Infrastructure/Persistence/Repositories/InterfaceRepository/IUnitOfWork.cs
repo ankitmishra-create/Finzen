@@ -5,6 +5,9 @@
         IUserRepository User { get; }
         ICategoryRepository Category { get; }
         ITransactionRepository Transaction { get; }
+        ICurrencyRepository Currency { get; }
+        IRecurringTransactionRepository RecurringTransaction { get; }
+        
         Task SaveAsync();
     }
 }

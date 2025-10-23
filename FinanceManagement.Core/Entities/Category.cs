@@ -20,7 +20,7 @@ namespace FinanceManagement.Core.Entities
         public string CategoryName { get; set; }
 
         [Required]
-        public CategoryType CategoryType { get; set; }
+        public CategoryType? CategoryType { get; set; }
 
         public SubType? SubType { get; set; } = null;
 

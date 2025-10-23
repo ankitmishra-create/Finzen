@@ -1,87 +1,265 @@
-﻿@model FinanceManagement.Application.ViewModels.AddTransactionVM
+﻿@using FinanceManagement.Application.ViewModels
+@using FinanceManagement.Core.Enums
+@model AddTransactionVM
 
-<h1>Create Transaction</h1>
+@{
+    ViewData["Title"] = "Create Transaction";
+}
 
-<div asp-validation-summary="All" class="text-danger mb-3"></div>
-<form method="post" asp-action="Create">
-    <input type="hidden" asp-for="UserId" />
+<div class="container py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-10 col-lg-8">
+            <div class="card shadow rounded-4 border-0">
+                <div class="card-body p-4 p-md-5">
+                    <h3 class="card-title text-center mb-4 fw-bold">Add a New Transaction</h3>
 
-    <div class="form-group">
-        <label asp-for="Amount"></label>
-        <input asp-for="Amount" class="form-control" value="" /> 
-        <span asp-validation-for="Amount" class="text-danger"></span>
+                    <form method="post" asp-action="Create">
+                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
+                        <input type="hidden" asp-for="UserId" />
+
+                        <!-- Transaction Timeline (One-Time / Recurring) -->
+                        <div class="mb-3">
+                            <label asp-for="TransactionTimeLine" class="form-label required-field"></label>
+                            <div class="d-flex gap-3">
+                                <!-- One-Time -->
+                                <div class="flex-fill">
+                                    <input class="btn-check"
+                                           type="radio"
+                                           asp-for="TransactionTimeLine"
+                                           value="OneTime"
+                                           id="timeline_OneTime"
+                                           checked />
+                                    <label class="btn btn-outline-primary w-100 p-3 text-center" for="timeline_OneTime">
+                                        <span class="fw-bold d-block">One-Time Payment</span>
+                                    </label>
+                                </div>
+                                <!-- Recurring -->
+                                <div class="flex-fill">
+                                    <input class="btn-check"
+                                           type="radio"
+                                           asp-for="TransactionTimeLine"
+                                           value="Recurring"
+                                           id="timeline_Recurring" />
+                                    <label class="btn btn-outline-success w-100 p-3 text-center" for="timeline_Recurring">
+                                        <span class="fw-bold d-block">Recurring Payment</span>
+                                    </label>
+                                </div>
+                            </div>
+                            <span asp-validation-for="TransactionTimeLine" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Recurrence Frequency (Conditionally Shown) -->
+                        <div class="mb-3" id="frequencyContainer" style="display:none;">
+                            <label asp-for="RecurrenceFrequency" class="form-label required-field"></label>
+                            <select asp-for="RecurrenceFrequency"
+                                    asp-items="ViewBag.RecurrenceFrequency"
+                                    class="form-select border rounded shadow-sm"
+                                    id="frequencySelect">
+                                <option value="">-- Select Frequency --</option>
+                            </select>
+                            <span asp-validation-for="RecurrenceFrequency" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Territory & Currency -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="TransactionTerrority" class="form-label required-field"></label>
+                                    <select asp-for="TransactionTerrority"
+                                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
+                                            class="form-select border rounded shadow-sm"
+                                            id="territorySelect">
+                                    </select>
+                                    <span asp-validation-for="TransactionTerrority" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6" id="currencyContainer" style="display:none;">
+                                <div class="mb-3">
+                                    <label asp-for="TransactionCurrency" class="form-label required-field"></label>
+                                    <select asp-for="TransactionCurrency"
+                                            class="form-select border rounded shadow-sm"
+                                            asp-items="ViewBag.Available">
+                                        <option value="">-- Select Currency --</option>
+                                    </select>
+                                    <span asp-validation-for="TransactionCurrency" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Amount & Date -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="Amount" class="form-label required-field"></label>
+                                    <input asp-for="Amount" class="form-control border rounded shadow-sm" placeholder="0.00" />
+                                    <span asp-validation-for="Amount" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="TransactionDate" class="form-label required-field"></label>
+                                    <input asp-for="TransactionDate" type="date"
+                                           class="form-control border rounded shadow-sm"
+                                           value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                                    <span asp-validation-for="TransactionDate" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Category Type & Category -->
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CategoryType" class="form-label required-field"></label>
+                                    <select asp-for="CategoryType" class="form-select border rounded shadow-sm" id="categoryTypeSelect">
+                                        <option value="">-- Select Type --</option>
+                                        <option value="Income">Income</option>
+                                        <option value="Expense">Expense</option>
+                                    </select>
+                                    <span asp-validation-for="CategoryType" class="text-danger small"></span>
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label asp-for="CategoryId" class="form-label required-field"></label>
+                                    <select asp-for="CategoryId" class="form-select border rounded shadow-sm" id="categorySelect">
+                                        <option value="">-- Select Category --</option>
+                                        @if (Model.Categories != null)
+                                        {
+                                            foreach (var category in Model.Categories)
+                                            {
+                                                <option value="@category.CategoryId" data-type="@category.CategoryType.ToString()">
+                                                    @category.CategoryName
+                                                </option>
+                                            }
+                                        }
+                                    </select>
+                                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Description -->
+                        <div class="mb-3">
+                            <label asp-for="Description" class="form-label" id="descriptionLabel"></label>
+                            <textarea asp-for="Description" class="form-control border rounded shadow-sm" rows="3"></textarea>
+                            <span asp-validation-for="Description" class="text-danger small"></span>
+                        </div>
+
+                        <!-- Submit Button -->
+                        <div class="d-grid mt-4">
+                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Save Transaction</button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
     </div>
-
-    <div class="col-md-6 mb-3">
-        <label asp-for="TransactionDate" class="form-label"></label>
-        <input asp-for="TransactionDate" type="date" class="form-control"
-               value="@(Model.TransactionDate == default(DateTime)
-                                            ? DateTime.Today.ToString("yyyy-MM-dd")
-                                            : Model.TransactionDate.ToString("yyyy-MM-dd"))"
-               max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-        <span asp-validation-for="TransactionDate" class="text-danger small"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="CategoryType"></label>
-        <select asp-for="CategoryType" class="form-control" id="categoryTypeSelect">
-            <option value="">-- Select Type --</option>
-            <option value="Income">Income</option>
-            <option value="Expense">Expense</option>
-        </select>
-        <span asp-validation-for="CategoryType" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="CategoryId"></label>
-        <select asp-for="CategoryId" class="form-control" id="categorySelect">
-            <option value="">-- Select Category --</option>
-            @if (Model.Categories != null && Model.Categories.Any())
-            {
-                foreach (var category in Model.Categories)
-                {
-                    <option value="@category.CategoryId" data-type="@category.CategoryType">
-                        @category.CategoryName
-                    </option>
-                }
-            }
-        </select>
-        <span asp-validation-for="CategoryId" class="text-danger"></span>
-    </div>
-
-    <div class="form-group mb-3">
-        <label asp-for="Description"></label>
-        <textarea asp-for="Description" class="form-control"></textarea>
-        <span asp-validation-for="Description" class="text-danger"></span>
-    </div>
-
-    <button type="submit" class="btn btn-primary">Save Transaction</button>
-</form>
+</div>
 
 @section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <style>
+        /* Adds a smooth transition to the button-cards */
+        .btn-check + .btn {
+            transition: all 0.15s ease-in-out;
+            border-width: 2px; /* Makes the outline a bit stronger */
+        }
+    </style>
     <script>
-        document.addEventListener('DOMContentLoaded', function () {
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // --- Timeline / Frequency Logic ---
+            const timelineOneTime = document.getElementById("timeline_OneTime");
+            const timelineRecurring = document.getElementById("timeline_Recurring");
+            const frequencyContainer = document.getElementById("frequencyContainer");
+            const frequencySelect = document.getElementById("frequencySelect");
+
+            function toggleFrequency() {
+                if (timelineRecurring.checked) {
+                    frequencyContainer.style.display = "block";
+                    frequencySelect.setAttribute("required", "required");
+                } else {
+                    frequencyContainer.style.display = "none";
+                    frequencySelect.removeAttribute("required");
+                    frequencySelect.value = ""; // Clear selection if hidden
+                }
+            }
+
+            // Add event listeners for the radio buttons
+            timelineOneTime.addEventListener("change", toggleFrequency);
+            timelineRecurring.addEventListener("change", toggleFrequency);
+
+            // Run on page load to set the correct initial state
+            toggleFrequency();
+
+
+            // --- Territory / Currency toggle ---
+            const territorySelect = document.getElementById("territorySelect");
+            const currencyContainer = document.getElementById("currencyContainer");
+
+            function toggleCurrency() {
+                const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
+                if (selectedOptionText === "International") {
+                    currencyContainer.style.display = "block";
+                } else {
+                    currencyContainer.style.display = "none";
+                    const currencySelect = currencyContainer.querySelector("select");
+                    if (currencySelect) currencySelect.value = "";
+                }
+            }
+
+            // Run on page load and on change
+            toggleCurrency();
+            territorySelect.addEventListener("change", toggleCurrency);
+
+
+            // --- Category filter & description toggle ---
             const typeSelect = document.getElementById('categoryTypeSelect');
             const categorySelect = document.getElementById('categorySelect');
-            const allOptions = Array.from(categorySelect.options);
+            const descriptionLabel = document.getElementById('descriptionLabel');
+            const allCategoryOptions = Array.from(categorySelect.options);
 
             function filterCategories() {
                 const selectedType = typeSelect.value;
-                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+                const currentCategoryValue = categorySelect.value;
 
-                allOptions.forEach(option => {
-                    if (!option.value) return; 
+                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+                allCategoryOptions.forEach(option => {
+                    if (!option.value) return; // Skip the placeholder
                     if (!selectedType || option.getAttribute('data-type') === selectedType) {
-                        categorySelect.appendChild(option);
+                        categorySelect.appendChild(option.cloneNode(true));
                     }
                 });
 
-                categorySelect.value = "";
+                // Attempt to re-select the previous value if it's still valid
+                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
+                     categorySelect.value = currentCategoryValue;
+                } else {
+                     categorySelect.value = "";
+                }
             }
 
-            typeSelect.addEventListener('change', filterCategories);
+            function toggleDescriptionRequirement() {
+                if (typeSelect.value === 'Expense') {
+                    descriptionLabel.classList.add('required-field');
+                } else {
+                    descriptionLabel.classList.remove('required-field');
+                }
+            }
 
+            typeSelect.addEventListener('change', function () {
+                filterCategories();
+                toggleDescriptionRequirement();
+            });
+
+            // Run on page load
             filterCategories();
+            toggleDescriptionRequirement();
         });
     </script>
 }

@@ -13,8 +13,8 @@ namespace FinanceManagement.Application.ViewModels
         [Required, MaxLength(100),Display(Name ="Category Name")]
         public string? CategoryName { get; set; }
 
-        [Required]
-        public CategoryType CategoryType { get; set; }
+        [Required, Display(Name ="Category Type")]
+        public CategoryType? CategoryType { get; set; }
 
         public SubType? SubType { get; set; } = null;
     }
