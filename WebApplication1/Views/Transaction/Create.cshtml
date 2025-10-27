@@ -76,7 +76,7 @@
 
                             <div class="col-md-6" id="currencyContainer" style="display:none;">
                                 <div class="mb-3">
-                                    <label asp-for="TransactionCurrency" class="form-label required-field"></label>
+                                    <label asp-for="TransactionCurrency" class="form-label"></label>
                                     <select asp-for="TransactionCurrency"
                                             class="form-select border rounded shadow-sm"
                                             asp-items="ViewBag.Available">
@@ -200,18 +200,21 @@
 
             // --- Territory / Currency toggle ---
             const territorySelect = document.getElementById("territorySelect");
-            const currencyContainer = document.getElementById("currencyContainer");
+        const currencyContainer = document.getElementById("currencyContainer");
+        const currencySelect = currencyContainer.querySelector("select"); // Get the select element itself
 
-            function toggleCurrency() {
-                const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
-                if (selectedOptionText === "International") {
-                    currencyContainer.style.display = "block";
-                } else {
-                    currencyContainer.style.display = "none";
-                    const currencySelect = currencyContainer.querySelector("select");
-                    if (currencySelect) currencySelect.value = "";
-                }
+        function toggleCurrency() {
+            const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
+
+            if (selectedOptionText === "International") {
+                currencyContainer.style.display = "block";
+                currencySelect.setAttribute("required", "required"); // Add required attribute
+            } else {
+                currencyContainer.style.display = "none";
+                currencySelect.removeAttribute("required"); // Remove required attribute
+                currencySelect.value = ""; // Clear selection
             }
+        }
 
             // Run on page load and on change
             toggleCurrency();

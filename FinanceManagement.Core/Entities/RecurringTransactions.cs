@@ -29,8 +29,7 @@ namespace FinanceManagement.Core.Entities
 
         public DateTime? EndDate { get; set; }
 
-        [Required]
-        public DateTime NextTransactionDate { get; set; }
+        public DateTime? NextTransactionDate { get; set; }
 
         public DateTime? LastExecutedDate { get; set; }
 

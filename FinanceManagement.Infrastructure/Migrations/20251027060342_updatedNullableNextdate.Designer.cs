@@ -4,6 +4,7 @@ using FinanceManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251027060342_updatedNullableNextdate")]
+    partial class updatedNullableNextdate
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -99,7 +102,7 @@ namespace FinanceManagement.Infrastructure.Migrations
                     b.Property<DateTime?>("LastExecutedDate")
                         .HasColumnType("datetime2");
 
-                    b.Property<DateTime?>("NextTransactionDate")
+                    b.Property<DateTime>("NextTransactionDate")
                         .HasColumnType("datetime2");
 
                     b.Property<DateTime>("StartDate")

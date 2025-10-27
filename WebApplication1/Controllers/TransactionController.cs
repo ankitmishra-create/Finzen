@@ -53,6 +53,11 @@ namespace FinanceManagement.Web.Controllers
                 ModelState.AddModelError(nameof(addTransactionVM.Description), "A description is required for all expense transactions.");
             }
 
+            if (addTransactionVM.TransactionTerrority == TransactionTerrority.International && string.IsNullOrWhiteSpace(addTransactionVM.TransactionCurrency))
+            {
+                ModelState.AddModelError(nameof(addTransactionVM.TransactionCurrency), "Transaction Currency is required for international transactions.");
+            }
+
             if (ModelState.IsValid)
             {
                 await _transactionService.AddTransactionAsync(addTransactionVM);
@@ -60,6 +65,9 @@ namespace FinanceManagement.Web.Controllers
             }
 
             addTransactionVM.Categories = (await _transactionService.CreateView()).Categories;
+            var allavailable = _transactionService.GetAllAvailableCurrency();
+            ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName");
+            ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(RecurrenceFrequency)));
             return View(addTransactionVM);
         }
 

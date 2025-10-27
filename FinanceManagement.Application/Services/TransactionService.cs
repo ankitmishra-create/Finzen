@@ -27,10 +27,15 @@ namespace FinanceManagement.Application.Services
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
             var categories = await _unitOfWork.Category.GetAllAsync(u => u.UserId == userId);
+            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+            var userBaseCurrencySymbol = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
+
             AddTransactionVM addTransactionVM = new AddTransactionVM()
             {
                 UserId = userId,
                 Categories = (List<Category>)categories,
+                TransactionTerrority = TransactionTerrority.Domestic,
+                TransactionCurrency = userBaseCurrencySymbol.CurrencyCode
             };
             return addTransactionVM;
         }
@@ -47,6 +52,13 @@ namespace FinanceManagement.Application.Services
             {
                 return;
             }
+
+            var userBasecurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
+            if (addTransactionVM.TransactionTerrority.ToString() == "Domestic")
+            {
+                addTransactionVM.TransactionCurrency = userBasecurrency.CurrencyCode;
+            }
+
             string currencyUsed;
             Currency findUsedCurrency;
             Currency findUserBaseCurrency;
@@ -139,7 +151,7 @@ namespace FinanceManagement.Application.Services
             string userBaseCurrency;
             ConvertedRates convertedRates;
             decimal convertedUpdatedRates = 0;
-            if (transaction.TransactionCurrency != null && transaction.TransactionCurrency.Length>=1)
+            if (transaction.TransactionCurrency != null && transaction.TransactionCurrency.Length >= 1)
             {
                 userCurrency = await _unitOfWork.Currency.GetAsync(t => t.CurrencyId == user.CurrencyId);
                 userBaseCurrency = userCurrency.CurrencyCode;
@@ -147,8 +159,8 @@ namespace FinanceManagement.Application.Services
 
                 AddTransactionVM addTransactionVM = new AddTransactionVM()
                 {
-                    UserId=user.UserId,
-                    TransactionId=transaction.TransactionId,
+                    UserId = user.UserId,
+                    TransactionId = transaction.TransactionId,
                     TransactionCurrency = transaction.TransactionCurrency,
                     TransactionTerrority = transaction.TransactionTerrority,
                     Categories = (List<Category>)categories,
@@ -163,8 +175,8 @@ namespace FinanceManagement.Application.Services
 
             AddTransactionVM addTransactionVM1 = new AddTransactionVM()
             {
-                UserId=user.UserId,
-                TransactionId=transaction.TransactionId,
+                UserId = user.UserId,
+                TransactionId = transaction.TransactionId,
                 TransactionCurrency = transaction.TransactionCurrency,
                 TransactionTerrority = transaction.TransactionTerrority,
                 Categories = (List<Category>)categories,
@@ -177,28 +189,55 @@ namespace FinanceManagement.Application.Services
             return addTransactionVM1;
         }
 
-            public async Task Edit(AddTransactionVM addTransactionVM)
+        public async Task Edit(AddTransactionVM addTransactionVM)
+        {
+            var user = await _unitOfWork.User.GetByIdAsync(addTransactionVM.UserId);
+            await _unitOfWork.User.GetAllPopulatedAsync(include: q => q.Include(t => t.Currency));
+            if (user == null)
             {
-                var user = await _unitOfWork.User.GetByIdAsync(addTransactionVM.UserId);
-                if (user == null)
-                {
-                    return;
-                }
-                var category = await _unitOfWork.Category.GetAsync(u => u.CategoryId == addTransactionVM.CategoryId);
-                if (category == null)
-                {
-                    return;
-                }
-                var transaction = await _unitOfWork.Transaction.GetAsync(t => t.TransactionId == addTransactionVM.TransactionId);
-                transaction.TransactionDate = addTransactionVM.TransactionDate;
-                transaction.Amount = addTransactionVM.Amount;
-                transaction.Description = addTransactionVM.Description;
-                transaction.CategoryId = addTransactionVM.CategoryId;
-                transaction.UpdatedAt = DateTime.UtcNow;
-
-                _unitOfWork.Transaction.Update(transaction);
-                await _unitOfWork.SaveAsync();
+                return;
             }
+            var category = await _unitOfWork.Category.GetAsync(u => u.CategoryId == addTransactionVM.CategoryId);
+            if (category == null)
+            {
+                return;
+            }
+            var transaction = await _unitOfWork.Transaction.GetAsync(t => t.TransactionId == addTransactionVM.TransactionId);
+            transaction.TransactionDate = addTransactionVM.TransactionDate;
+            transaction.Amount = addTransactionVM.Amount;
+            transaction.Description = addTransactionVM.Description;
+            transaction.CategoryId = addTransactionVM.CategoryId;
+            transaction.UpdatedAt = DateTime.UtcNow;
+            transaction.TransactionTerrority = addTransactionVM.TransactionTerrority;
+
+            string currencyUsed;
+            Currency findUsedCurrency;
+            Currency findUserBaseCurrency;
+            ConvertedRates convertedAmount;
+            if (addTransactionVM.TransactionTerrority.ToString() == "Domestic")
+            {
+                transaction.TransactionCurrency = user.Currency.CurrencyCode;
+            }
+            else
+            {
+                transaction.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                currencyUsed = addTransactionVM.TransactionCurrency.ToUpper();
+                findUsedCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyCode == currencyUsed);
+                findUserBaseCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
+
+                if (findUsedCurrency != findUserBaseCurrency)
+                {
+                    convertedAmount = await _currencyConversion.GetConvertedRates(findUsedCurrency.CurrencyCode, findUserBaseCurrency.CurrencyCode);
+                    addTransactionVM.Amount = convertedAmount.conversion_rate * addTransactionVM.Amount;
+                    addTransactionVM.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                }
+                transaction.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                transaction.Amount = addTransactionVM.Amount;
+
+            }
+            _unitOfWork.Transaction.Update(transaction);
+            await _unitOfWork.SaveAsync();
+        }
 
         public async Task Delete(Guid transactionId)
         {

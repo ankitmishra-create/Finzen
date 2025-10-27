@@ -36,6 +36,7 @@ namespace FinanceManagement.Application.Services
                 transaction.TransactionTimeLine = Core.Enums.TransactionTimeLine.OneTime;
                 transaction.RecurrenceFrequency = null;
                 recurredTransaction.IsActive = false;
+                recurredTransaction.NextTransactionDate = null;
             }
             _unitOfWork.Transaction.Update(transaction);
             _unitOfWork.RecurringTransaction.Update(recurredTransaction);
