@@ -10,22 +10,22 @@ namespace FinanceManagement.Core.Entities
         public Guid RecurringTransactionId { get; set; } = Guid.NewGuid();
 
         [Required]
-        public Guid TransactionId { get; set; }
-
-        [ForeignKey(nameof(TransactionId))]
-        public Transaction Transaction { get; set; }
-
-        [Required]
         public Guid UserId { get; set; }
 
         [ForeignKey(nameof(UserId))]
         public User User { get; set; }
 
         [Required]
+        public Guid CategoryId { get; set; }
+
+        [ForeignKey(nameof(CategoryId))]
+        public Category Category { get; set; }
+
+        [Required]
         public RecurrenceFrequency Frequency { get; set; }
 
         [Required]
-        public DateTime StartDate { get; set; }
+        public DateTime StartDate { get; set; } = DateTime.UtcNow;
 
         public DateTime? EndDate { get; set; }
 
@@ -34,5 +34,25 @@ namespace FinanceManagement.Core.Entities
         public DateTime? LastExecutedDate { get; set; }
 
         public bool IsActive { get; set; } = true;
+
+        [Required]
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal Amount { get; set; }
+
+        [Required]
+        public string Description { get; set; }
+
+        [Required]
+        public TransactionTerrority TransactionTerrority { get; set; }
+
+        [Required]
+        public string TransactionCurrency { get; set; }
+
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? OriginalAmount { get; set; }
+
+        public string? OriginalCurrency { get; set; }
+
+        public ICollection<Transaction> GeneratedTransactions { get; set; } = new List<Transaction>();
     }
 }

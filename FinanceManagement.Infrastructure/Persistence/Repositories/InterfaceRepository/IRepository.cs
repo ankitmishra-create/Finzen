@@ -11,5 +11,6 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRep
         Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate);
         void Update(T entity);
         void Delete(T entity);
+        Task<T> GetPopulatedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null);
     }
 }

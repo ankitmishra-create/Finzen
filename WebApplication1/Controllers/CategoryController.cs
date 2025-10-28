@@ -4,6 +4,7 @@ using FinanceManagement.Core.Entities;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using System.Security.Claims;
+using System.Threading.Tasks;
 
 namespace FinanceManagement.Web.Controllers
 {
@@ -19,8 +20,7 @@ namespace FinanceManagement.Web.Controllers
 
         public async Task<IActionResult> Index()
         {
-            var userId = User.FindFirstValue(ClaimTypes.NameIdentifier);
-            IEnumerable<Category> usersCategories = await _categoryService.DisplayCategoryAsync(userId);
+            IEnumerable<Category> usersCategories = await _categoryService.DisplayCategoryAsync();
             return View(usersCategories);
         }
 
@@ -54,22 +54,22 @@ namespace FinanceManagement.Web.Controllers
         }
 
         [HttpGet]
-        public IActionResult Edit(Guid id)
+        public async Task<IActionResult> Edit(Guid categoryId)
         {
-            var currentCategoryVM = _categoryService.UpdateBuild(id);
+            var currentCategoryVM = await _categoryService.GetCategoryForUpdateAsync(categoryId);
             return View(currentCategoryVM);
         }
 
         [HttpPost]
         public async Task<IActionResult> Edit(AddCategoryVM addCategoryVM)
         {
-            await _categoryService.Update(addCategoryVM);
+            await _categoryService.UpdateCategoryAsync(addCategoryVM);
             return RedirectToAction("Index");
         }
 
-        public async Task<IActionResult> Delete(AddCategoryVM addCategoryVM)
+        public async Task<IActionResult> Delete(Guid categoryId)
         {
-            await _categoryService.Delete(addCategoryVM);
+            await _categoryService.DeleteCategoryAsync(categoryId);
             return RedirectToAction("Index");
         }
 

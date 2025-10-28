@@ -80,9 +80,9 @@
 
                                 <div class="mb-3">
 
-                                    <label asp-for="TransactionCurrency" class="form-label required-field"></label>
+                                    <label asp-for="SelectedCurrency" class="form-label required-field"></label>
 
-                                    <select asp-for="TransactionCurrency"
+                                    <select asp-for="SelectedCurrency"
                                                                   class="form-select"
                                                                   asp-items="ViewBag.Available">
 
@@ -90,7 +90,7 @@
 
                                     </select>
 
-                                    <span asp-validation-for="TransactionCurrency" class="text-danger small"></span>
+                                    <span asp-validation-for="SelectedCurrency" class="text-danger small"></span>
 
                                 </div>
 

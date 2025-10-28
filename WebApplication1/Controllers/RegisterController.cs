@@ -32,7 +32,7 @@ namespace FinanceManagement.Web.Controllers
                 await PopulateDropdownsAsync();
                 return View(userRegistrationVM);
             }
-            var result = await _userService.Register(userRegistrationVM, null);
+            var result = await _userService.Register(userRegistrationVM);
             if (result != null)
             {
                 return RedirectToAction("Verify", "Login");

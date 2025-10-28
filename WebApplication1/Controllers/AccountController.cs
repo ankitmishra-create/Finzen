@@ -11,10 +11,12 @@ namespace FinanceManagement.Web.Controllers
     {
         private readonly IEmailService _emailService;
         private readonly IUserService _userService;
-        public AccountController(IEmailService emailService, IUserService userService)
+        private readonly IExternalAuthService _externalAuthService;
+        public AccountController(IEmailService emailService, IUserService userService,IExternalAuthService externalAuthService)
         {
             _emailService = emailService;
             _userService = userService;
+            _externalAuthService = externalAuthService;
         }
 
         public async Task<IActionResult> VerifyEmail([FromQuery] string userId, string token)
@@ -41,7 +43,7 @@ namespace FinanceManagement.Web.Controllers
 
 
 
-            var user = await _userService.ExternalRegistration(result);
+            var user = await _externalAuthService.HandleExternalLoginAsync(result);
             if (user != null)
             {
                 var claims = new List<Claim>()

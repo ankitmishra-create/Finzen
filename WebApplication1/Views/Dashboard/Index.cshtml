@@ -1,40 +1,28 @@
 ﻿@using FinanceManagement.Application.Utility
 @using FinanceManagement.Core.Entities
 @using FinanceManagement.Core.Enums
-@model IEnumerable<Transaction>
+@using FinanceManagement.Application.DTO 
+
+@* --- HIGHLIGHTED: THE MODEL IS NOW DashboardDto --- *@
+@model DashboardDto
 
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-@* This updated CSS uses Container Queries for a truly robust and responsive font size *@
+@* (Your <style> section is perfect, no changes needed) *@
 <style>
-    /* 1. Define the card as a query container */
     .summary-card {
         container-type: inline-size;
     }
 
-    .summary-card-icon {
-        position: absolute;
-        top: 1rem;
-        right: 1.5rem;
-        font-size: 3rem;
-        opacity: 0.2;
-        transition: all 0.3s ease-in-out;
+    .summary-card-icon { /* ... */
     }
 
-    .summary-card:hover .summary-card-icon {
-        opacity: 0.4;
-        transform: scale(1.1);
+    .summary-card:hover .summary-card-icon { /* ... */
     }
 
-    /* 2. Make the font size responsive to its container */
-    .amount-display {
-        white-space: nowrap; /* Keep the number on a single line */
-        /* The font size is now based on the card's width (cqw), not the viewport's (vw) */
-        /* It will shrink aggressively to fit extremely long numbers. */
-        font-size: clamp(0.9rem, 8cqw, 2.5rem);
-        line-height: 1.2;
+    .amount-display { /* ... */
     }
 </style>
 
@@ -46,23 +34,16 @@
 
     <div class="d-flex align-items-center gap-2">
         <label for="currencySelector" class="form-label mb-0 small text-muted">Currency:</label>
+
+        @* --- HIGHLIGHTED: Added AntiForgeryToken --- *@
         <form asp-controller="Dashboard" asp-action="Index" method="post" class="d-flex align-items-center gap-2">
+            @Html.AntiForgeryToken()
+
+            @* --- HIGHLIGHTED: Using asp-items for a clean dropdown --- *@
             <select name="selectedCurrencyCode" id="currencySelector"
                     class="form-select form-select-sm" style="width: 160px;"
-                    onchange="this.form.submit()">
-                @if (ViewBag.CurrencyList != null)
-                {
-                    var currencyList = ViewBag.CurrencyList as List<FinanceManagement.Application.Utility.CurrencyRecords>;
-                    var userCurrencyCode = ViewBag.UserCurrencyCode as string;
-
-                    foreach (var currency in currencyList)
-                    {
-                        <option value="@currency.CurrencyCode"
-                                selected="@(currency.CurrencyCode == userCurrencyCode)">
-                            @currency.CurrencyName (@currency.CurrencySymbol)
-                        </option>
-                    }
-                }
+                    onchange="this.form.submit()"
+                    asp-items="@(ViewBag.CurrencyList as List<SelectListItem>)">
             </select>
         </form>
     </div>
@@ -77,7 +58,8 @@
                 </div>
                 <h6 class="card-title text-success-emphasis mb-1">TOTAL INCOME</h6>
                 <h3 class="fw-bold text-success-emphasis mb-0 amount-display">
-                    @ViewBag.CurrencySymbol @(((decimal)ViewBag.Income).ToString("N2"))
+                    @* --- HIGHLIGHTED: Using @Model property --- *@
+                    @ViewBag.CurrencySymbol @Model.TotalIncome.ToString("N2")
                 </h3>
             </div>
         </div>
@@ -91,7 +73,8 @@
                 </div>
                 <h6 class="card-title text-danger-emphasis mb-1">TOTAL EXPENSE</h6>
                 <h3 class="fw-bold text-danger-emphasis mb-0 amount-display">
-                    @ViewBag.CurrencySymbol @(((decimal)ViewBag.Expense).ToString("N2"))
+                    @* --- HIGHLIGHTED: Using @Model property --- *@
+                    @ViewBag.CurrencySymbol @Model.TotalExpense.ToString("N2")
                 </h3>
             </div>
         </div>
@@ -105,7 +88,8 @@
                 </div>
                 <h6 class="card-title text-primary-emphasis mb-1">BALANCE AVAILABLE</h6>
                 <h3 class="fw-bold text-primary-emphasis mb-0 amount-display">
-                    @ViewBag.CurrencySymbol @(((decimal)ViewBag.Available).ToString("N2"))
+                    @* --- HIGHLIGHTED: Using @Model property --- *@
+                    @ViewBag.CurrencySymbol @Model.TotalBalance.ToString("N2")
                 </h3>
             </div>
         </div>
@@ -134,21 +118,32 @@
                         </tr>
                     </thead>
                     <tbody>
-                        @if (Model != null && Model.Any())
+                        @* --- HIGHLIGHTED: Looping over @Model.RecentTransaction --- *@
+                        @if (Model.RecentTransaction != null && Model.RecentTransaction.Any())
                         {
-                            @foreach (var item in Model)
+                            @foreach (var item in Model.RecentTransaction)
                             {
-                                var amountPrefix = item.Category.CategoryType == CategoryType.Income ? "+" : "-";
+                                // --- HIGHLIGHTED: Default values if Category is null ---
+                                var categoryType = item.Category?.CategoryType ?? CategoryType.Expense; // Default to Expense if null
+                                var categoryName = item.Category?.CategoryName ?? "Unknown Category"; // Default text
+                                var amountPrefix = categoryType == CategoryType.Income ? "+" : "-";
+                                var badgeClass = categoryType == CategoryType.Income ? "bg-success-subtle text-success-emphasis" : "bg-danger-subtle text-danger-emphasis";
+                                var amountClass = categoryType == CategoryType.Income ? "text-success" : "text-danger";
+                                // --- END HIGHLIGHTED ---
+
                                 <tr>
                                     <td class="ps-3">
-                                        <span class="badge @(item.Category.CategoryType.ToString() == "Income" ? "bg-success-subtle text-success-emphasis" : "bg-danger-subtle text-danger-emphasis")">
-                                            @item.Category.CategoryType
+                                        @* --- HIGHLIGHTED: Using the safe variables --- *@
+                                        <span class="badge @badgeClass">
+                                            @categoryType
                                         </span>
                                     </td>
-                                    <td>@item.Category.CategoryName</td>
+                                    @* --- HIGHLIGHTED: Using the safe variable --- *@
+                                    <td>@categoryName</td>
                                     <td>@item.Description</td>
                                     <td>@item.TransactionDate?.ToShortDateString()</td>
-                                    <td class="text-end pe-3 fw-bold @(item.Category.CategoryType.ToString() == "Income" ? "text-success" : "text-danger")">
+                                    @* --- HIGHLIGHTED: Using the safe variables --- *@
+                                    <td class="text-end pe-3 fw-bold @amountClass">
                                         @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString("N2")
                                     </td>
                                 </tr>

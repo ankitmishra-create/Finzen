@@ -31,7 +31,7 @@ builder.Services.AddAuthentication()
     });
 
 builder.Services.AddHttpClient<ICountryApiService, CountryApiService>();
-builder.Services.AddHttpClient<ICurrencyConversion, CurrencyConversion>();
+builder.Services.AddHttpClient<ICurrencyConversionService, CurrencyConversionService>();
 
 builder.Services.AddScoped<IUnitOfWork, UnitOfWork>();
 builder.Services.AddScoped<CountrySeeders>();
@@ -44,7 +44,7 @@ builder.Services.AddScoped<ITransactionService, TransactionService>();
 builder.Services.AddScoped<ILoggedInUser, LoggedInUser>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
-
+builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddSingleton<IPasswordHashing, PasswordHashing>();
 
 builder.Services.AddAuthentication("MyCookie").AddCookie("MyCookie", opt =>

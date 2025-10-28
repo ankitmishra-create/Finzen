@@ -29,8 +29,7 @@ namespace FinanceManagement.Application.ViewModels
         public TransactionTerrority TransactionTerrority { get; set; }
 
         [Display(Name = "Transaction Currency")]
-        public string? TransactionCurrency { get; set; }
-
+        public string? SelectedCurrency { get; set; }
 
         [Display(Name ="Recurrency Frequency")]
         public RecurrenceFrequency? RecurrenceFrequency { get; set; }

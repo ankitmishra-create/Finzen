@@ -2,6 +2,7 @@
 using FinanceManagement.Application.Utility;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 
 namespace FinanceManagement.Web.Controllers
 {
@@ -15,70 +16,51 @@ namespace FinanceManagement.Web.Controllers
         }
         public async Task<IActionResult> Index()
         {
-            var last5 = await _dashboardService.Last5Transaction();
-            var income = await _dashboardService.TotalIncome();
-            var expense = await _dashboardService.TotalExpense();
-            var available = income - expense;
-            var user = await _dashboardService.GetUser();
+            var dashboardData = await _dashboardService.GetDashboardDataAsync();
+            SetupCurrencyDropdown(dashboardData.BaseCurrencyCode);
+            return View(dashboardData);
+        }
 
-            var CurrencySymbols = CurrencySymbol.GetCultures();
-            string userCurrencyCode = user?.Currency?.CurrencyCode;
+        private void SetupCurrencyDropdown(string selectedCurrencyCode)
+        {
+            var currencySymbols = CurrencySymbol.GetCultures();
 
-            foreach (var item in CurrencySymbols)
+            ViewBag.CurrencyList = currencySymbols.Select(c => new SelectListItem
             {
-                if (item.CurrencyCode == userCurrencyCode)
-                {
-                    ViewBag.CurrencySymbol = item.CurrencySymbol;
-                    break;
-                }
-            }
+                Value = c.CurrencyCode,
+                Text = $"{c.CurrencyName} ({c.CurrencySymbol})",
+                Selected = c.CurrencyCode == selectedCurrencyCode
+            }).ToList();
 
-            ViewBag.UserCurrencyCode = userCurrencyCode;
-            ViewBag.CurrencyList = CurrencySymbols;
-            ViewBag.Income = income;
-            ViewBag.Expense = expense;
-            ViewBag.Available = available;
-            return View(last5);
+            var selectedSymbol = currencySymbols
+                .FirstOrDefault(c => c.CurrencyCode == selectedCurrencyCode)?.CurrencySymbol ?? "$";
+
+            ViewBag.CurrencySymbol = selectedSymbol;
+
+            ViewBag.UserCurrencyCode = selectedCurrencyCode;
         }
 
         [HttpPost]
+        [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(string selectedCurrencyCode)
         {
-            var updatedResult = await _dashboardService.CurrencyConversion(selectedCurrencyCode);
-            var last5 = await _dashboardService.Last5Transaction();
-            var alltranactions = await _dashboardService.After5();
-            foreach (var last in last5)
-            {
-                last.Amount = last.Amount * updatedResult;
-            }
-            foreach(var last in alltranactions)
-            {
-                last.Amount = last.Amount * updatedResult;
-            }
+           
+            var dashboardDto = await _dashboardService.GetDashboardDataAsync();
+            var conversionRate = await _dashboardService.CurrencyConversion(selectedCurrencyCode);
+            dashboardDto.TotalIncome *= conversionRate;
+            dashboardDto.TotalExpense *= conversionRate;
+            dashboardDto.TotalBalance *= conversionRate;
 
-            var income = await (_dashboardService.TotalIncome());
-            var expense = await (_dashboardService.TotalExpense());
-            var available = (income - expense);
-            var user = await _dashboardService.GetUser();
-
-            var CurrencySymbols = CurrencySymbol.GetCultures();
-            string userCurrencyCode = selectedCurrencyCode;
-
-            foreach (var item in CurrencySymbols)
+            foreach(var transaction in dashboardDto.RecentTransaction)
             {
-                if (item.CurrencyCode == userCurrencyCode)
+                if (transaction.Amount.HasValue)
                 {
-                    ViewBag.CurrencySymbol = item.CurrencySymbol;
-                    break;
+                    transaction.Amount *= conversionRate;
                 }
             }
 
-            ViewBag.UserCurrencyCode = userCurrencyCode;
-            ViewBag.CurrencyList = CurrencySymbols;
-            ViewBag.Income = income;
-            ViewBag.Expense = expense;
-            ViewBag.Available = available;
-            return View(last5);
+            SetupCurrencyDropdown(selectedCurrencyCode);
+            return View(dashboardDto);
         }
     }
 }

@@ -144,7 +144,7 @@ namespace FinanceManagement.Infrastructure.Migrations
                     b.Property<int?>("RecurrenceFrequency")
                         .HasColumnType("int");
 
-                    b.Property<string>("TransactionCurrency")
+                    b.Property<string>("SelectedCurrency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

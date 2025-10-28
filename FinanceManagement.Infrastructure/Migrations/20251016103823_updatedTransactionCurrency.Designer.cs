@@ -12,8 +12,8 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    [Migration("20251016103823_updatedTransactionCurrency")]
-    partial class updatedTransactionCurrency
+    [Migration("20251016103823_updatedSelectedCurrency")]
+    partial class updatedSelectedCurrency
     {
         /// <inheritdoc />
         protected override void BuildTargetModel(ModelBuilder modelBuilder)
@@ -102,7 +102,7 @@ namespace FinanceManagement.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TransactionCurrency")
+                    b.Property<string>("SelectedCurrency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

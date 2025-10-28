@@ -1,6 +1,8 @@
-﻿using FinanceManagement.Application.Interfaces;
+﻿using FinanceManagement.Application.Exceptions;
+using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Entities;
+using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 
 namespace FinanceManagement.Application.Services
@@ -8,49 +10,69 @@ namespace FinanceManagement.Application.Services
     public class CategoryService : ICategoryService
     {
         private readonly IUnitOfWork _unitOfWork;
-        public CategoryService(IUnitOfWork unitOfWork)
+        private readonly ILoggedInUser _loggedInUser;
+        public CategoryService(IUnitOfWork unitOfWork,ILoggedInUser loggedInUser)
         {
+            _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;
         }
 
-        public async Task AddCategoryAsync(AddCategoryVM addCategoryVM)
+        public async Task<Category> AddCategoryAsync(AddCategoryVM addCategoryVM)
         {
-            Guid convertedGuid;
-            Guid.TryParse(addCategoryVM.UserId, out convertedGuid);
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var existing = await _unitOfWork.Category.GetAsync(c => c.UserId == userId && c.CategoryName.ToLower() == addCategoryVM.CategoryName.ToLower() && c.CategoryType==addCategoryVM.CategoryType);
+            
+            if(existing != null)
+            {
+                throw new CategoryAlreadyExistException("A category with this name and type already exists.");
+            }
+
             Category category = new Category()
             {
-                UserId = convertedGuid,
+                UserId = userId,
                 CategoryName = addCategoryVM.CategoryName,
                 CategoryType = addCategoryVM.CategoryType,
                 SubType = addCategoryVM.SubType
             };
-            User user = await _unitOfWork.User.GetByIdAsync(convertedGuid);
-            category.User = user;
             await _unitOfWork.Category.AddAsync(category);
             await _unitOfWork.SaveAsync();
+            return category;
         }
 
-        public async Task<IEnumerable<Category>> DisplayCategoryAsync(string userId)
+        public async Task<IEnumerable<Category>> DisplayCategoryAsync()
         {
-            Guid convertedGuid;
-            Guid.TryParse(userId, out convertedGuid);
-            return await _unitOfWork.Category.GetAllAsync(u => u.UserId == convertedGuid);
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            return await _unitOfWork.Category.GetAllAsync(u => u.UserId == userId);
         }
 
-        public AddCategoryVM UpdateBuild(Guid id)
+        public async Task<AddCategoryVM> GetCategoryForUpdateAsync(Guid categoryId)
         {
-            var category = _unitOfWork.Category.GetAsync(u => u.CategoryId == id);
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var category = await _unitOfWork.Category.GetAsync(u => u.CategoryId == categoryId);
+
+            if (category == null)
+            {
+                throw new CategoryNotFoundException("Category not found!");
+            }
+
             AddCategoryVM addCategoryVM = new AddCategoryVM()
             {
-                CategoryName = category.Result.CategoryName,
-                CategoryType = category.Result.CategoryType
+                Id=category.CategoryId,
+                CategoryName = category.CategoryName,
+                CategoryType = category.CategoryType
             };
             return addCategoryVM;
         }
 
-        public async Task Update(AddCategoryVM addCategoryVM)
+        public async Task UpdateCategoryAsync(AddCategoryVM addCategoryVM)
         {
+            var userId = _loggedInUser.CurrentLoggedInUser();
             var category = await _unitOfWork.Category.GetAsync(category => category.CategoryId == addCategoryVM.Id);
+
+            if (category == null)
+            {
+                throw new CategoryNotFoundException("Category not found");
+            }
 
             category.CategoryName = addCategoryVM.CategoryName;
             category.CategoryType = addCategoryVM.CategoryType;
@@ -61,9 +83,14 @@ namespace FinanceManagement.Application.Services
             await _unitOfWork.SaveAsync();
         }
 
-        public async Task Delete(AddCategoryVM addCategoryVM)
+        public async Task DeleteCategoryAsync(Guid categoryId)
         {
-            var categoryToDelete = await _unitOfWork.Category.GetAsync(c => c.CategoryId == addCategoryVM.Id);
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var categoryToDelete = await _unitOfWork.Category.GetAsync(c => c.CategoryId == categoryId && c.UserId==userId);
+            if (categoryToDelete == null)
+            {
+                throw new CategoryNotFoundException("Category not found");
+            }
             _unitOfWork.Category.Delete(categoryToDelete);
             await _unitOfWork.SaveAsync();
         }

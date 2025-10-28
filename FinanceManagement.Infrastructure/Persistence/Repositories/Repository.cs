@@ -15,6 +15,19 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
             dbset = this._db.Set<T>();
         }
 
+        public async Task<T> GetPopulatedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
+        {
+            IQueryable<T> query = dbset;
+            if (filter != null)
+            {
+                query = query.Where(filter);
+            }
+            if (include != null)
+            {
+                query = include(query);
+            }
+            return await query.FirstOrDefaultAsync();
+        }
         public async Task<IEnumerable<T>> GetAllPopulatedAsync(Expression<Func<T, bool>> filter = null, Func<IQueryable<T>, IIncludableQueryable<T, object>> include = null)
         {
             IQueryable<T> query = dbset;

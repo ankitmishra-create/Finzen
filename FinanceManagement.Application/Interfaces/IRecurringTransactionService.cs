@@ -7,6 +7,8 @@ namespace FinanceManagement.Application.Interfaces
     {
         Task<List<RecurringTransactions>> GetRecuringTransactionsAsync();
         Task DeleteRecurringTransaction(Guid recurringTransactionId);
-
+        Task<RecurringTransactions> CreateRecurringTransaction(AddTransactionVM addTransactionVM, decimal originalAmount);
+        Task<RecurringTransactions> EditRecurringTransaction(RecurringTransactionVM recurringTransactionVM);
+        Task<RecurringTransactionVM> EditView(Guid recurringTransactionId);
     }
 }

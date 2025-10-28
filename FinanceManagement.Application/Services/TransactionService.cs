@@ -15,12 +15,14 @@ namespace FinanceManagement.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILoggedInUser _loggedInUser;
-        private readonly ICurrencyConversion _currencyConversion;
-        public TransactionService(IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversion currencyConversion)
+        private readonly ICurrencyConversionService _currencyConversion;
+        private readonly IRecurringTransactionService _recurringTransaction;
+        public TransactionService(IRecurringTransactionService recurringTransaction,IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversionService currencyConversion)
         {
             _unitOfWork = unitOfWork;
             _loggedInUser = loggedInUser;
             _currencyConversion = currencyConversion;
+            _recurringTransaction = recurringTransaction;
         }
 
         public async Task<AddTransactionVM> CreateView()
@@ -35,7 +37,7 @@ namespace FinanceManagement.Application.Services
                 UserId = userId,
                 Categories = (List<Category>)categories,
                 TransactionTerrority = TransactionTerrority.Domestic,
-                TransactionCurrency = userBaseCurrencySymbol.CurrencyCode
+                SelectedCurrency = userBaseCurrencySymbol.CurrencyCode
             };
             return addTransactionVM;
         }
@@ -56,26 +58,28 @@ namespace FinanceManagement.Application.Services
             var userBasecurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
             if (addTransactionVM.TransactionTerrority.ToString() == "Domestic")
             {
-                addTransactionVM.TransactionCurrency = userBasecurrency.CurrencyCode;
+                addTransactionVM.SelectedCurrency = userBasecurrency.CurrencyCode;
             }
+
+            decimal originalAmount = (decimal)addTransactionVM.Amount;
 
             string currencyUsed;
             Currency findUsedCurrency;
-            Currency findUserBaseCurrency;
+            Currency findUserBaseCurrency=await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
             ConvertedRates convertedAmount;
 
             if (addTransactionVM.TransactionTerrority.ToString() == "International")
             {
-                currencyUsed = addTransactionVM.TransactionCurrency.ToUpper();
+                currencyUsed = addTransactionVM.SelectedCurrency.ToUpper();
                 findUsedCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyCode == currencyUsed);
-                findUserBaseCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
 
                 if (findUsedCurrency != findUserBaseCurrency)
                 {
                     convertedAmount = await _currencyConversion.GetConvertedRates(findUsedCurrency.CurrencyCode, findUserBaseCurrency.CurrencyCode);
                     addTransactionVM.Amount = convertedAmount.conversion_rate * addTransactionVM.Amount;
-                    addTransactionVM.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                    addTransactionVM.SelectedCurrency = addTransactionVM.SelectedCurrency;
                 }
+
             }
 
             Transaction transaction = new Transaction()
@@ -85,49 +89,20 @@ namespace FinanceManagement.Application.Services
                 Description = addTransactionVM.Description,
                 TransactionDate = addTransactionVM.TransactionDate,
                 CategoryId = addTransactionVM.CategoryId,
-                TransactionCurrency = addTransactionVM.TransactionCurrency,
+                SelectedCurrency = addTransactionVM.SelectedCurrency,
                 TransactionTerrority = addTransactionVM.TransactionTerrority,
                 TransactionTimeLine = addTransactionVM.TransactionTimeLine,
-                RecurrenceFrequency = addTransactionVM.RecurrenceFrequency
+                RecurrenceFrequency = addTransactionVM.RecurrenceFrequency,
+                OriginalAmount=originalAmount,
+                OriginalCurrency=findUserBaseCurrency.CurrencyCode,
             };
 
             if (addTransactionVM.TransactionTimeLine.ToString() == "Recurring" && addTransactionVM.RecurringStartDate.HasValue)
             {
-                RecurringTransactions recurringTransactions = new RecurringTransactions()
-                {
-                    Transaction = transaction,
-                    TransactionId = transaction.TransactionId,
-                    User = user,
-                    UserId = addTransactionVM.UserId,
-                    Frequency = (Core.Enums.RecurrenceFrequency)addTransactionVM.RecurrenceFrequency,
-                    StartDate = addTransactionVM.RecurringStartDate.Value,
-                    EndDate = addTransactionVM.RecurringEndDate.Value,
-                    LastExecutedDate = DateTime.UtcNow
-                };
-                var nextTransactionDate = addTransactionVM.RecurrenceFrequency;
-
-                switch ((RecurrenceFrequency)nextTransactionDate)
-                {
-                    case RecurrenceFrequency.Daily:
-                        recurringTransactions.NextTransactionDate = recurringTransactions.LastExecutedDate.Value.AddDays(1);
-                        break;
-                    case RecurrenceFrequency.Weekly:
-                        recurringTransactions.NextTransactionDate = recurringTransactions.LastExecutedDate.Value.AddDays(7);
-                        break;
-                    case RecurrenceFrequency.Monthly:
-                        recurringTransactions.NextTransactionDate = recurringTransactions.LastExecutedDate.Value.AddMonths(1);
-                        break;
-                    case RecurrenceFrequency.Quarterly:
-                        recurringTransactions.NextTransactionDate = recurringTransactions.LastExecutedDate.Value.AddMonths(3);
-                        break;
-                    case RecurrenceFrequency.Yearly:
-                        recurringTransactions.NextTransactionDate = recurringTransactions.LastExecutedDate.Value.AddYears(1);
-                        break;
-                }
-
-                await _unitOfWork.RecurringTransaction.AddAsync(recurringTransactions);
+                var recurringTransaction = await _recurringTransaction.CreateRecurringTransaction(addTransactionVM, originalAmount);
+                transaction.GeneratedFromRecurringId = recurringTransaction.RecurringTransactionId;
+                await _unitOfWork.RecurringTransaction.AddAsync(recurringTransaction);
             }
-
             await _unitOfWork.Transaction.AddAsync(transaction);
             await _unitOfWork.SaveAsync();
         }
@@ -151,17 +126,17 @@ namespace FinanceManagement.Application.Services
             string userBaseCurrency;
             ConvertedRates convertedRates;
             decimal convertedUpdatedRates = 0;
-            if (transaction.TransactionCurrency != null && transaction.TransactionCurrency.Length >= 1)
+            if (transaction.SelectedCurrency != null && transaction.SelectedCurrency.Length >= 1)
             {
                 userCurrency = await _unitOfWork.Currency.GetAsync(t => t.CurrencyId == user.CurrencyId);
                 userBaseCurrency = userCurrency.CurrencyCode;
-                convertedRates = await _currencyConversion.GetConvertedRates(userBaseCurrency, transaction.TransactionCurrency);
+                convertedRates = await _currencyConversion.GetConvertedRates(userBaseCurrency, transaction.SelectedCurrency);
 
                 AddTransactionVM addTransactionVM = new AddTransactionVM()
                 {
                     UserId = user.UserId,
                     TransactionId = transaction.TransactionId,
-                    TransactionCurrency = transaction.TransactionCurrency,
+                    SelectedCurrency = transaction.SelectedCurrency,
                     TransactionTerrority = transaction.TransactionTerrority,
                     Categories = (List<Category>)categories,
                     Amount = convertedRates.conversion_rate * transaction.Amount,
@@ -177,7 +152,7 @@ namespace FinanceManagement.Application.Services
             {
                 UserId = user.UserId,
                 TransactionId = transaction.TransactionId,
-                TransactionCurrency = transaction.TransactionCurrency,
+                SelectedCurrency = transaction.SelectedCurrency,
                 TransactionTerrority = transaction.TransactionTerrority,
                 Categories = (List<Category>)categories,
                 Amount = transaction.Amount,
@@ -210,18 +185,20 @@ namespace FinanceManagement.Application.Services
             transaction.UpdatedAt = DateTime.UtcNow;
             transaction.TransactionTerrority = addTransactionVM.TransactionTerrority;
 
-            string currencyUsed;
+            transaction.OriginalAmount = addTransactionVM.Amount;
+            
+                string currencyUsed;
             Currency findUsedCurrency;
             Currency findUserBaseCurrency;
             ConvertedRates convertedAmount;
             if (addTransactionVM.TransactionTerrority.ToString() == "Domestic")
             {
-                transaction.TransactionCurrency = user.Currency.CurrencyCode;
+                transaction.SelectedCurrency = user.Currency.CurrencyCode;
             }
             else
             {
-                transaction.TransactionCurrency = addTransactionVM.TransactionCurrency;
-                currencyUsed = addTransactionVM.TransactionCurrency.ToUpper();
+                transaction.SelectedCurrency = addTransactionVM.SelectedCurrency;
+                currencyUsed = addTransactionVM.SelectedCurrency.ToUpper();
                 findUsedCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyCode == currencyUsed);
                 findUserBaseCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
 
@@ -229,9 +206,9 @@ namespace FinanceManagement.Application.Services
                 {
                     convertedAmount = await _currencyConversion.GetConvertedRates(findUsedCurrency.CurrencyCode, findUserBaseCurrency.CurrencyCode);
                     addTransactionVM.Amount = convertedAmount.conversion_rate * addTransactionVM.Amount;
-                    addTransactionVM.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                    addTransactionVM.SelectedCurrency = addTransactionVM.SelectedCurrency;
                 }
-                transaction.TransactionCurrency = addTransactionVM.TransactionCurrency;
+                transaction.SelectedCurrency = addTransactionVM.SelectedCurrency;
                 transaction.Amount = addTransactionVM.Amount;
 
             }
@@ -246,11 +223,11 @@ namespace FinanceManagement.Application.Services
             await _unitOfWork.SaveAsync();
         }
 
-        public List<CurrencyList> GetAllAvailableCurrency()
+        public List<CurrencyData> GetAllAvailableCurrency()
         {
             var allavailable = CurrencySymbol.GetCultures();
 
-            var allAvailableCurrency = allavailable.Select(c => new CurrencyList
+            var allAvailableCurrency = allavailable.Select(c => new CurrencyData
             {
                 CurrencyName = c.CurrencyName,
                 CurrencySymbol = c.CurrencySymbol,

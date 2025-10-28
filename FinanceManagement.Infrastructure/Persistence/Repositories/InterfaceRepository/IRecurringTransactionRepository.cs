@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository
 {
-    public interface IRecurringTransactionRepository :IRepository<RecurringTransactions> 
-    {
+    public interface IRecurringTransactionRepository : IRepository<RecurringTransactions>
+    { 
     }
 }

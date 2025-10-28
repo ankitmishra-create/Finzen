@@ -76,13 +76,13 @@
 
                             <div class="col-md-6" id="currencyContainer" style="display:none;">
                                 <div class="mb-3">
-                                    <label asp-for="TransactionCurrency" class="form-label"></label>
-                                    <select asp-for="TransactionCurrency"
+                                    <label asp-for="SelectedCurrency" class="form-label"></label>
+                                    <select asp-for="SelectedCurrency"
                                             class="form-select border rounded shadow-sm"
                                             asp-items="ViewBag.Available">
                                         <option value="">-- Select Currency --</option>
                                     </select>
-                                    <span asp-validation-for="TransactionCurrency" class="text-danger small"></span>
+                                    <span asp-validation-for="SelectedCurrency" class="text-danger small"></span>
                                 </div>
                             </div>
                         </div>

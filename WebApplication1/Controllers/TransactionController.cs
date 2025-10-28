@@ -1,5 +1,4 @@
 ﻿using FinanceManagement.Application.Interfaces;
-using FinanceManagement.Application.Services;
 using FinanceManagement.Application.Utility;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Enums;
@@ -14,15 +13,17 @@ namespace FinanceManagement.Web.Controllers
     {
         private readonly ITransactionService _transactionService;
         private readonly IDashboardService _dashboardService;
-        public TransactionController(ITransactionService transactionService,IDashboardService dashboardService)
+        private readonly IUserService _userService;
+        public TransactionController(ITransactionService transactionService, IDashboardService dashboardService, IUserService userService)
         {
             _transactionService = transactionService;
             _dashboardService = dashboardService;
+            _userService = userService;
         }
         public async Task<IActionResult> Index()
         {
             var allTransaction = await _transactionService.DisplayTransactions();
-            var user = await _dashboardService.GetUser();
+            var user = await _userService.GetUser();
             var CurrencySymbols = CurrencySymbol.GetCultures();
             foreach (var item in CurrencySymbols)
             {
@@ -39,8 +40,8 @@ namespace FinanceManagement.Web.Controllers
         public async Task<IActionResult> Create()
         {
             var addTransactionVM = await _transactionService.CreateView();
-            var allavailable = _transactionService.GetAllAvailableCurrency();
-            ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName");
+            var allavailableCurriences = _transactionService.GetAllAvailableCurrency();
+            ViewBag.Available = new SelectList(allavailableCurriences, "CurrencyCode", "CurrencyName");
             ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(RecurrenceFrequency)));
             return View(addTransactionVM);
         }
@@ -53,9 +54,9 @@ namespace FinanceManagement.Web.Controllers
                 ModelState.AddModelError(nameof(addTransactionVM.Description), "A description is required for all expense transactions.");
             }
 
-            if (addTransactionVM.TransactionTerrority == TransactionTerrority.International && string.IsNullOrWhiteSpace(addTransactionVM.TransactionCurrency))
+            if (addTransactionVM.TransactionTerrority == TransactionTerrority.International && string.IsNullOrWhiteSpace(addTransactionVM.SelectedCurrency))
             {
-                ModelState.AddModelError(nameof(addTransactionVM.TransactionCurrency), "Transaction Currency is required for international transactions.");
+                ModelState.AddModelError(nameof(addTransactionVM.SelectedCurrency), "Transaction Currency is required for international transactions.");
             }
 
             if (ModelState.IsValid)
@@ -76,7 +77,7 @@ namespace FinanceManagement.Web.Controllers
         {
             var addTransactionVM = await _transactionService.EditView(transactionId);
             var allavailable = _transactionService.GetAllAvailableCurrency();
-            ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName",addTransactionVM.TransactionCurrency);
+            ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName", addTransactionVM.SelectedCurrency);
             return View(addTransactionVM);
         }
 

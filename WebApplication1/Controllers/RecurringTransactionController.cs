@@ -13,17 +13,19 @@ namespace FinanceManagement.Web.Controllers
 
         private readonly IRecurringTransactionService _recurringTransactionService;
         private readonly IDashboardService _dashboardService;
+        private readonly IUserService _userService;
         private readonly ITransactionService _transactionService;
-        public RecurringTransactionController(IRecurringTransactionService recurringTransactionService,IDashboardService dashboardService,ITransactionService transactionService)
+        public RecurringTransactionController(ITransactionService transactionService,IUserService userService,IRecurringTransactionService recurringTransactionService, IDashboardService dashboardService)
         {
             _recurringTransactionService = recurringTransactionService;
             _dashboardService = dashboardService;
+            _userService = userService;
             _transactionService = transactionService;
         }
 
         public async Task<IActionResult> Index()
         {
-            var user = await _dashboardService.GetUser();
+            var user = await _userService.GetUser();
             var CurrencySymbols = CurrencySymbol.GetCultures();
             foreach (var item in CurrencySymbols)
             {
@@ -38,18 +40,18 @@ namespace FinanceManagement.Web.Controllers
         }
 
         [HttpGet]
-        public async Task<IActionResult> Edit(Guid transactionId)
+        public async Task<IActionResult> Edit(Guid recurringTransactionId)
         {
-            var addTransactionVM = await _transactionService.EditView(transactionId);
-            var allavailable = _transactionService.GetAllAvailableCurrency();
-            ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName", addTransactionVM.TransactionCurrency);
-            return View(addTransactionVM);
+            var recurringTransactionVM = await _recurringTransactionService.EditView(recurringTransactionId);
+            var allAvailableCurriencies = CurrencySymbol.GetCultures();
+            ViewBag.Available = new SelectList(allAvailableCurriencies, "CurrencyCode", "CurrencyName");
+            return View(recurringTransactionVM);
         }
 
         [HttpPost]
-        public async Task<IActionResult> Edit(AddTransactionVM addTransactionVM)
+        public async Task<IActionResult> Edit(RecurringTransactionVM recurringTransactionVM)
         {
-            await _transactionService.Edit(addTransactionVM);
+            await _recurringTransactionService.EditRecurringTransaction(recurringTransactionVM);
             return RedirectToAction(nameof(Index));
         }
 

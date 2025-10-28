@@ -47,8 +47,9 @@
                 <tr>
 
                     <th>Date</th>
-
-                    <th>Category</th>
+                    <th>Category Type</th>
+                    <th>Category Name</th>
+                    
 
                     <th>Description</th>
 
@@ -80,6 +81,16 @@
 
                             <td>@item.TransactionDate?.ToString("MMM dd, yyyy")</td>
 
+
+                            <td>
+
+                                <span class="badge bg-secondary bg-opacity-25 text-dark-emphasis">
+
+                                    @item.Category?.CategoryType
+
+                                </span>
+
+                            </td>
                             <td>
 
                                 <span class="badge bg-secondary bg-opacity-25 text-dark-emphasis">
@@ -89,6 +100,7 @@
                                 </span>
 
                             </td>
+
 
                             <td>@item.Description</td>
 

@@ -7,11 +7,9 @@ namespace FinanceManagement.Application.Interfaces
 {
     public interface IUserService
     {
-        Task<User> Register(UserRegistrationVM userRegistrationDto,string? Method);
+        Task<User> Register(UserRegistrationVM userRegistrationDto);
         Task<LoginResult> Login(UserLoginVM userLoginDto);
-
-        Task<User> ExternalRegistration(AuthenticateResult result);
-
-        Task<AvailableCountries> PopulateRegisterationPage();
+        Task<AvailableCurrencies> PopulateRegisterationPage();
+        Task<User> GetUser();
     }
 }

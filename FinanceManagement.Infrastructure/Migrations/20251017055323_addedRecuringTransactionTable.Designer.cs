@@ -141,7 +141,7 @@ namespace FinanceManagement.Infrastructure.Migrations
                     b.Property<string>("Description")
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<string>("TransactionCurrency")
+                    b.Property<string>("SelectedCurrency")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 

@@ -5,12 +5,10 @@ namespace FinanceManagement.Application.Interfaces
 {
     public interface ICategoryService
     {
-        Task AddCategoryAsync(AddCategoryVM addCategoryVM);
-        Task<IEnumerable<Category>> DisplayCategoryAsync(string userId);
-
-        AddCategoryVM UpdateBuild(Guid id);
-        Task Update(AddCategoryVM addCategoryVM);
-
-        Task Delete(AddCategoryVM addCategoryVM);
+        Task<Category> AddCategoryAsync(AddCategoryVM addCategoryVM);
+        Task<IEnumerable<Category>> DisplayCategoryAsync();
+        Task<AddCategoryVM> GetCategoryForUpdateAsync(Guid categoryId);
+        Task UpdateCategoryAsync(AddCategoryVM addCategoryVM);
+        Task DeleteCategoryAsync(Guid categoryId);
     }
 }

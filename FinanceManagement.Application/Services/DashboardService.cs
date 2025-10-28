@@ -1,9 +1,11 @@
-﻿using FinanceManagement.Application.Interfaces;
+﻿using FinanceManagement.Application.DTO;
+using FinanceManagement.Application.Exceptions;
+using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Core.Entities;
+using FinanceManagement.Core.Enums;
 using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using Microsoft.EntityFrameworkCore;
-using Org.BouncyCastle.Tsp;
 
 namespace FinanceManagement.Application.Services
 {
@@ -11,76 +13,66 @@ namespace FinanceManagement.Application.Services
     {
         private readonly ILoggedInUser _loggedInUser;
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ICurrencyConversion _currencyConversion;
+        private readonly ICurrencyConversionService _currencyConversion;
 
-        public DashboardService(ILoggedInUser loggedInUser, IUnitOfWork unitOfWork,ICurrencyConversion currencyConversion)
+        public DashboardService(ILoggedInUser loggedInUser, IUnitOfWork unitOfWork, ICurrencyConversionService currencyConversion)
         {
             _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;
             _currencyConversion = currencyConversion;
         }
-        public async Task<IEnumerable<Transaction>> Last5Transaction()
+
+        public async Task<DashboardDto> GetDashboardDataAsync()
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var user = await _unitOfWork.User.GetByIdAsync(userId);
+            var user = await _unitOfWork.User.GetPopulatedAsync(u => u.UserId == userId, include: q => q.Include(u => u.Currency));
+
             if (user == null)
             {
-                return null;
+                throw new UserNotFoundException("User not found");
             }
-            var last5Transaction = await _unitOfWork.Transaction.LastFiveTransaction(userId);
-            await _unitOfWork.Transaction.GetAllPopulatedAsync(include: q => q.Include(t => t.Category));
-            return last5Transaction;
+            var totalIncome = await GetTotalAmountByTypeAsync(userId, CategoryType.Income);
+            var totalExpense = await GetTotalAmountByTypeAsync(userId, CategoryType.Expense);
+
+            var recentTransaction = await _unitOfWork.Transaction.LastFiveTransaction(userId);
+            var dashboardDto = new DashboardDto()
+            {
+                TotalIncome = totalIncome,
+                TotalExpense = totalExpense,
+                TotalBalance = totalIncome - totalExpense,
+                RecentTransaction = recentTransaction,
+                BaseCurrencyCode=user.Currency.CurrencyCode
+            };
+            return dashboardDto;
         }
 
-        public async Task<decimal?> TotalIncome()
+        private async Task<decimal> GetTotalAmountByTypeAsync(Guid userId, CategoryType categoryType)
         {
-            var userId = _loggedInUser.CurrentLoggedInUser();
-            var incomeTransactions = await _unitOfWork.Transaction.GetAllAsync(t => t.UserId == userId && t.Category.CategoryType.ToString() == "Income");
-            var income = incomeTransactions.Sum(t => t.Amount);
-            return income;
-        }
-        public async Task<decimal?> TotalExpense()
-        {
-            var userId = _loggedInUser.CurrentLoggedInUser();
-            var expenseTransactions = await _unitOfWork.Transaction.GetAllAsync(t => t.UserId == userId && t.Category.CategoryType.ToString() == "Expense");
-            var expense = expenseTransactions.Sum(e => e.Amount);
-            return expense;
-        }
-        public async Task<User> GetUser()
-        {
-            var loggedInUser = _loggedInUser.CurrentLoggedInUser();
-            User user = await _unitOfWork.User.GetAsync(u => u.UserId == loggedInUser);
-            await _unitOfWork.User.GetAllPopulatedAsync(include: q => q.Include(q => q.Currency));
-            return user;
+            return await _unitOfWork.Transaction.SumAsync(
+                t => t.UserId == userId && t.Category.CategoryType == categoryType
+            );
         }
 
         public async Task<decimal> CurrencyConversion(string currencyToConvert)
         {
             var loggedInUser = _loggedInUser.CurrentLoggedInUser();
-            var user = await _unitOfWork.User.GetAllPopulatedAsync(u => u.UserId==loggedInUser,include: q => q.Include(t => t.Currency));
-            var userUpdated = user.First();
+            var user = await _unitOfWork.User.GetPopulatedAsync(u => u.UserId == loggedInUser, include: q => q.Include(t => t.Currency));
 
-            var userBaseCurrencyCode = userUpdated.Currency.CurrencyCode;
-            var currencyToUpdate = currencyToConvert;
-
-            var convertedCurrencyRate = await _currencyConversion.GetConvertedRates(userBaseCurrencyCode, currencyToUpdate);
-            return convertedCurrencyRate.conversion_rate;
-        }
-        
-        public async Task<IEnumerable<Transaction>> After5()
-        {
-            var userId = _loggedInUser.CurrentLoggedInUser();
-            var user = await _unitOfWork.User.GetByIdAsync(userId);
             if (user == null)
             {
-                return null;
+                throw new UserNotFoundException("User not found");
             }
-            var allTransactions = await _unitOfWork.Transaction.GetAllAsync(t => t.UserId==userId);
-            var updatedALlTransactions = allTransactions.OrderByDescending(u => u.TransactionDate).ThenByDescending(u => u.Amount).Skip(5);
-
-            await _unitOfWork.Transaction.GetAllPopulatedAsync(include: q => q.Include(t => t.Category));
-            return updatedALlTransactions;
+            if (user.Currency == null)
+            {
+                throw new InvalidCurrencyException("Invalid Currency");
+            }
+            var userBaseCurrencyCode = user.Currency.CurrencyCode;
+            if (userBaseCurrencyCode.Equals(currencyToConvert, StringComparison.OrdinalIgnoreCase))
+            {
+                return 1.0m;
+            }
+            var convertedCurrencyRate = await _currencyConversion.GetConvertedRates(userBaseCurrencyCode, currencyToConvert);
+            return convertedCurrencyRate.conversion_rate;
         }
-
     }
 }

@@ -13,6 +13,6 @@ namespace FinanceManagement.Application.Interfaces
         Task<AddTransactionVM> EditView(Guid transactionId);
         Task Edit(AddTransactionVM addTransactionVM);
         Task Delete(Guid transactionId);
-        List<CurrencyList> GetAllAvailableCurrency();
+        List<CurrencyData> GetAllAvailableCurrency();
     }
 }

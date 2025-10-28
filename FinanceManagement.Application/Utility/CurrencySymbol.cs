@@ -31,7 +31,7 @@ namespace FinanceManagement.Application.Utility
                     {
                         return null;
                     }
-                }).Where(x => x != null).Distinct().OrderBy(x => x.CurrencyCode).ToList();
+                }).Where(x => x != null && x.ToString().Length>1).Distinct().OrderBy(x => x.CurrencyCode).ToList();
             return uniqueCurrencies;
         }
     }

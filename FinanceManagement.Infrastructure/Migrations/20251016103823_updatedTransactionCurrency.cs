@@ -5,13 +5,13 @@
 namespace FinanceManagement.Infrastructure.Migrations
 {
     /// <inheritdoc />
-    public partial class updatedTransactionCurrency : Migration
+    public partial class updatedSelectedCurrency : Migration
     {
         /// <inheritdoc />
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AddColumn<string>(
-                name: "TransactionCurrency",
+                name: "SelectedCurrency",
                 table: "Transactions",
                 type: "nvarchar(max)",
                 nullable: false,
@@ -22,7 +22,7 @@ namespace FinanceManagement.Infrastructure.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.DropColumn(
-                name: "TransactionCurrency",
+                name: "SelectedCurrency",
                 table: "Transactions");
         }
     }
