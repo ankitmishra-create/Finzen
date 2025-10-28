@@ -1,7 +1,6 @@
 ﻿using FinanceManagement.Infrastructure.Persistence;
 using FinanceManagement.Infrastructure.Persistence.Repositories;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
-using FinanceManagement.Processor.BackgroundServices;
 using FinanceManagement.Processor.Configuration;
 using FinanceManagement.Processor.Services;
 using Microsoft.EntityFrameworkCore;
