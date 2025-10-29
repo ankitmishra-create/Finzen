@@ -45,6 +45,7 @@ builder.Services.AddScoped<ILoggedInUser, LoggedInUser>();
 builder.Services.AddScoped<IDashboardService, DashboardService>();
 builder.Services.AddScoped<IRecurringTransactionService, RecurringTransactionService>();
 builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
+
 builder.Services.AddSingleton<IPasswordHashing, PasswordHashing>();
 
 builder.Services.AddAuthentication("MyCookie").AddCookie("MyCookie", opt =>
@@ -62,6 +63,7 @@ using (var scope = app.Services.CreateScope())
 }
 
 app.UseMiddleware<GlobalExceptionHandling>();
+
 if (!app.Environment.IsDevelopment())
 {
     app.UseExceptionHandler("/Home/Error");

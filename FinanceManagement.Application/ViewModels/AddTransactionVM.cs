@@ -43,6 +43,20 @@ namespace FinanceManagement.Application.ViewModels
         public DateTime? RecurringStartDate { get; set; } = DateTime.UtcNow;
         [Display(Name ="Recurring End Date")]
         public DateTime? RecurringEndDate { get; set; } = DateTime.UtcNow.AddYears(10);
+
+
+        //stepup
+
+        public bool IsStepUpTransaction { get; set; }
+
+        [Display(Name ="Step Up Amount")]
+        public decimal? StepUpAmount { get; set; }
+
+        [Display(Name ="Step Up Percentage")]
+        public decimal? StepUpPercentage { get; set; }
+        [Display(Name ="Step Up Frequency")]
+        public RecurrenceFrequency? StepUpFrequeny { get; set; }
+
     }
 
 

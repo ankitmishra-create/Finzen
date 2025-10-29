@@ -11,7 +11,7 @@ namespace FinanceManagement.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly ILoggedInUser _loggedInUser;
-        public CategoryService(IUnitOfWork unitOfWork,ILoggedInUser loggedInUser)
+        public CategoryService(IUnitOfWork unitOfWork, ILoggedInUser loggedInUser)
         {
             _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;
@@ -20,9 +20,9 @@ namespace FinanceManagement.Application.Services
         public async Task<Category> AddCategoryAsync(AddCategoryVM addCategoryVM)
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var existing = await _unitOfWork.Category.GetAsync(c => c.UserId == userId && c.CategoryName.ToLower() == addCategoryVM.CategoryName.ToLower() && c.CategoryType==addCategoryVM.CategoryType);
-            
-            if(existing != null)
+            var existing = await _unitOfWork.Category.GetAsync(c => c.UserId == userId && c.CategoryName.ToLower() == addCategoryVM.CategoryName.ToLower() && c.CategoryType == addCategoryVM.CategoryType);
+
+            if (existing != null)
             {
                 throw new CategoryAlreadyExistException("A category with this name and type already exists.");
             }
@@ -57,7 +57,7 @@ namespace FinanceManagement.Application.Services
 
             AddCategoryVM addCategoryVM = new AddCategoryVM()
             {
-                Id=category.CategoryId,
+                Id = category.CategoryId,
                 CategoryName = category.CategoryName,
                 CategoryType = category.CategoryType
             };
@@ -86,7 +86,7 @@ namespace FinanceManagement.Application.Services
         public async Task DeleteCategoryAsync(Guid categoryId)
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var categoryToDelete = await _unitOfWork.Category.GetAsync(c => c.CategoryId == categoryId && c.UserId==userId);
+            var categoryToDelete = await _unitOfWork.Category.GetAsync(c => c.CategoryId == categoryId && c.UserId == userId);
             if (categoryToDelete == null)
             {
                 throw new CategoryNotFoundException("Category not found");

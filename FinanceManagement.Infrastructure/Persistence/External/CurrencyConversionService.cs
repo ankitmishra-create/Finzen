@@ -24,7 +24,6 @@ namespace FinanceManagement.Infrastructure.Persistence.External
             {
                 return null;
             }
-
             var jsonResponse = await response.Content.ReadAsStringAsync();
             var convertedRates = JsonConvert.DeserializeObject<ConvertedRates>(jsonResponse);
             return convertedRates;

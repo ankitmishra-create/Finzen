@@ -11,7 +11,7 @@ namespace FinanceManagement.Application.Services
     public class ExternalAuthService : IExternalAuthService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly Guid _defaultCurrencyId = Guid.Parse("b69fabd1-0c5d-42d9-8f98-3b869c0fb631"); 
+        private readonly Guid _defaultCurrencyId = Guid.Parse("b69fabd1-0c5d-42d9-8f98-3b869c0fb631");
 
         public ExternalAuthService(IUnitOfWork unitOfWork)
         {
@@ -54,7 +54,7 @@ namespace FinanceManagement.Application.Services
                 CreatedAt = DateTime.UtcNow,
                 PasswordHash = "Admin@123",
                 PreferredCurrency = _defaultCurrencyId.ToString(),
-                CurrencyId= _defaultCurrencyId
+                CurrencyId = _defaultCurrencyId
             };
 
             await _unitOfWork.User.AddUserDataAsync(newUser);

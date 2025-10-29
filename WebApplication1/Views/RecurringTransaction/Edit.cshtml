@@ -48,6 +48,46 @@
                             </div>
                         </div>
 
+                        @if (Model.IsStepUpTransaction)
+                        {
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+
+                                    <input name="IsStepUpTransaction" value="true"
+                                           class="form-check-input" type="checkbox" id="stepUpToggle"
+                                           @(Model.IsStepUpTransaction ? "checked" : "") />
+
+                                    <input type="hidden" name="IsStepUpTransaction" value="false" />
+
+                                    <label class="form-check-label fw-semibold" for="stepUpToggle">Enable Auto Increase</label>
+                                </div>
+                            </div>
+
+                            <div class="row" id="stepUpInputsContainer" style="display:none;">
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        @if (Model.StepUpAmount != null)
+                                        {
+                                            <input asp-for="StepUpAmount" class="form-control" />
+                                            <label asp-for="StepUpAmount"></label>
+                                        }
+                                        else
+                                        {
+                                            <input asp-for="StepUpPercentage" class="form-control" />
+                                            <label asp-for="StepUpPercentage"></label>
+                                        }
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="form-floating mb-3">
+                                        <select asp-for="StepUpFrequeny" class="form-select" asp-items="Html.GetEnumSelectList<RecurrenceFrequency>()"></select>
+                                        <label asp-for="StepUpFrequeny"></label>
+                                    </div>
+                                </div>
+                            </div>
+
+                        }
+
                         <div class="form-floating mb-3">
                             <textarea asp-for="Description" class="form-control" style="height:100px"></textarea>
                             <label asp-for="Description"></label>
@@ -63,3 +103,34 @@
         </div>
     </div>
 </div>
+
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+
+            // 1. Get the two elements
+            const stepUpToggle = document.getElementById('stepUpToggle');
+            const stepUpInputsContainer = document.getElementById('stepUpInputsContainer');
+
+            // 2. Create a function to show/hide the inputs
+            function toggleStepUpInputs() {
+                if (stepUpToggle.checked) {
+                    // Use 'flex' because "row" is a flex container
+                    stepUpInputsContainer.style.display = 'flex';
+                } else {
+                    stepUpInputsContainer.style.display = 'none';
+                }
+            }
+
+            // 3. Attach the function to the toggle's 'change' event
+            stepUpToggle.addEventListener('change', toggleStepUpInputs);
+
+            // 4. Run the function once on page load to set the correct initial state
+            toggleStepUpInputs();
+
+        });
+    </script>
+}

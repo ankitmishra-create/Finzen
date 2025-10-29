@@ -20,12 +20,6 @@
 
         <h1 class="mb-0">Recurring Transactions</h1>
 
-        <a asp-action="Create" asp-controller="Transaction" class="btn btn-primary shadow-sm">
-
-            <i class="fas fa-plus me-2"></i>Add New
-
-        </a>
-
     </div>
 
 
@@ -75,9 +69,9 @@
                                     <tr>
 
                                         <td class="ps-4">
-
-                                            <div class="fw-bold">@recurring.Category?.CategoryType</div>
-
+                                            <div class="fw-bold @(recurring.Category?.CategoryType == CategoryType.Income ? "text-success" : "text-danger")">
+                                                @recurring.Category?.CategoryType
+                                            </div>
                                         </td>
 
                                         <td>

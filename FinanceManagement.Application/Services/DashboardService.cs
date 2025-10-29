@@ -1,7 +1,6 @@
 ﻿using FinanceManagement.Application.DTO;
 using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
-using FinanceManagement.Core.Entities;
 using FinanceManagement.Core.Enums;
 using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
@@ -41,7 +40,7 @@ namespace FinanceManagement.Application.Services
                 TotalExpense = totalExpense,
                 TotalBalance = totalIncome - totalExpense,
                 RecentTransaction = recentTransaction,
-                BaseCurrencyCode=user.Currency.CurrencyCode
+                BaseCurrencyCode = user.Currency.CurrencyCode
             };
             return dashboardDto;
         }

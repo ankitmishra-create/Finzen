@@ -83,13 +83,9 @@
 
 
                             <td>
-
-                                <span class="badge bg-secondary bg-opacity-25 text-dark-emphasis">
-
+                                <span class="badge @(item.Category.CategoryType == CategoryType.Income ? "bg-success" : "bg-danger")">
                                     @item.Category?.CategoryType
-
                                 </span>
-
                             </td>
                             <td>
 

@@ -13,7 +13,7 @@ namespace FinanceManagement.Application.Services
         private readonly ILoggedInUser _loggedInUser;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrencyConversionService _currencyConversionService;
-        public RecurringTransactionService(ICurrencyConversionService currencyConversionService,ILoggedInUser loggedInUser, IUnitOfWork unitOfWork)
+        public RecurringTransactionService(ICurrencyConversionService currencyConversionService, ILoggedInUser loggedInUser, IUnitOfWork unitOfWork)
         {
             _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;
@@ -25,7 +25,8 @@ namespace FinanceManagement.Application.Services
             var user = _loggedInUser.CurrentLoggedInUser();
             var allRecuringTransaction = await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(rt => rt.UserId == user, include: q => q.Include(q => q.Category));
             await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(include: q => q.Include(q => q.User));
-            return allRecuringTransaction.ToList();
+            var sortedResult = allRecuringTransaction.OrderByDescending(t => t.NextTransactionDate).ThenByDescending(t => t.Amount);
+            return sortedResult.ToList();
         }
 
         public async Task DeleteRecurringTransaction(Guid recurringTransactionId)
@@ -35,6 +36,8 @@ namespace FinanceManagement.Application.Services
             {
                 recurredTransaction.IsActive = false;
                 recurredTransaction.NextTransactionDate = null;
+                recurredTransaction.NextStepUpDate = null;
+                recurredTransaction.IsStepUpTransaction = null;
             }
             _unitOfWork.RecurringTransaction.Update(recurredTransaction);
             await _unitOfWork.SaveAsync();
@@ -61,6 +64,42 @@ namespace FinanceManagement.Application.Services
                 OriginalAmount = originalAmount,
                 OriginalCurrency = addTransactionVM.SelectedCurrency
             };
+
+            if (addTransactionVM.IsStepUpTransaction)
+            {
+                recurringTransaction.IsStepUpTransaction = true;
+                if (addTransactionVM.StepUpAmount.HasValue)
+                {
+                    recurringTransaction.StepUpAmount = addTransactionVM.StepUpAmount;
+                }
+                else
+                {
+                    recurringTransaction.StepUpPercentage = addTransactionVM.StepUpPercentage;
+                }
+                recurringTransaction.StepUpFrequeny = addTransactionVM.StepUpFrequeny;
+                recurringTransaction.LastStepUpDate = DateTime.UtcNow;
+                var nextStepUpDate = addTransactionVM.StepUpFrequeny;
+                switch ((RecurrenceFrequency)nextStepUpDate)
+                {
+                    case RecurrenceFrequency.Daily:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(1);
+                        break;
+                    case RecurrenceFrequency.Weekly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
+                        break;
+                    case RecurrenceFrequency.Monthly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
+                        break;
+                    case RecurrenceFrequency.Quarterly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
+                        break;
+                    case RecurrenceFrequency.Yearly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
+                        break;
+                }
+            }
+
+
             var nextTransactionDate = addTransactionVM.RecurrenceFrequency;
             switch ((RecurrenceFrequency)nextTransactionDate)
             {
@@ -80,30 +119,88 @@ namespace FinanceManagement.Application.Services
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddYears(1);
                     break;
             }
+
+
             return recurringTransaction;
         }
-    
+
         public async Task<RecurringTransactions> EditRecurringTransaction(RecurringTransactionVM recurringTransactionVM)
         {
             var recurringTransaction = await _unitOfWork.RecurringTransaction.GetAsync(r => r.RecurringTransactionId == recurringTransactionVM.RecurringTransactionId);
             recurringTransaction.OriginalAmount = recurringTransactionVM.OriginalAmount;
             recurringTransaction.Frequency = recurringTransactionVM.RecurrenceFrequency;
             recurringTransaction.Description = recurringTransactionVM.Description;
-            
-            if(recurringTransactionVM.TransactionTerrority == TransactionTerrority.Domestic)
+
+            if (recurringTransactionVM.TransactionTerrority == TransactionTerrority.Domestic)
             {
                 recurringTransaction.Amount = (decimal)recurringTransaction.OriginalAmount;
             }
             else
             {
                 var userId = _loggedInUser.CurrentLoggedInUser();
-                var user = await _unitOfWork.User.GetPopulatedAsync(u => u.UserId==userId,include: q=> q.Include(c => c.Currency));
+                var user = await _unitOfWork.User.GetPopulatedAsync(u => u.UserId == userId, include: q => q.Include(c => c.Currency));
                 if (user == null)
                 {
                     return null;
                 }
                 var convertedRates = await _currencyConversionService.GetConvertedRates(recurringTransaction.OriginalCurrency, user.Currency.CurrencyCode);
                 recurringTransaction.Amount = recurringTransactionVM.OriginalAmount * convertedRates.conversion_rate;
+            }
+
+            if (recurringTransactionVM.IsStepUpTransaction == true)
+            {
+                recurringTransaction.StepUpAmount = recurringTransactionVM.StepUpAmount;
+                recurringTransaction.StepUpPercentage = recurringTransactionVM.StepUpPercentage;
+                recurringTransaction.StepUpFrequeny = recurringTransactionVM.StepUpFrequeny;
+
+                var nextStepUpDate = recurringTransactionVM.StepUpFrequeny;
+                switch ((RecurrenceFrequency)nextStepUpDate)
+                {
+                    case RecurrenceFrequency.Daily:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(1);
+                        break;
+                    case RecurrenceFrequency.Weekly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
+                        break;
+                    case RecurrenceFrequency.Monthly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
+                        break;
+                    case RecurrenceFrequency.Quarterly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
+                        break;
+                    case RecurrenceFrequency.Yearly:
+                        recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
+                        break;
+                }
+            }
+            else
+            {
+                recurringTransaction.IsStepUpTransaction = false;
+                recurringTransaction.StepUpAmount = null;
+                recurringTransaction.StepUpPercentage = null;
+                recurringTransaction.StepUpFrequeny = null;
+                recurringTransaction.NextStepUpDate = null;
+            }
+
+            var todaysDate = DateTime.UtcNow;
+            var nextTransactionDate = recurringTransactionVM.RecurrenceFrequency;
+            switch ((RecurrenceFrequency)nextTransactionDate)
+            {
+                case RecurrenceFrequency.Daily:
+                    recurringTransaction.NextTransactionDate = todaysDate.AddDays(1);
+                    break;
+                case RecurrenceFrequency.Weekly:
+                    recurringTransaction.NextTransactionDate = todaysDate.AddDays(7);
+                    break;
+                case RecurrenceFrequency.Monthly:
+                    recurringTransaction.NextTransactionDate = todaysDate.AddMonths(1);
+                    break;
+                case RecurrenceFrequency.Quarterly:
+                    recurringTransaction.NextTransactionDate = todaysDate.AddMonths(3);
+                    break;
+                case RecurrenceFrequency.Yearly:
+                    recurringTransaction.NextTransactionDate = todaysDate.AddYears(1);
+                    break;
             }
             _unitOfWork.RecurringTransaction.Update(recurringTransaction);
             await _unitOfWork.SaveAsync();
@@ -115,13 +212,31 @@ namespace FinanceManagement.Application.Services
             var recurringTransaction = await _unitOfWork.RecurringTransaction.GetAsync(r => r.RecurringTransactionId == recurringTransactionId);
             RecurringTransactionVM recurringTransactionVM = new RecurringTransactionVM
             {
-                RecurringTransactionId=recurringTransaction.RecurringTransactionId,
-                OriginalAmount= (decimal)recurringTransaction.OriginalAmount,
+                RecurringTransactionId = recurringTransaction.RecurringTransactionId,
+                OriginalAmount = (decimal)recurringTransaction.OriginalAmount,
                 RecurrenceFrequency = recurringTransaction.Frequency,
                 TransactionTerrority = recurringTransaction.TransactionTerrority,
-                OriginalCurrency= recurringTransaction.OriginalCurrency,
-                Description=recurringTransaction.Description
+                OriginalCurrency = recurringTransaction.OriginalCurrency,
+                Description = recurringTransaction.Description,
             };
+
+            if (recurringTransaction.IsStepUpTransaction.HasValue && (bool)recurringTransaction.IsStepUpTransaction == true)
+            {
+                recurringTransactionVM.IsStepUpTransaction = true;
+                if (recurringTransaction.StepUpAmount.HasValue)
+                {
+                    recurringTransactionVM.StepUpAmount = recurringTransaction.StepUpAmount.Value;
+                }
+                else
+                {
+                    recurringTransactionVM.StepUpPercentage = recurringTransaction?.StepUpPercentage;
+                }
+                recurringTransactionVM.StepUpFrequeny = recurringTransaction?.StepUpFrequeny;
+            }
+            else
+            {
+                recurringTransactionVM.IsStepUpTransaction = false;
+            }
             return recurringTransactionVM;
         }
     }

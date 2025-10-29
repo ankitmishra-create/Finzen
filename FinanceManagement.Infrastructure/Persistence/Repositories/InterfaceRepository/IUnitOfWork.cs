@@ -7,6 +7,7 @@
         ITransactionRepository Transaction { get; }
         ICurrencyRepository Currency { get; }
         IRecurringTransactionRepository RecurringTransaction { get; }
+        ITransactionLogRepository TransactionLog { get; }
         
         Task SaveAsync();
     }

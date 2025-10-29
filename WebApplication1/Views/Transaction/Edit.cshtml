@@ -185,7 +185,7 @@
 
                         <div class="mb-3">
 
-                            <label asp-for="Description" class="form-label" id="descriptionLabel"></label>
+                            <label asp-for="Description" id="descriptionLabel" class="form-label"></label>
 
                             <textarea asp-for="Description" class="form-control"></textarea>
 
@@ -314,17 +314,7 @@
 
 
             function toggleDescriptionRequirement() {
-
-                if (typeSelect.value === 'Expense') {
-
                     descriptionLabel.classList.add('required-field');
-
-                } else {
-
-                    descriptionLabel.classList.remove('required-field');
-
-                }
-
             }
 
 

@@ -11,35 +11,31 @@ namespace FinanceManagement.Core.Entities
 
         public Guid UserId { get; set; }
         [ForeignKey("UserId")]
-        public User User { get; set; } // Navigation property for the User
+        public User User { get; set; }
 
         public Guid? CategoryId { get; set; }
         [ForeignKey("CategoryId")]
-        public Category Category { get; set; } // Navigation property for the Category
+        public Category Category { get; set; }
 
         public TransactionTerrority TransactionTerrority { get; set; }
 
         [Display(Name = "Base Currency Code")]
-        public string SelectedCurrency { get; set; } // This will ALWAYS store the USER's base currency code (e.g., "INR")
+        public string SelectedCurrency { get; set; }
 
         [Required]
         public TransactionTimeLine TransactionTimeLine { get; set; }
         public RecurrenceFrequency? RecurrenceFrequency { get; set; }
 
         [Display(Name = "Amount (In Base Currency)")]
-        [Column(TypeName = "decimal(18, 2)")] // Ensure proper SQL type for money
-        public decimal? Amount { get; set; } // This will ALWAYS store the amount converted to the user's base currency
-
-        // --- ADDED FIELDS START ---
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? Amount { get; set; }
 
         [Display(Name = "Original Amount")]
-        [Column(TypeName = "decimal(18, 2)")] // Ensure proper SQL type for money
-        public decimal? OriginalAmount { get; set; } // Stores the original foreign amount IF TransactionTerritory is International (e.g., 50.00)
+        [Column(TypeName = "decimal(18, 2)")]
+        public decimal? OriginalAmount { get; set; }
 
         [Display(Name = "Original Currency Code")]
-        public string? OriginalCurrency { get; set; } // Stores the original foreign currency code IF TransactionTerritory is International (e.g., "EUR")
-
-        // --- ADDED FIELDS END ---
+        public string? OriginalCurrency { get; set; }
 
         public string? Description { get; set; }
 
@@ -48,7 +44,6 @@ namespace FinanceManagement.Core.Entities
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
-        // ADDED: Reference to recurring transaction that generated this transaction
         public Guid? GeneratedFromRecurringId { get; set; }
 
         [ForeignKey(nameof(GeneratedFromRecurringId))]

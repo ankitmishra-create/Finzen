@@ -13,8 +13,8 @@ namespace FinanceManagement.Infrastructure.Persistence
         public DbSet<Category> Categories { get; set; }
         public DbSet<Transaction> Transactions { get; set; }
         public DbSet<Currency> Currencies { get; set; }
-
         public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
+        public DbSet<TransactionLog> TransactionLogs { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

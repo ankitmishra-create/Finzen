@@ -1,211 +1,188 @@
 using FinanceManagement.Core.Entities;
 using FinanceManagement.Core.Enums;
+using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Logging;
 
 namespace FinanceManagement.Processor.Services
 {
     public class RecurringTransactionProcessor
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly ILogger<RecurringTransactionProcessor> _logger;
+        private readonly ICurrencyConversionService _currencyConversionService;
 
-        public RecurringTransactionProcessor(IUnitOfWork unitOfWork, ILogger<RecurringTransactionProcessor> logger)
+        public RecurringTransactionProcessor(IUnitOfWork unitOfWork, ICurrencyConversionService currencyConversionService)
         {
             _unitOfWork = unitOfWork;
-            _logger = logger;
+            _currencyConversionService = currencyConversionService;
         }
 
-        public async Task ProcessRecurringTransactionsAsync()
+        private async Task HandleInternationConversion(RecurringTransactions recurringTransactions)
         {
-            try
-            {
-                _logger.LogInformation("Starting recurring transaction processing at {Time}", DateTime.UtcNow);
-
-                // Use the service method to process due recurring transactions
-                var generatedTransactions = await ProcessDueRecurringTransactionsAsync();
-
-                _logger.LogInformation("Completed recurring transaction processing at {Time}. Generated {Count} transactions.",
-                    DateTime.UtcNow, generatedTransactions.Count);
-            }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error occurred while processing recurring transactions");
-                throw;
-            }
+            var convertedAmount = await _currencyConversionService.GetConvertedRates(recurringTransactions.OriginalCurrency, recurringTransactions.TransactionCurrency);
+            recurringTransactions.Amount = (decimal)(recurringTransactions.OriginalAmount * convertedAmount.conversion_rate);
         }
 
-        private async Task<IEnumerable<RecurringTransactions>> GetDueRecurringTransactionsAsync()
+        private Transaction CreateTransaction(RecurringTransactions recurringTransaction)
         {
-            var currentDate = DateTime.UtcNow.Date;
-
-            return await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(
-                rt => rt.IsActive &&
-                      rt.NextTransactionDate.HasValue &&
-                      rt.NextTransactionDate.Value.Date <= currentDate &&
-                      (rt.EndDate == null || rt.EndDate.Value.Date >= currentDate),
-                include: q => q.Include(rt => rt.User)
-                              .Include(rt => rt.Category)
-            );
-        }
-
-        private async Task ProcessSingleRecurringTransactionAsync(RecurringTransactions recurringTransaction)
-        {
-            try
+            if (recurringTransaction.TransactionTerrority == TransactionTerrority.International)
             {
-                _logger.LogInformation("Processing recurring transaction {RecurringTransactionId} for user {UserId}",
-                    recurringTransaction.RecurringTransactionId, recurringTransaction.UserId);
-
-                // Create a new transaction based on the recurring transaction template
-                var newTransaction = await CreateNewTransactionFromRecurringAsync(recurringTransaction);
-
-                // Update the recurring transaction with next execution date
-                await UpdateRecurringTransactionNextExecutionAsync(recurringTransaction);
-
-                _logger.LogInformation("Successfully processed recurring transaction {RecurringTransactionId}",
-                    recurringTransaction.RecurringTransactionId);
+                HandleInternationConversion(recurringTransaction);
             }
-            catch (Exception ex)
-            {
-                _logger.LogError(ex, "Error processing recurring transaction {RecurringTransactionId}",
-                    recurringTransaction.RecurringTransactionId);
-                throw;
-            }
-        }
-
-        private async Task<Transaction> CreateNewTransactionFromRecurringAsync(RecurringTransactions recurringTransaction)
-        {
-            var currentDate = DateTime.UtcNow;
-
-            var newTransaction = new Transaction
+            Transaction transaction = new Transaction()
             {
                 UserId = recurringTransaction.UserId,
                 CategoryId = recurringTransaction.CategoryId,
                 Amount = recurringTransaction.Amount,
                 Description = recurringTransaction.Description,
-                TransactionDate = currentDate,
+                TransactionDate = DateTime.UtcNow,
                 TransactionTerrority = recurringTransaction.TransactionTerrority,
-                SelectedCurrency = recurringTransaction.TransactionCurrency,
+                TransactionTimeLine = TransactionTimeLine.Recurring,
+                RecurrenceFrequency = recurringTransaction.Frequency,
+                SelectedCurrency = recurringTransaction.OriginalCurrency,
                 OriginalAmount = recurringTransaction.OriginalAmount,
-                OriginalCurrency = recurringTransaction.OriginalCurrency,
-                TransactionTimeLine = TransactionTimeLine.OneTime, // Generated transactions are one-time
+                OriginalCurrency = recurringTransaction.TransactionCurrency,
                 GeneratedFromRecurringId = recurringTransaction.RecurringTransactionId,
-                IsAutoGenerated = true,
-                CreatedAt = currentDate
+                IsAutoGenerated = true
             };
-
-            await _unitOfWork.Transaction.AddAsync(newTransaction);
-            return newTransaction;
+            return transaction;
         }
 
-        private async Task UpdateRecurringTransactionNextExecutionAsync(RecurringTransactions recurringTransaction)
+        private void CalculateNextTransactionDate(RecurringTransactions recurringTransaction)
         {
-            var currentDate = DateTime.UtcNow;
-            var nextExecutionDate = CalculateNextExecutionDate(recurringTransaction.Frequency, currentDate);
+            var nextTransactionDate = recurringTransaction.Frequency;
+            switch ((RecurrenceFrequency)nextTransactionDate)
+            {
+                case RecurrenceFrequency.Daily:
+                    recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddHours(24);
+                    break;
+                case RecurrenceFrequency.Weekly:
+                    recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddDays(7);
+                    break;
+                case RecurrenceFrequency.Monthly:
+                    recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(1);
+                    break;
+                case RecurrenceFrequency.Quarterly:
+                    recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(3);
+                    break;
+                case RecurrenceFrequency.Yearly:
+                    recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddYears(1);
+                    break;
+                default:
+                    recurringTransaction.IsActive = false;
+                    recurringTransaction.NextTransactionDate = null;
+                    break;
+            }
 
-            recurringTransaction.LastExecutedDate = currentDate;
-            recurringTransaction.NextTransactionDate = nextExecutionDate;
-
-            // Check if the recurring transaction has reached its end date
-            if (recurringTransaction.EndDate.HasValue && nextExecutionDate > recurringTransaction.EndDate.Value)
+            if (recurringTransaction.EndDate.HasValue && recurringTransaction.NextTransactionDate.Value.Date > recurringTransaction.EndDate.Value.Date)
             {
                 recurringTransaction.IsActive = false;
-                _logger.LogInformation("Recurring transaction {RecurringTransactionId} has reached its end date and is now inactive",
-                    recurringTransaction.RecurringTransactionId);
+                recurringTransaction.NextTransactionDate = null;
             }
-
-            _unitOfWork.RecurringTransaction.Update(recurringTransaction);
         }
 
-        private DateTime CalculateNextExecutionDate(RecurrenceFrequency frequency, DateTime currentDate)
+        private void CalculateNextStepUpDate(RecurringTransactions recurringTransaction)
         {
-            return frequency switch
+            var nextTransactionDate = recurringTransaction.StepUpFrequeny;
+            switch ((RecurrenceFrequency)nextTransactionDate)
             {
-                RecurrenceFrequency.Daily => currentDate.AddDays(1),
-                RecurrenceFrequency.Weekly => currentDate.AddDays(7),
-                RecurrenceFrequency.Monthly => currentDate.AddMonths(1),
-                RecurrenceFrequency.Quarterly => currentDate.AddMonths(3),
-                RecurrenceFrequency.Yearly => currentDate.AddYears(1),
-                _ => throw new ArgumentException($"Unsupported recurrence frequency: {frequency}")
-            };
+                case RecurrenceFrequency.Daily:
+                    recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddHours(24);
+                    break;
+                case RecurrenceFrequency.Weekly:
+                    recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
+                    break;
+                case RecurrenceFrequency.Monthly:
+                    recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
+                    break;
+                case RecurrenceFrequency.Quarterly:
+                    recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
+                    break;
+                case RecurrenceFrequency.Yearly:
+                    recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
+                    break;
+                default:
+                    recurringTransaction.IsActive = false;
+                    recurringTransaction.NextTransactionDate = null;
+                    recurringTransaction.IsStepUpTransaction = false;
+                    recurringTransaction.NextStepUpDate = null;
+                    break;
+            }
         }
 
-        public async Task<int> GetPendingRecurringTransactionsCountAsync()
+        private async Task<decimal> HandleInternationConversionStepUp(RecurringTransactions recurringTransactions)
         {
-            var currentDate = DateTime.UtcNow.Date;
-
-            var dueTransactions = await _unitOfWork.RecurringTransaction.GetAllAsync(
-                rt => rt.IsActive &&
-                      rt.NextTransactionDate.HasValue &&
-                      rt.NextTransactionDate.Value.Date <= currentDate &&
-                      (rt.EndDate == null || rt.EndDate.Value.Date >= currentDate)
-            );
-
-            return dueTransactions.Count();
+            var convertedAmount = await _currencyConversionService.GetConvertedRates(recurringTransactions.OriginalCurrency, recurringTransactions.TransactionCurrency);
+            return (decimal)(recurringTransactions.StepUpAmount * convertedAmount.conversion_rate);
         }
 
-        /// <summary>
-        /// Processes due recurring transactions and generates new transactions
-        /// </summary>
-        public async Task<List<Transaction>> ProcessDueRecurringTransactionsAsync()
+        private async Task UpdateStepUp()
         {
-            var generatedTransactions = new List<Transaction>();
-            var currentDate = DateTime.UtcNow.Date;
+            var todaysDate = DateTime.UtcNow.Date;
+            var StepUpForTodays = await _unitOfWork.RecurringTransaction.GetAllAsync(t => t.IsActive && t.IsStepUpTransaction == true &&
+            t.NextStepUpDate.HasValue && t.NextStepUpDate.Value.Date <= todaysDate &&
+            t.EndDate.HasValue && t.EndDate.Value.Date >= todaysDate);
 
-            try
+            int cnt = 0;
+            foreach (var recurringTransaction in StepUpForTodays)
             {
-                // Get all active recurring transactions that are due for execution
-                var dueRecurringTransactions = await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(
-                    rt => rt.IsActive &&
-                          rt.NextTransactionDate.HasValue &&
-                          rt.NextTransactionDate.Value.Date <= currentDate &&
-                          (rt.EndDate == null || rt.EndDate.Value.Date >= currentDate),
-                    include: q => q.Include(rt => rt.User)
-                                  .Include(rt => rt.Category)
-                );
-
-                if (!dueRecurringTransactions.Any())
+                decimal convertedRates;
+                if (recurringTransaction.TransactionTerrority == TransactionTerrority.International)
                 {
-                    _logger.LogInformation("No recurring transactions due for processing");
-                    return generatedTransactions;
+                    convertedRates = await HandleInternationConversionStepUp(recurringTransaction);
+                }
+                else
+                {
+                    convertedRates = recurringTransaction.Amount;
                 }
 
-                _logger.LogInformation("Found {Count} recurring transactions due for processing", dueRecurringTransactions.Count());
-
-                foreach (var recurringTransaction in dueRecurringTransactions)
+                if (recurringTransaction.StepUpAmount != null)
                 {
-                    // Create new transaction from template
-                    var newTransaction = new Transaction
-                    {
-                        UserId = recurringTransaction.UserId,
-                        CategoryId = recurringTransaction.CategoryId,
-                        Amount = recurringTransaction.Amount,
-                        Description = recurringTransaction.Description,
-                        TransactionDate = DateTime.UtcNow,
-                        TransactionTerrority = recurringTransaction.TransactionTerrority,
-                        SelectedCurrency = recurringTransaction.TransactionCurrency,
-                        OriginalAmount = recurringTransaction.OriginalAmount,
-                        OriginalCurrency = recurringTransaction.OriginalCurrency,
-                        TransactionTimeLine = TransactionTimeLine.OneTime, // Generated transactions are one-time
-                        GeneratedFromRecurringId = recurringTransaction.RecurringTransactionId,
-                        IsAutoGenerated = true
-                    };
-
-                    await _unitOfWork.Transaction.AddAsync(newTransaction);
-                    generatedTransactions.Add(newTransaction);
-
-                    // Update recurring transaction with next execution date
-                    await UpdateRecurringTransactionNextExecutionAsync(recurringTransaction);
+                    recurringTransaction.Amount += convertedRates;
+                    recurringTransaction.LastStepUpDate = DateTime.UtcNow;
+                    CalculateNextStepUpDate(recurringTransaction);
                 }
-
+                else
+                {
+                    decimal updatedAmount = (decimal)((recurringTransaction.Amount * recurringTransaction.StepUpPercentage) / 100);
+                    recurringTransaction.Amount = updatedAmount;
+                    recurringTransaction.LastStepUpDate = DateTime.UtcNow;
+                    CalculateNextStepUpDate(recurringTransaction);
+                }
+                cnt++;
+            }
+            if (cnt >= 1)
+            {
                 await _unitOfWork.SaveAsync();
-                return generatedTransactions;
             }
-            catch (Exception ex)
+        }
+
+        public async Task ProcessDueRecurringTransactionsAsync()
+        {
+
+            UpdateStepUp();
+
+            var todaysDate = DateTime.UtcNow.Date;
+            var pendingTransactions = await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(t => t.NextTransactionDate.HasValue
+            && t.NextTransactionDate.Value.Date <= todaysDate
+            && t.IsActive == true
+            && (t.EndDate == null || t.EndDate.Value.Date >= todaysDate)
+            , include: q => q.Include(c => c.Category));
+
+            var changesCount = 0;
+            foreach (var pendingTransaction in pendingTransactions)
             {
-                _logger.LogError(ex, "Error processing due recurring transactions");
-                throw;
+                var transaction = CreateTransaction(pendingTransaction);
+                await _unitOfWork.Transaction.AddAsync(transaction);
+
+                pendingTransaction.LastExecutedDate = DateTime.UtcNow;
+                CalculateNextTransactionDate(pendingTransaction);
+                _unitOfWork.RecurringTransaction.Update(pendingTransaction);
+                changesCount++;
+            }
+            if (changesCount >= 1)
+            {
+                await _unitOfWork.SaveAsync();
             }
         }
     }

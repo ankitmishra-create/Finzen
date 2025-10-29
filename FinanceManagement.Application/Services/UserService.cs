@@ -3,13 +3,9 @@ using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Entities;
-using FinanceManagement.Core.Enums;
 using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
-using FinanceManagement.Infrastructure.Services;
-using Microsoft.AspNetCore.Authentication;
 using Microsoft.EntityFrameworkCore;
-using System.Security.Claims;
 
 namespace FinanceManagement.Application.Services
 {
@@ -19,7 +15,7 @@ namespace FinanceManagement.Application.Services
         private readonly IPasswordHashing _passwordHashing;
         private readonly IGenerateToken _generateToken;
         private readonly ILoggedInUser _loggedInUser;
-        public UserService(IUnitOfWork unitOfWork, IPasswordHashing passwordHashing, IGenerateToken generateToken,ILoggedInUser loggedInUser)
+        public UserService(IUnitOfWork unitOfWork, IPasswordHashing passwordHashing, IGenerateToken generateToken, ILoggedInUser loggedInUser)
         {
             _unitOfWork = unitOfWork;
             _passwordHashing = passwordHashing;
@@ -34,7 +30,7 @@ namespace FinanceManagement.Application.Services
             }
             var passwordHash = _passwordHashing.HashPassword(userRegistrationVM.Password);
 
-            if(!Guid.TryParse(userRegistrationVM.CurrencyId, out var convertedCurrencyId))
+            if (!Guid.TryParse(userRegistrationVM.CurrencyId, out var convertedCurrencyId))
             {
                 throw new InvalidOperationException("Invalid Currency Id format");
             }
@@ -76,7 +72,7 @@ namespace FinanceManagement.Application.Services
 
         public async Task<AvailableCurrencies> PopulateRegisterationPage()
         {
-            var response = await _unitOfWork.Currency.GetAllAsync(c => c==c);
+            var response = await _unitOfWork.Currency.GetAllAsync(c => c == c);
             AvailableCurrencies availableCountries = new AvailableCurrencies();
             availableCountries.currencies = response.ToList();
             return availableCountries;

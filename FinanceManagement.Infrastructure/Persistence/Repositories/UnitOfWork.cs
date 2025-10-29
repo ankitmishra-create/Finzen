@@ -10,6 +10,8 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
         public ITransactionRepository Transaction { get; private set; }
         public ICurrencyRepository Currency { get; private set; }
         public IRecurringTransactionRepository RecurringTransaction { get; private set; }
+
+        public ITransactionLogRepository TransactionLog { get; private set; }
         public UnitOfWork(ApplicationDbContext db)
         {
             _db = db;
@@ -18,6 +20,7 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
             Transaction = new TransactionRepository(_db);
             Currency = new CurrencyRepository(_db);
             RecurringTransaction = new RecurringTransactionRepository(_db);
+            TransactionLog = new TransactionLogRepository(_db);
         }
         public async Task SaveAsync()
         {

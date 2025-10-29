@@ -53,6 +53,16 @@ namespace FinanceManagement.Core.Entities
 
         public string? OriginalCurrency { get; set; }
 
-        public ICollection<Transaction> GeneratedTransactions { get; set; } = new List<Transaction>();
+        public ICollection<Transaction> GeneratedTransactions { get; set; } = new List<Transaction>(); 
+
+
+        public bool? IsStepUpTransaction { get; set; }
+
+        public decimal? StepUpAmount { get; set; }
+
+        public decimal? StepUpPercentage { get; set; }
+        public RecurrenceFrequency? StepUpFrequeny { get; set; }
+        public DateTime? NextStepUpDate { get; set; }
+        public DateTime? LastStepUpDate { get; set; }
     }
 }

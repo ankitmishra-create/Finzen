@@ -150,6 +150,63 @@
                             <span asp-validation-for="Description" class="text-danger small"></span>
                         </div>
 
+                        <!-- =================== Auto Increase (Step-Up) Section - PREMIUM CARD =================== -->
+                        <div id="stepUpContainer" style="display:none;">
+                            <div class="mb-3">
+                                <div class="form-check form-switch">
+
+                                    <input asp-for="IsStepUpTransaction" class="form-check-input" type="checkbox" id="stepUpToggle" />
+
+                                    <label class="form-check-label fw-semibold" for="stepUpToggle">Enable Auto Increase</label>
+                                </div>
+                            </div>
+
+                            <!-- Collapsible soft card -->
+                            <div id="stepUpCard" class="soft-card collapse-card" aria-hidden="true" style="display:none;">
+                                <div class="p-3 rounded-3 shadow-sm bg-white">
+                                    <h5 class="mb-3 fw-bold">Auto Increase Settings</h5>
+
+                                    <!-- Step-Up Type -->
+                                    <div class="mb-3">
+                                        <label class="form-label">Increase Type</label>
+                                        <div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="stepUpType" id="stepUpTypeAmount" value="Amount" checked>
+                                                <label class="form-check-label" for="stepUpTypeAmount">Fixed Amount</label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" name="stepUpType" id="stepUpTypePercentage" value="Percentage">
+                                                <label class="form-check-label" for="stepUpTypePercentage">Percentage</label>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <!-- Amount input (bound to ViewModel.StepUpAmount) -->
+                                    <div class="mb-3" id="stepUpAmountGroup">
+                                        <label asp-for="StepUpAmount" class="form-label"></label>
+                                        <input asp-for="StepUpAmount" step="0.01" min="0" class="form-control" id="StepUpAmount" />
+                                        <span asp-validation-for="StepUpAmount" class="text-danger small"></span>
+                                    </div>
+
+                                    <!-- Percentage input (bound to ViewModel.StepUpPercentage) -->
+                                    <div class="mb-3" id="stepUpPercentageGroup" style="display:none;">
+                                        <label asp-for="StepUpPercentage" class="form-label"></label>
+                                        <input asp-for="StepUpPercentage" step="0.01" min="0" max="100" class="form-control" id="StepUpPercentage" />
+                                        <span asp-validation-for="StepUpPercentage" class="text-danger small"></span>
+                                    </div>
+
+                                    <!-- Step-Up Frequency (reuses ViewBag.RecurrenceFrequency) -->
+                                    <div class="mb-0">
+                                        <label asp-for="StepUpFrequeny" class="form-label"></label>
+                                        <select asp-for="StepUpFrequeny" asp-items="ViewBag.RecurrenceFrequency" class="form-select" id="stepUpFrequencySelect">
+                                            <option value="">-- Select Frequency --</option>
+                                        </select>
+                                        <span asp-validation-for="StepUpFrequeny" class="text-danger small"></span>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- =================== End Auto Increase Section =================== -->
                         <!-- Submit Button -->
                         <div class="d-grid mt-4">
                             <button type="submit" class="btn btn-primary btn-lg shadow-sm">Save Transaction</button>
@@ -162,46 +219,85 @@
 </div>
 
 @section Scripts {
-    <partial name="_ValidationScriptsPartial" />
+    
     <style>
         /* Adds a smooth transition to the button-cards */
         .btn-check + .btn {
             transition: all 0.15s ease-in-out;
             border-width: 2px; /* Makes the outline a bit stronger */
         }
-    </style>
-    <script>
-        document.addEventListener("DOMContentLoaded", function () {
 
-            // --- Timeline / Frequency Logic ---
-            const timelineOneTime = document.getElementById("timeline_OneTime");
-            const timelineRecurring = document.getElementById("timeline_Recurring");
-            const frequencyContainer = document.getElementById("frequencyContainer");
-            const frequencySelect = document.getElementById("frequencySelect");
+        /* Soft card style for the Step-Up section (classy & subtle) */
+        .soft-card .p-3 {
+            background: #fbfcfd; /* subtle off-white */
+            border-radius: .5rem;
+        }
 
-            function toggleFrequency() {
-                if (timelineRecurring.checked) {
-                    frequencyContainer.style.display = "block";
-                    frequencySelect.setAttribute("required", "required");
-                } else {
-                    frequencyContainer.style.display = "none";
-                    frequencySelect.removeAttribute("required");
-                    frequencySelect.value = ""; // Clear selection if hidden
-                }
+        /* Smooth collapse using max-height */
+        .collapse-card {
+            overflow: hidden;
+            max-height: 0;
+            transition: max-height 320ms cubic-bezier(.4,0,.2,1);
+        }
+
+            .collapse-card.show {
+                max-height: 800px; /* large enough to contain the content */
             }
+    </style>
 
-            // Add event listeners for the radio buttons
-            timelineOneTime.addEventListener("change", toggleFrequency);
-            timelineRecurring.addEventListener("change", toggleFrequency);
+    <script>
+    document.addEventListener("DOMContentLoaded", function () {
 
-            // Run on page load to set the correct initial state
-            toggleFrequency();
+        // =================================================================
+        // STEP 1: ALL 'const' (ELEMENTS) GO FIRST
+        // =================================================================
+        
+        // --- Timeline / Frequency Logic ---
+        const timelineOneTime = document.getElementById("timeline_OneTime");
+        const timelineRecurring = document.getElementById("timeline_Recurring");
+        const frequencyContainer = document.getElementById("frequencyContainer");
+        const frequencySelect = document.getElementById("frequencySelect");
 
-
-            // --- Territory / Currency toggle ---
-            const territorySelect = document.getElementById("territorySelect");
+        // --- Territory / Currency toggle ---
+        const territorySelect = document.getElementById("territorySelect");
         const currencyContainer = document.getElementById("currencyContainer");
-        const currencySelect = currencyContainer.querySelector("select"); // Get the select element itself
+        const currencySelect = currencyContainer.querySelector("select");
+
+        // --- Category filter & description ---
+        const typeSelect = document.getElementById('categoryTypeSelect');
+        const categorySelect = document.getElementById('categorySelect');
+        const descriptionLabel = document.getElementById('descriptionLabel');
+        const allCategoryOptions = Array.from(categorySelect.options);
+
+        // --- Step-Up (Auto Increase) Logic ---
+        const stepUpContainer = document.getElementById('stepUpContainer');
+        const stepUpToggle = document.getElementById('stepUpToggle');
+        const stepUpCard = document.getElementById('stepUpCard');
+        const stepUpTypeAmount = document.getElementById('stepUpTypeAmount');
+        const stepUpTypePercentage = document.getElementById('stepUpTypePercentage');
+        const stepUpAmountGroup = document.getElementById('stepUpAmountGroup');
+        const stepUpPercentageGroup = document.getElementById('stepUpPercentageGroup');
+        const stepUpAmountInput = document.getElementById('StepUpAmount');
+        const stepUpPercentageInput = document.getElementById('StepUpPercentage');
+        const stepUpFrequencySelect = document.getElementById('stepUpFrequencySelect');
+
+
+        // =================================================================
+        // STEP 2: ALL 'function' DEFINITIONS GO SECOND
+        // =================================================================
+
+        function toggleFrequency() {
+            if (timelineRecurring.checked) {
+                frequencyContainer.style.display = "block";
+                frequencySelect.setAttribute("required", "required");
+            } else {
+                frequencyContainer.style.display = "none";
+                frequencySelect.removeAttribute("required");
+                frequencySelect.value = ""; // Clear selection if hidden
+            }
+            // ALSO call step-up visibility update
+            updateStepUpAvailability();
+        }
 
         function toggleCurrency() {
             const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
@@ -216,53 +312,144 @@
             }
         }
 
-            // Run on page load and on change
-            toggleCurrency();
-            territorySelect.addEventListener("change", toggleCurrency);
+        function filterCategories() {
+            const selectedType = typeSelect.value;
+            const currentCategoryValue = categorySelect.value;
 
-
-            // --- Category filter & description toggle ---
-            const typeSelect = document.getElementById('categoryTypeSelect');
-            const categorySelect = document.getElementById('categorySelect');
-            const descriptionLabel = document.getElementById('descriptionLabel');
-            const allCategoryOptions = Array.from(categorySelect.options);
-
-            function filterCategories() {
-                const selectedType = typeSelect.value;
-                const currentCategoryValue = categorySelect.value;
-
-                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
-                allCategoryOptions.forEach(option => {
-                    if (!option.value) return; // Skip the placeholder
-                    if (!selectedType || option.getAttribute('data-type') === selectedType) {
-                        categorySelect.appendChild(option.cloneNode(true));
-                    }
-                });
-
-                // Attempt to re-select the previous value if it's still valid
-                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
-                     categorySelect.value = currentCategoryValue;
-                } else {
-                     categorySelect.value = "";
+            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+            allCategoryOptions.forEach(option => {
+                if (!option.value) return; // Skip the placeholder
+                if (!selectedType || option.getAttribute('data-type') === selectedType) {
+                    categorySelect.appendChild(option.cloneNode(true));
                 }
-            }
-
-            function toggleDescriptionRequirement() {
-                if (typeSelect.value === 'Expense') {
-                    descriptionLabel.classList.add('required-field');
-                } else {
-                    descriptionLabel.classList.remove('required-field');
-                }
-            }
-
-            typeSelect.addEventListener('change', function () {
-                filterCategories();
-                toggleDescriptionRequirement();
             });
 
-            // Run on page load
+            if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
+                categorySelect.value = currentCategoryValue;
+            } else {
+                categorySelect.value = "";
+            }
+        }
+
+        function toggleDescriptionRequirement() {
+            descriptionLabel.classList.add('required-field');
+        }
+
+        function updateStepUpAvailability() {
+            if (timelineRecurring.checked) {
+                stepUpContainer.style.display = "block";
+            } else {
+                // Hide + reset
+                stepUpContainer.style.display = "none";
+                stepUpToggle.checked = false;
+                collapseStepUp(false);
+                clearStepUpFields();
+            }
+        }
+
+        function collapseStepUp(show) {
+            if (show) {
+                stepUpCard.style.display = "block";
+                window.requestAnimationFrame(function () {
+                    stepUpCard.classList.add('show');
+                    stepUpCard.setAttribute('aria-hidden', 'false');
+                });
+            } else {
+                stepUpCard.classList.remove('show');
+                stepUpCard.setAttribute('aria-hidden', 'true');
+                setTimeout(function () {
+                    if (!stepUpCard.classList.contains('show')) stepUpCard.style.display = "none";
+                }, 350);
+            }
+        }
+
+        function clearStepUpFields() {
+            if (stepUpAmountInput) {
+                stepUpAmountInput.value = "";
+                stepUpAmountInput.removeAttribute('required');
+            }
+            if (stepUpPercentageInput) {
+                stepUpPercentageInput.value = "";
+                stepUpPercentageInput.removeAttribute('required');
+            }
+            if (stepUpFrequencySelect) {
+                stepUpFrequencySelect.value = "";
+                stepUpFrequencySelect.removeAttribute('required');
+            }
+        }
+
+        function updateStepUpTypeUI() {
+            if (stepUpTypePercentage.checked) {
+                stepUpAmountGroup.style.display = 'none';
+                stepUpPercentageGroup.style.display = 'block';
+                if (stepUpToggle.checked) {
+                    stepUpPercentageInput && stepUpPercentageInput.setAttribute('required', 'required');
+                    stepUpAmountInput && stepUpAmountInput.removeAttribute('required');
+                }
+            } else {
+                stepUpAmountGroup.style.display = 'block';
+                stepUpPercentageGroup.style.display = 'none';
+                if (stepUpToggle.checked) {
+                    stepUpAmountInput && stepUpAmountInput.setAttribute('required', 'required');
+                    stepUpPercentageInput && stepUpPercentageInput.removeAttribute('required');
+                }
+            }
+        }
+
+
+        // =================================================================
+        // STEP 3: ALL EVENT LISTENERS GO THIRD
+        // =================================================================
+        
+        timelineOneTime.addEventListener("change", toggleFrequency);
+        timelineRecurring.addEventListener("change", toggleFrequency);
+        
+        territorySelect.addEventListener("change", toggleCurrency);
+        
+        typeSelect.addEventListener('change', function () {
             filterCategories();
             toggleDescriptionRequirement();
         });
+
+        stepUpToggle.addEventListener('change', function () {
+            if (stepUpToggle.checked) {
+                collapseStepUp(true);
+                // Set required based on current type
+                if (stepUpTypeAmount.checked) {
+                    stepUpAmountInput && stepUpAmountInput.setAttribute('required', 'required');
+                    stepUpPercentageInput && stepUpPercentageInput.removeAttribute('required');
+                } else {
+                    stepUpPercentageInput && stepUpPercentageInput.setAttribute('required', 'required');
+                    stepUpAmountInput && stepUpAmountInput.removeAttribute('required');
+                }
+                stepUpFrequencySelect && stepUpFrequencySelect.setAttribute('required', 'required');
+            } else {
+                collapseStepUp(false);
+                clearStepUpFields();
+            }
+        });
+        
+        stepUpTypeAmount.addEventListener('change', updateStepUpTypeUI);
+        stepUpTypePercentage.addEventListener('change', updateStepUpTypeUI);
+
+
+        // =================================================================
+        // STEP 4: ALL INITIAL PAGE-LOAD CALLS GO LAST
+        // =================================================================
+        
+        toggleFrequency(); // This also calls updateStepUpAvailability()
+        toggleCurrency();
+        filterCategories();
+        toggleDescriptionRequirement();
+
+        // Initial step-up UI setup:
+        // (updateStepUpAvailability is already called by toggleFrequency)
+        if (stepUpToggle.checked) {
+            collapseStepUp(true);
+            updateStepUpTypeUI();
+        } else {
+            collapseStepUp(false);
+        }
+    });
     </script>
 }

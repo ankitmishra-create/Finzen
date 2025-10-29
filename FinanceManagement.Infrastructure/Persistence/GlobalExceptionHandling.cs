@@ -1,6 +1,5 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
-using System.Text.Json;
 
 namespace FinanceManagement.Infrastructure.Persistence
 {
@@ -8,7 +7,7 @@ namespace FinanceManagement.Infrastructure.Persistence
     {
         private readonly ILogger<GlobalExceptionHandling> _logger;
         private readonly RequestDelegate _next;
-        public GlobalExceptionHandling(ILogger<GlobalExceptionHandling> logger,RequestDelegate next)
+        public GlobalExceptionHandling(ILogger<GlobalExceptionHandling> logger, RequestDelegate next)
         {
             _logger = logger;
             _next = next;
@@ -20,7 +19,7 @@ namespace FinanceManagement.Infrastructure.Persistence
             {
                 await _next(context);
             }
-            catch(Exception e)
+            catch (Exception e)
             {
                 _logger.LogError("Unhandled Exception Occured");
 
@@ -34,11 +33,11 @@ namespace FinanceManagement.Infrastructure.Persistence
                     InnerException = e.InnerException,
                     StackTrace = e.StackTrace,
                 };
-                
+
                 string filePath = "C:\\Users\\Coditas\\Desktop\\FinanceManagement\\WebApplication1\\wwwroot\\logger.txt";
                 if (File.Exists(filePath))
                 {
-                    await File.AppendAllTextAsync(filePath,response.ToString());
+                    await File.AppendAllTextAsync(filePath, response.ToString());
                 }
             }
         }
