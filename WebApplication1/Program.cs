@@ -8,8 +8,14 @@ using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceReposit
 using FinanceManagement.Infrastructure.Persistence.Seeders;
 using FinanceManagement.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
+using Serilog;
 
 var builder = WebApplication.CreateBuilder(args);
+
+Log.Logger = new LoggerConfiguration()
+    .WriteTo.File("C:\\Users\\Coditas\\Desktop\\FinanceManagement\\Logs", 
+    outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}").CreateLogger();
+builder.Host.UseSerilog();
 
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();

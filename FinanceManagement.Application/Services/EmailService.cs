@@ -1,17 +1,23 @@
 ﻿using FinanceManagement.Application.DTO;
+using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
+using MailKit.Net.Smtp;
 using MailKit.Security;
+using Microsoft.Extensions.Logging;
 using MimeKit;
+using System.Net.Sockets;
 
 namespace FinanceManagement.Application.Services
 {
     public class EmailService : IEmailService
     {
         private readonly IUnitOfWork _unitOfWork;
-        public EmailService(IUnitOfWork unitOfWork)
+        private readonly ILogger<EmailService> _logger;
+        public EmailService(IUnitOfWork unitOfWork, ILogger<EmailService> logger)
         {
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task SendEmailAsync(string email, string subject, string htmlMessage)
@@ -27,13 +33,36 @@ namespace FinanceManagement.Application.Services
             };
             emailMessage.Body = bodyBuilder.ToMessageBody();
 
-            using (var client = new MailKit.Net.Smtp.SmtpClient())
+            try
             {
-                await client.ConnectAsync("sandbox.smtp.mailtrap.io", 2525, SecureSocketOptions.StartTls);
-                await client.AuthenticateAsync("e8f914e04144e4", "cb476df26d1599");
+                using (var client = new MailKit.Net.Smtp.SmtpClient())
+                {
+                    await client.ConnectAsync("sandbox.smtp.mailtrap.io", 2525, SecureSocketOptions.StartTls);
+                    await client.AuthenticateAsync("e8f914e04144e4", "cb476df26d1599");
 
-                await client.SendAsync(emailMessage);
-                await client.DisconnectAsync(true);
+                    await client.SendAsync(emailMessage);
+                    await client.DisconnectAsync(true);
+                }
+            }
+            catch (SocketException ex)
+            {
+                _logger.LogError(ex, "SMTP Connection Error: Failed to connect to Mailtrap. {ErrorMessage}", ex.Message);
+                throw new EmailSendException("Failed to connect to email server.", ex);
+            }
+            catch (AuthenticationException ex)
+            {
+                _logger.LogError(ex, "SMTP Authentication Error: Invalid credentials. {ErrorMessage}", ex.Message);
+                throw new EmailSendException("Email server authentication failed.", ex);
+            }
+            catch (SmtpCommandException ex)
+            {
+                _logger.LogError(ex, "SMTP Command Error: {StatusCode} - {ErrorMessage}", ex.StatusCode, ex.Message);
+                throw new EmailSendException($"Failed to send email: {ex.Message}", ex);
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Unhandled error in SendEmailAsync. {ErrorMessage}", ex.Message);
+                throw new EmailSendException("An unexpected error occurred while sending the email.", ex);
             }
         }
 
@@ -43,58 +72,50 @@ namespace FinanceManagement.Application.Services
             string message;
             if (string.IsNullOrWhiteSpace(userId) || string.IsNullOrWhiteSpace(token))
             {
-                message = "Missing userId or token.";
                 verificationResult.Success = false;
-                verificationResult.Message = message;
+                verificationResult.Message = "Missing userId or token.";
                 return verificationResult;
             }
             userId = userId.ToLower();
             if (!Guid.TryParse(userId, out Guid uid))
             {
-                message = "Invalid userId.";
                 verificationResult.Success = false;
-                verificationResult.Message = message;
+                verificationResult.Message = "Invalid userId.";
                 return verificationResult;
             }
-
             var user = await _unitOfWork.User.GetByIdAsync(uid);
             if (user == null)
             {
-                message = "User not found.";
                 verificationResult.Success = false;
-                verificationResult.Message = message;
+                verificationResult.Message = "User not found.";
                 return verificationResult;
             }
-
             if (string.IsNullOrWhiteSpace(user.EmailVerificationToken) ||
                 !string.Equals(user.EmailVerificationToken, token, StringComparison.Ordinal))
             {
-                message = "Invalid token.";
+                _logger.LogWarning("VerifyEmailAsync called with missing userId or token.");
                 verificationResult.Success = false;
-                verificationResult.Message = message;
+                verificationResult.Message = "Invalid token.";
                 return verificationResult;
             }
 
             if (user.IsEmailVerified)
             {
-                message = "Email already verified.";
                 verificationResult.Success = true;
-                verificationResult.Message = message;
+                verificationResult.Message = "Email already verified.";
                 return verificationResult;
             }
             if (user.VerificationTokenExpiresAt == null || user.VerificationTokenExpiresAt < DateTime.UtcNow)
             {
-                message = "Token expired.";
                 verificationResult.Success = false;
-                verificationResult.Message = message;
+                verificationResult.Message = "Token expired.";
                 return verificationResult;
             }
 
             user.VerifyEmail();
             await _unitOfWork.SaveAsync();
-            message = "Email verified successfully.";
             verificationResult.Success = true;
-            verificationResult.Message = message;
+            verificationResult.Message = "Email verified successfully.";
             return verificationResult;
         }
     }

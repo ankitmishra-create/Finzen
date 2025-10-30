@@ -1,4 +1,5 @@
 ﻿using FinanceManagement.Application.DTO;
+using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.Utility;
 using FinanceManagement.Application.ViewModels;
@@ -8,6 +9,7 @@ using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.External;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FinanceManagement.Application.Services
 {
@@ -17,31 +19,45 @@ namespace FinanceManagement.Application.Services
         private readonly ILoggedInUser _loggedInUser;
         private readonly ICurrencyConversionService _currencyConversion;
         private readonly IRecurringTransactionService _recurringTransaction;
-        public TransactionService(IRecurringTransactionService recurringTransactions, IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversionService currencyConversion)
+        private readonly ILogger<TransactionService> _logger;
+        public TransactionService(ILogger<TransactionService> logger,IRecurringTransactionService recurringTransactions, IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversionService currencyConversion)
         {
             _unitOfWork = unitOfWork;
             _loggedInUser = loggedInUser;
             _currencyConversion = currencyConversion;
             _recurringTransaction = recurringTransactions;
+            _logger = logger;
         }
 
         public async Task<AddTransactionVM> CreateView()
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var categories = await _unitOfWork.Category.GetAllAsync(u => u.UserId == userId);
-            var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
-            var userBaseCurrencySymbol = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
-
-            AddTransactionVM addTransactionVM = new AddTransactionVM()
+            try
             {
-                UserId = userId,
-                Categories = (List<Category>)categories,
-                TransactionTerrority = TransactionTerrority.Domestic,
-                SelectedCurrency = userBaseCurrencySymbol.CurrencyCode,
-                TransactionTimeLine = TransactionTimeLine.OneTime,
-                IsStepUpTransaction = false
-            };
-            return addTransactionVM;
+                var user = await _unitOfWork.User.GetAsync(u => u.UserId == userId);
+                var categories = await _unitOfWork.Category.GetAllAsync(u => u.UserId == userId);
+                var userBaseCurrencySymbol = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
+                if (user?.Currency == null)
+                {
+                    _logger.LogError("User {UserId} has no base currency configured.", userId);
+                    throw new InvalidCurrencyException("User base currency not set.");
+                }
+                AddTransactionVM addTransactionVM = new AddTransactionVM()
+                {
+                    UserId = userId,
+                    Categories = (List<Category>)categories,
+                    TransactionTerrority = TransactionTerrority.Domestic,
+                    SelectedCurrency = userBaseCurrencySymbol?.CurrencyCode,
+                    TransactionTimeLine = TransactionTimeLine.OneTime,
+                    IsStepUpTransaction = false
+                };
+                return addTransactionVM;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Erro loading CreateView for user {UserId}", userId);
+                throw new DataRetrievalException("Error loading transaction data.", ex);
+            }
         }
 
         public async Task AddTransactionAsync(AddTransactionVM addTransactionVM)
@@ -49,12 +65,14 @@ namespace FinanceManagement.Application.Services
             var user = await _unitOfWork.User.GetByIdAsync(addTransactionVM.UserId);
             if (user == null)
             {
-                return;
+                _logger.LogError("AddTransaction: User not found");
+                throw new UserNotFoundException("Requested User Not Found");
             }
             var category = await _unitOfWork.Category.GetAsync(u => u.CategoryId == addTransactionVM.CategoryId);
             if (category == null)
             {
-                return;
+                _logger.LogError("AddTransaction: Category not found");
+                throw new CategoryNotFoundException("Requested Category not Found");
             }
 
             var userBasecurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
@@ -107,7 +125,18 @@ namespace FinanceManagement.Application.Services
             }
             await _unitOfWork.Transaction.AddAsync(transaction);
             TransactionLog(transaction, ActionPerformed.Created);
-            await _unitOfWork.SaveAsync();
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex,"Database Update Exception");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError("AddTransaction: Unexpected Error Occured");
+            }
         }
 
         public void TransactionLog(Transaction transaction, ActionPerformed actionPerformed)
@@ -142,9 +171,22 @@ namespace FinanceManagement.Application.Services
         public async Task<IEnumerable<Transaction>> DisplayTransactions()
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            IEnumerable<Transaction> allTransaction = await _unitOfWork.Transaction.GetAllPopulatedAsync(u => u.UserId == userId, include: q => q.Include(t => t.Category));
-            var sortedResult = allTransaction.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Amount);
-            return sortedResult;
+            try
+            {
+                IEnumerable<Transaction> allTransaction = await _unitOfWork.Transaction.GetAllPopulatedAsync(u => u.UserId == userId, include: q => q.Include(t => t.Category));
+                var sortedResult = allTransaction.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Amount);
+                return sortedResult;
+            }
+            catch(TransactionNotFoundException ex)
+            {
+                _logger.LogError(ex,"Display Transaction: Transaction Not Found");
+                throw new TransactionNotFoundException("Transaction Not Found");
+            }
+            catch(Exception ex)
+            {
+                _logger.LogError(ex, "Database error displaying transactions for user {UserId}", userId);
+                throw new DataRetrievalException("Error loading transactions.", ex);
+            }
         }
 
         public async Task<AddTransactionVM> EditView(Guid transactionId)
@@ -202,12 +244,14 @@ namespace FinanceManagement.Application.Services
             await _unitOfWork.User.GetAllPopulatedAsync(include: q => q.Include(t => t.Currency));
             if (user == null)
             {
-                return;
+                _logger.LogError("AddTransaction: User not found");
+                throw new UserNotFoundException("Requested User Not Found");
             }
             var category = await _unitOfWork.Category.GetAsync(u => u.CategoryId == addTransactionVM.CategoryId);
             if (category == null)
             {
-                return;
+                _logger.LogError("AddTransaction: Category not found");
+                throw new CategoryNotFoundException("Requested Category not Found");
             }
             var transaction = await _unitOfWork.Transaction.GetAsync(t => t.TransactionId == addTransactionVM.TransactionId);
             transaction.TransactionDate = addTransactionVM.TransactionDate;
@@ -244,15 +288,43 @@ namespace FinanceManagement.Application.Services
             }
             _unitOfWork.Transaction.Update(transaction);
             TransactionLog(transaction, ActionPerformed.Edited);
-            await _unitOfWork.SaveAsync();
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database Update Exception");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("AddTransaction: Unexpected Error Occured");
+            }
         }
 
         public async Task Delete(Guid transactionId)
         {
-            var transaction = await _unitOfWork.Transaction.GetAsync(t => t.TransactionId == transactionId);
-            _unitOfWork.Transaction.Delete(transaction);
-            TransactionLog(transaction, ActionPerformed.Deleted);
-            await _unitOfWork.SaveAsync();
+            try
+            {
+                var transaction = await _unitOfWork.Transaction.GetAsync(t => t.TransactionId == transactionId);
+                _unitOfWork.Transaction.Delete(transaction);
+                TransactionLog(transaction, ActionPerformed.Deleted);
+                await _unitOfWork.SaveAsync();
+            }
+            catch(TransactionNotFoundException ex)
+            {
+                _logger.LogError(ex, "Display Transaction: Transaction Not Found");
+                throw new TransactionNotFoundException("Transaction Not Found");
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database Update Exception");
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError("AddTransaction: Unexpected Error Occured");
+            }
+            
         }
         public List<CurrencyData> GetAllAvailableCurrency()
         {
@@ -264,7 +336,6 @@ namespace FinanceManagement.Application.Services
                 CurrencySymbol = c.CurrencySymbol,
                 CurrencyCode = c.CurrencyCode
             }).ToList();
-
             return allAvailableCurrency;
         }
 

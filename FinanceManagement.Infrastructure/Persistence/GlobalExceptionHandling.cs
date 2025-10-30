@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Http;
 using Microsoft.Extensions.Logging;
+using System.Text.Json;
 
 namespace FinanceManagement.Infrastructure.Persistence
 {
@@ -21,8 +22,7 @@ namespace FinanceManagement.Infrastructure.Persistence
             }
             catch (Exception e)
             {
-                _logger.LogError("Unhandled Exception Occured");
-
+                _logger.LogInformation("Unhandled Exception Occured");
                 var response = new
                 {
                     TimeStamp = DateTime.Now,
@@ -30,15 +30,11 @@ namespace FinanceManagement.Infrastructure.Persistence
                     Message = "An Unexpected Error Occured",
                     Source = e.Source,
                     ErrorMessage = e.Message,
-                    InnerException = e.InnerException,
-                    StackTrace = e.StackTrace,
+                    InnerException = e?.InnerException,
+                    StackTrace = e?.StackTrace,
                 };
-
-                string filePath = "C:\\Users\\Coditas\\Desktop\\FinanceManagement\\WebApplication1\\wwwroot\\logger.txt";
-                if (File.Exists(filePath))
-                {
-                    await File.AppendAllTextAsync(filePath, response.ToString());
-                }
+                var json = JsonSerializer.Serialize(response);
+                _logger.LogError(json);
             }
         }
 

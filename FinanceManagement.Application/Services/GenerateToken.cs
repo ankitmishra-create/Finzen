@@ -1,7 +1,10 @@
-﻿using FinanceManagement.Application.Interfaces;
+﻿using FinanceManagement.Application.Exceptions;
+using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Core.Entities;
 using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FinanceManagement.Infrastructure.Services
 {
@@ -9,10 +12,12 @@ namespace FinanceManagement.Infrastructure.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
-        public GenerateToken(IUnitOfWork unitOfWork, IEmailService emailService)
+        private readonly ILogger<GenerateToken> _logger;
+        public GenerateToken(ILogger<GenerateToken> logger,IUnitOfWork unitOfWork, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
+            _logger = logger;
         }
         public async Task GenerateTokenAsync(User user)
         {
@@ -21,7 +26,15 @@ namespace FinanceManagement.Infrastructure.Services
                 user.GenerateVerificationToken();
             }
             _unitOfWork.User.Update(user);
-            await _unitOfWork.SaveAsync();
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch(DbUpdateException ex)
+            {
+                _logger.LogError("Generate Token: Exception Occured while generating token for {User}", user);
+                throw;
+            }
 
             string baseUrl = "https://localhost:7145";
 
@@ -35,7 +48,15 @@ namespace FinanceManagement.Infrastructure.Services
                 <p>If the link doesn't work, paste this URL into your browser:</p>
                 <p>{verifyUrl}</p>";
 
-            await _emailService.SendEmailAsync(user.Email, "Email Verification", mailBody);
+            try
+            {
+                await _emailService.SendEmailAsync(user.Email, "Email Verification", mailBody);
+            }
+            catch(EmailSendException ex)
+            {
+                _logger.LogError(ex, "Registration failed: Could not send verification email for {Email}", user.Email);
+                throw new TokenGenerationException("Failed to generate or send email token.", ex);
+            }
         }
     }
 }

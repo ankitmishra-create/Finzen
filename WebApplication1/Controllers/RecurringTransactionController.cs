@@ -15,12 +15,14 @@ namespace FinanceManagement.Web.Controllers
         private readonly IDashboardService _dashboardService;
         private readonly IUserService _userService;
         private readonly ITransactionService _transactionService;
-        public RecurringTransactionController(ITransactionService transactionService,IUserService userService,IRecurringTransactionService recurringTransactionService, IDashboardService dashboardService)
+        private readonly ILogger<RecurringTransactionController> _logger;
+        public RecurringTransactionController(ITransactionService transactionService,IUserService userService,IRecurringTransactionService recurringTransactionService, IDashboardService dashboardService,ILogger<RecurringTransactionController> logger)
         {
             _recurringTransactionService = recurringTransactionService;
             _dashboardService = dashboardService;
             _userService = userService;
             _transactionService = transactionService;
+            _logger = logger;
         }
 
         public async Task<IActionResult> Index()

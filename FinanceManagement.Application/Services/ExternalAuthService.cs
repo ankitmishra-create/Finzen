@@ -4,6 +4,8 @@ using FinanceManagement.Core.Entities;
 using FinanceManagement.Core.Enums;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 using System.Security.Claims;
 
 namespace FinanceManagement.Application.Services
@@ -12,10 +14,12 @@ namespace FinanceManagement.Application.Services
     {
         private readonly IUnitOfWork _unitOfWork;
         private readonly Guid _defaultCurrencyId = Guid.Parse("b69fabd1-0c5d-42d9-8f98-3b869c0fb631");
+        private readonly ILogger<ExternalAuthException> _logger;
 
-        public ExternalAuthService(IUnitOfWork unitOfWork)
+        public ExternalAuthService(IUnitOfWork unitOfWork, ILogger<ExternalAuthException> logger)
         {
             _unitOfWork = unitOfWork;
+            _logger = logger;
         }
 
         public async Task<User> HandleExternalLoginAsync(AuthenticateResult authResult)
@@ -23,6 +27,7 @@ namespace FinanceManagement.Application.Services
             var email = authResult.Principal.FindFirstValue(ClaimTypes.Email);
             if (string.IsNullOrEmpty(email))
             {
+                _logger.LogWarning("External login failed: Email claim not provided by external provider.");
                 throw new ExternalAuthException("Email claim not provided by external provider.");
             }
 
@@ -58,7 +63,15 @@ namespace FinanceManagement.Application.Services
             };
 
             await _unitOfWork.User.AddUserDataAsync(newUser);
-            await _unitOfWork.SaveAsync();
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error saving new external user {Email}. {ErrorMessage}", email, ex.InnerException?.Message);
+                throw new DatabaseException("Failed to save new user to the database.", ex);
+            }
 
             return newUser;
         }

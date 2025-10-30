@@ -1,7 +1,10 @@
-﻿using FinanceManagement.Application.Interfaces;
+﻿using FinanceManagement.Application.Exceptions;
+using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Core.Entities;
 using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
+using Microsoft.EntityFrameworkCore;
+using Microsoft.Extensions.Logging;
 
 namespace FinanceManagement.Application.Services
 {
@@ -10,20 +13,30 @@ namespace FinanceManagement.Application.Services
         private readonly ILoggedInUser _loggedInUser;
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITransactionService _transactionService;
-        public TransactionLoggerService(ILoggedInUser loggedInUser, IUnitOfWork unitOfWork, ITransactionService transactionService)
+        private readonly ILogger<TransactionLoggerService> _logger;
+        public TransactionLoggerService(ILogger<TransactionLoggerService> logger,ILoggedInUser loggedInUser, IUnitOfWork unitOfWork, ITransactionService transactionService)
         {
             _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;
             _transactionService = transactionService;
+            _logger = logger;
         }
         public async Task<List<TransactionLog>> DeletedTransactionLogs()
         {
             var sevenDaysLaterDate = DateTime.UtcNow.AddDays(7);
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var userLast7DaysTransactions = await _unitOfWork.TransactionLog.GetAllAsync(t => t.UserId == userId
-            && t.ActionPerformed == Core.Enums.ActionPerformed.Deleted
-            && t.ActionDate <= sevenDaysLaterDate);
-            return userLast7DaysTransactions.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Amount).ToList();
+            try
+            {
+                var userLast7DaysTransactions = await _unitOfWork.TransactionLog.GetAllAsync(t => t.UserId == userId
+                && t.ActionPerformed == Core.Enums.ActionPerformed.Deleted
+                && t.ActionDate <= sevenDaysLaterDate);
+                return userLast7DaysTransactions.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Amount).ToList();
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Database error loading deleted logs for user {UserId}", userId);
+                throw new DataRetrievalException("Could not retrieve deleted transaction logs.", ex);
+            }
         }
 
         private async Task<Transaction> CreateTransaction(TransactionLog deletedTransaction)
@@ -52,11 +65,40 @@ namespace FinanceManagement.Application.Services
 
         public async Task<Transaction> RecoverDeletedTransaction(Guid transactionLogId)
         {
-            var deletedTransaction = await _unitOfWork.TransactionLog.GetPopulatedAsync(r => r.TransactionLogId == transactionLogId);
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            TransactionLog deletedTransaction;
+            try
+            {
+                deletedTransaction = await _unitOfWork.TransactionLog.GetPopulatedAsync(r => r.TransactionLogId == transactionLogId);
+
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "Database error finding log {LogId}", transactionLogId);
+                throw new DataRetrievalException($"Error finding log: {ex.Message}", ex);
+            }
+            if (deletedTransaction == null)
+            {
+                _logger.LogWarning("User {UserId} failed to recover log {LogId}: Not Found.", userId, transactionLogId);
+                throw new TransactionLogNotFoundException("The transaction log to recover was not found.");
+            }
+            if (deletedTransaction.UserId != userId)
+            {
+                _logger.LogWarning("SECURITY: User {UserId} tried to recover log {LogId} belonging to user {OwnerId}", userId, transactionLogId, deletedTransaction.UserId);
+                throw new TransactionLogNotFoundException("The transaction log to recover was not found."); // Obfuscate error
+            }
             var transaction = await CreateTransaction(deletedTransaction);
             _transactionService.TransactionLog(transaction, Core.Enums.ActionPerformed.Created);
-            await _unitOfWork.SaveAsync();
-            return transaction;
+            try
+            {
+                await _unitOfWork.SaveAsync();
+                return transaction;
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "Database error saving recovered transaction from log {LogId}", transactionLogId);
+                throw new DatabaseException("Failed to save the recovered transaction.", ex);
+            }
         }
     }
 }
