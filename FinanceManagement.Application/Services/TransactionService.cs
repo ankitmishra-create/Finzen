@@ -110,7 +110,7 @@ namespace FinanceManagement.Application.Services
             await _unitOfWork.SaveAsync();
         }
 
-        private void TransactionLog(Transaction transaction, ActionPerformed actionPerformed)
+        public void TransactionLog(Transaction transaction, ActionPerformed actionPerformed)
         {
             TransactionLog transactionLog = new TransactionLog()
             {

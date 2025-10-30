@@ -2,6 +2,7 @@
 using FinanceManagement.Application.Utility;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Entities;
+using FinanceManagement.Core.Enums;
 
 namespace FinanceManagement.Application.Interfaces
 {
@@ -14,5 +15,6 @@ namespace FinanceManagement.Application.Interfaces
         Task Edit(AddTransactionVM addTransactionVM);
         Task Delete(Guid transactionId);
         List<CurrencyData> GetAllAvailableCurrency();
+        void TransactionLog(Transaction transaction, ActionPerformed actionPerformed);
     }
 }
