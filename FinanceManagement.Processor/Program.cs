@@ -5,10 +5,12 @@ using FinanceManagement.Infrastructure.Persistence.Repositories;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using FinanceManagement.Infrastructure.Services;
 using FinanceManagement.Processor.Services;
+using Microsoft.Extensions.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+
 
 namespace FinanceManagement.Processor
 {
@@ -25,7 +27,7 @@ namespace FinanceManagement.Processor
 
                 services.AddScoped<IUnitOfWork, UnitOfWork>();
                 services.AddScoped<ILoggedInUser, LoggedInUser>();
-                services.AddScoped<ICurrencyConversionService, CurrencyConversionService>();
+                services.AddHttpClient<ICurrencyConversionService, CurrencyConversionService>();
                 services.AddScoped<RecurringTransactionProcessor>();
 
             }).Build();

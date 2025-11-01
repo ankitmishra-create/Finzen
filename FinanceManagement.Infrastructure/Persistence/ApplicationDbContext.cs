@@ -15,7 +15,7 @@ namespace FinanceManagement.Infrastructure.Persistence
         public DbSet<Currency> Currencies { get; set; }
         public DbSet<RecurringTransactions> RecurringTransactions { get; set; }
         public DbSet<TransactionLog> TransactionLogs { get; set; }
-
+        public DbSet<Budget> Budgets { get; set; }
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

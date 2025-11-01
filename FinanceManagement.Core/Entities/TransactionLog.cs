@@ -26,7 +26,7 @@ namespace FinanceManagement.Core.Entities
 
         [Required]
         public TransactionTimeLine TransactionTimeLine { get; set; }
-        public RecurrenceFrequency? RecurrenceFrequency { get; set; }
+        public Frequency? RecurrenceFrequency { get; set; }
 
         [Display(Name = "Amount (In Base Currency)")]
         [Column(TypeName = "decimal(18, 2)")]

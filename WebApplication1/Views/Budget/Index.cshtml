@@ -1,0 +1,211 @@
+﻿@using FinanceManagement.Core.Enums
+@model List<FinanceManagement.Application.DTO.BudgetDto>
+
+@{
+    ViewData["Title"] = "Budget Overview";
+    var jsonBudgets = System.Text.Json.JsonSerializer.Serialize(Model);
+}
+
+
+<head>
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+</head>
+
+<style>
+    /* Simple style to show which button is active */
+    .btn-group > .btn.active {
+        background-color: var(--bs-primary);
+        color: white;
+    }
+</style>
+
+<div class="container my-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Your Budgets</h1>
+        <a asp-controller="Budget" asp-action="Create" class="btn btn-primary">
+            <i class="bi bi-plus-circle me-2"></i>Create New Budget
+        </a>
+    </div>
+
+    <div class="btn-group w-100 mb-4" role="group" id="budgetTypeGroup">
+        <button class="btn btn-outline-secondary" data-type="null" id="generalBtn">General</button>
+        <button class="btn btn-outline-success" data-type="1" id="incomeBtn">Income</button>
+        <button class="btn btn-outline-danger" data-type="2" id="expenseBtn">Expense</button>
+    </div>
+
+    <div id="categorySection" class="d-flex flex-wrap gap-2 mb-4"></div>
+
+    <div class="row mb-4" id="summaryCards" style="display:none;">
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Total Budget</h6>
+                <h4 id="totalBudget"></h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Already Spent</h6>
+                <h4 id="spentAmount"></h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Remaining</h6>
+                <h4 id="remainingAmount"></h4>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card shadow-sm p-3">
+                <h6 class="text-muted">Days Left</h6>
+                <h4 id="daysLeft"></h4>
+            </div>
+        </div>
+    </div>
+
+    <div class="card shadow-sm p-3">
+        <h5 id="chartTitle" class="mb-3"></h5>
+        <div id="budgetChart"></div>
+    </div>
+</div>
+
+<script>
+    document.addEventListener("DOMContentLoaded", function () {
+        const budgets = @Html.Raw(jsonBudgets);
+        console.log("Budgets loaded:", budgets);
+
+        const chartContainer = document.querySelector("#budgetChart");
+        let chart = null;
+
+        function getTypeLabel(type) {
+            if (type === 1) return "Income";
+            if (type === 2) return "Expense";
+            return "General";
+        }
+
+        function setActiveButton(selectedBtn) {
+            document.querySelectorAll('#budgetTypeGroup .btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            if (selectedBtn) {
+                selectedBtn.classList.add('active');
+            }
+        }
+
+        function filterByType(type, btnElement) {
+            setActiveButton(btnElement);
+
+            const filtered = budgets.filter(b => {
+                if (type === null) return b.CategoryType === null;
+                return b.CategoryType === type;
+            });
+            const uniqueCategories = [...new Set(filtered.map(b => b.CategoryName || "General"))];
+            const categorySection = document.getElementById("categorySection");
+            categorySection.innerHTML = "";
+            document.getElementById("summaryCards").style.display = "none";
+            document.getElementById("chartTitle").innerText = "";
+            if (chart) {
+                chart.destroy();
+                chart = null;
+            }
+            chartContainer.innerHTML = "";
+
+            if (uniqueCategories.length === 0) {
+                categorySection.innerHTML = `<div class="text-muted w-100 text-center">No ${getTypeLabel(type)} budgets found.</div>`;
+                return;
+            }
+
+            uniqueCategories.forEach(cat => {
+                const btn = document.createElement("button");
+                btn.classList.add("btn", "btn-outline-primary");
+                btn.innerText = cat;
+                btn.onclick = (e) => {
+                    document.querySelectorAll('#categorySection .btn').forEach(b => b.classList.remove('active'));
+                    e.target.classList.add('active');
+                    showCategoryData(type, cat, filtered);
+                };
+                categorySection.appendChild(btn);
+            });
+
+            const firstCategoryButton = document.querySelector("#categorySection button");
+            if (firstCategoryButton) {
+                firstCategoryButton.click();
+            }
+        }
+
+        function showCategoryData(type, category, allBudgets) {
+            console.log("Charts");
+            const catBudgets = allBudgets.filter(b => (b.CategoryName || "General") === category);
+
+            const totalBudget = catBudgets.reduce((sum, b) => sum + (b.BudgetAmount || 0), 0);
+            const spent = catBudgets.reduce((sum, b) => sum + (b.AlreadySpendAmount || 0), 0);
+            const remaining = totalBudget - spent;
+
+            const validDates = catBudgets
+                .map(b => new Date(b.BudgetEndDate))
+                .filter(d => !isNaN(d));
+
+            const minEndDate = validDates.length ? new Date(Math.min(...validDates)) : new Date();
+            const daysLeft = Math.ceil((minEndDate - new Date()) / (1000 * 60 * 60 * 24));
+
+            document.getElementById("summaryCards").style.display = "flex";
+            document.getElementById("totalBudget").innerText = `₹ ${totalBudget.toFixed(2)}`;
+            document.getElementById("spentAmount").innerText = `₹ ${spent.toFixed(2)}`;
+            document.getElementById("remainingAmount").innerText = `₹ ${remaining.toFixed(2)}`;
+            document.getElementById("daysLeft").innerText = daysLeft > 0 ? daysLeft + " days" : "Expired";
+
+            // ✅ Updated section to show BudgetName on x-axis instead of date
+            const xLabels = catBudgets.map(b => b.BudgetName || b.CategoryName || "Unnamed Budget");
+            const budgetAmounts = catBudgets.map(b => b.BudgetAmount || 0);
+            const spentAmounts = catBudgets.map(b => b.AlreadySpendAmount || 0);
+
+            const options = {
+                series: [
+                    { name: 'Budget', data: budgetAmounts },
+                    { name: 'Spent', data: spentAmounts }
+                ],
+                chart: {
+                    height: 350,
+                    type: 'bar',
+                    zoom: { enabled: true }
+                },
+                dataLabels: { enabled: true },
+                stroke: { curve: 'straight' },
+                grid: {
+                    row: {
+                        colors: ['#f3f3f3', 'transparent'],
+                        opacity: 0.5
+                    },
+                },
+                xaxis: {
+                    categories: xLabels,
+                    title: { text: "Budget Name" },
+                    labels: {
+                        rotate: -45,
+                        trim: true,
+                        style: { fontSize: '12px' }
+                    }
+                },
+                colors: ['#007bff', '#dc3545'],
+                legend: { position: 'top' }
+            };
+
+            if (chart) chart.destroy();
+            chart = new ApexCharts(chartContainer, options);
+            chart.render();
+
+            document.getElementById("chartTitle").innerText =
+                `${getTypeLabel(type)} - ${category} Budget Overview`;
+        }
+
+        const generalBtn = document.getElementById("generalBtn");
+        generalBtn.onclick = () => filterByType(null, generalBtn);
+
+        const incomeBtn = document.getElementById("incomeBtn");
+        incomeBtn.onclick = () => filterByType(1, incomeBtn);
+
+        const expenseBtn = document.getElementById("expenseBtn");
+        expenseBtn.onclick = () => filterByType(2, expenseBtn);
+
+        generalBtn.click();
+    });
+</script>

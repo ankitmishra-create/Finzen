@@ -30,7 +30,7 @@ namespace FinanceManagement.Application.Services
             try
             {
                 var allRecuringTransaction = await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(rt => rt.UserId == userId, include: q => q.Include(q => q.Category));
-                var sortedResult = allRecuringTransaction.OrderByDescending(t => t.NextTransactionDate).ThenByDescending(t => t.Amount);
+                var sortedResult = allRecuringTransaction.OrderBy(t => t.NextTransactionDate).ThenByDescending(t => t.Amount);
                 return sortedResult.ToList();
             }
             catch (Exception ex)
@@ -81,7 +81,7 @@ namespace FinanceManagement.Application.Services
             {
                 UserId = addTransactionVM.UserId,
                 CategoryId = (Guid)addTransactionVM.CategoryId,
-                Frequency = (Core.Enums.RecurrenceFrequency)addTransactionVM.RecurrenceFrequency,
+                Frequency = (Core.Enums.Frequency)addTransactionVM.RecurrenceFrequency,
                 StartDate = addTransactionVM.RecurringStartDate.Value,
                 EndDate = addTransactionVM.RecurringEndDate,
                 Amount = (decimal)addTransactionVM.Amount,
@@ -109,21 +109,21 @@ namespace FinanceManagement.Application.Services
                 recurringTransaction.LastStepUpDate = DateTime.UtcNow;
                 
                 var nextStepUpDate = addTransactionVM.StepUpFrequeny;
-                switch ((RecurrenceFrequency)nextStepUpDate)
+                switch ((Frequency)nextStepUpDate)
                 {
-                    case RecurrenceFrequency.Daily:
+                    case Frequency.Daily:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(1);
                         break;
-                    case RecurrenceFrequency.Weekly:
+                    case Frequency.Weekly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
                         break;
-                    case RecurrenceFrequency.Monthly:
+                    case Frequency.Monthly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
                         break;
-                    case RecurrenceFrequency.Quarterly:
+                    case Frequency.Quarterly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
                         break;
-                    case RecurrenceFrequency.Yearly:
+                    case Frequency.Yearly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
                         break;
                 }
@@ -131,21 +131,21 @@ namespace FinanceManagement.Application.Services
 
 
             var nextTransactionDate = addTransactionVM.RecurrenceFrequency;
-            switch ((RecurrenceFrequency)nextTransactionDate)
+            switch ((Frequency)nextTransactionDate)
             {
-                case RecurrenceFrequency.Daily:
+                case Frequency.Daily:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddDays(1);
                     break;
-                case RecurrenceFrequency.Weekly:
+                case Frequency.Weekly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddDays(7);
                     break;
-                case RecurrenceFrequency.Monthly:
+                case Frequency.Monthly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(1);
                     break;
-                case RecurrenceFrequency.Quarterly:
+                case Frequency.Quarterly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(3);
                     break;
-                case RecurrenceFrequency.Yearly:
+                case Frequency.Yearly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddYears(1);
                     break;
             }
@@ -189,21 +189,21 @@ namespace FinanceManagement.Application.Services
                 recurringTransaction.StepUpFrequeny = recurringTransactionVM.StepUpFrequeny;
 
                 var nextStepUpDate = recurringTransactionVM.StepUpFrequeny;
-                switch ((RecurrenceFrequency)nextStepUpDate)
+                switch ((Frequency)nextStepUpDate)
                 {
-                    case RecurrenceFrequency.Daily:
+                    case Frequency.Daily:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(1);
                         break;
-                    case RecurrenceFrequency.Weekly:
+                    case Frequency.Weekly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
                         break;
-                    case RecurrenceFrequency.Monthly:
+                    case Frequency.Monthly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
                         break;
-                    case RecurrenceFrequency.Quarterly:
+                    case Frequency.Quarterly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
                         break;
-                    case RecurrenceFrequency.Yearly:
+                    case Frequency.Yearly:
                         recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
                         break;
                 }
@@ -219,21 +219,21 @@ namespace FinanceManagement.Application.Services
 
             var todaysDate = DateTime.UtcNow;
             var nextTransactionDate = recurringTransactionVM.RecurrenceFrequency;
-            switch ((RecurrenceFrequency)nextTransactionDate)
+            switch ((Frequency)nextTransactionDate)
             {
-                case RecurrenceFrequency.Daily:
+                case Frequency.Daily:
                     recurringTransaction.NextTransactionDate = todaysDate.AddDays(1);
                     break;
-                case RecurrenceFrequency.Weekly:
+                case Frequency.Weekly:
                     recurringTransaction.NextTransactionDate = todaysDate.AddDays(7);
                     break;
-                case RecurrenceFrequency.Monthly:
+                case Frequency.Monthly:
                     recurringTransaction.NextTransactionDate = todaysDate.AddMonths(1);
                     break;
-                case RecurrenceFrequency.Quarterly:
+                case Frequency.Quarterly:
                     recurringTransaction.NextTransactionDate = todaysDate.AddMonths(3);
                     break;
-                case RecurrenceFrequency.Yearly:
+                case Frequency.Yearly:
                     recurringTransaction.NextTransactionDate = todaysDate.AddYears(1);
                     break;
             }

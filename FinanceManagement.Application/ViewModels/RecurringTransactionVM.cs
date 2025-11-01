@@ -8,7 +8,7 @@ namespace FinanceManagement.Application.ViewModels
         public Guid RecurringTransactionId { get; set; }
 
         [Display(Name = "Recurrency Frequency")]
-        public RecurrenceFrequency RecurrenceFrequency { get; set; }
+        public Frequency RecurrenceFrequency { get; set; }
         public string Description { get; set; }
 
         [Display(Name = "Original Amount")]
@@ -32,7 +32,7 @@ namespace FinanceManagement.Application.ViewModels
         [Display(Name = "Step Up Percentage")]
         public decimal? StepUpPercentage { get; set; }
         [Display(Name = "Step Up Frequency")]
-        public RecurrenceFrequency? StepUpFrequeny { get; set; }
+        public Frequency? StepUpFrequeny { get; set; }
 
     }
 }

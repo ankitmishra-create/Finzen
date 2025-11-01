@@ -23,11 +23,11 @@ namespace FinanceManagement.Processor.Services
             recurringTransactions.Amount = (decimal)(recurringTransactions.OriginalAmount * convertedAmount.conversion_rate);
         }
 
-        private Transaction CreateTransaction(RecurringTransactions recurringTransaction)
+        private async Task<Transaction> CreateTransaction(RecurringTransactions recurringTransaction)
         {
             if (recurringTransaction.TransactionTerrority == TransactionTerrority.International)
             {
-                HandleInternationConversion(recurringTransaction);
+                await HandleInternationConversion(recurringTransaction);
             }
             Transaction transaction = new Transaction()
             {
@@ -51,21 +51,21 @@ namespace FinanceManagement.Processor.Services
         private void CalculateNextTransactionDate(RecurringTransactions recurringTransaction)
         {
             var nextTransactionDate = recurringTransaction.Frequency;
-            switch ((RecurrenceFrequency)nextTransactionDate)
+            switch ((Frequency)nextTransactionDate)
             {
-                case RecurrenceFrequency.Daily:
+                case Frequency.Daily:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddHours(24);
                     break;
-                case RecurrenceFrequency.Weekly:
+                case Frequency.Weekly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddDays(7);
                     break;
-                case RecurrenceFrequency.Monthly:
+                case Frequency.Monthly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(1);
                     break;
-                case RecurrenceFrequency.Quarterly:
+                case Frequency.Quarterly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddMonths(3);
                     break;
-                case RecurrenceFrequency.Yearly:
+                case Frequency.Yearly:
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddYears(1);
                     break;
                 default:
@@ -84,21 +84,21 @@ namespace FinanceManagement.Processor.Services
         private void CalculateNextStepUpDate(RecurringTransactions recurringTransaction)
         {
             var nextTransactionDate = recurringTransaction.StepUpFrequeny;
-            switch ((RecurrenceFrequency)nextTransactionDate)
+            switch ((Frequency)nextTransactionDate)
             {
-                case RecurrenceFrequency.Daily:
+                case Frequency.Daily:
                     recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddHours(24);
                     break;
-                case RecurrenceFrequency.Weekly:
+                case Frequency.Weekly:
                     recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddDays(7);
                     break;
-                case RecurrenceFrequency.Monthly:
+                case Frequency.Monthly:
                     recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(1);
                     break;
-                case RecurrenceFrequency.Quarterly:
+                case Frequency.Quarterly:
                     recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddMonths(3);
                     break;
-                case RecurrenceFrequency.Yearly:
+                case Frequency.Yearly:
                     recurringTransaction.NextStepUpDate = recurringTransaction.LastStepUpDate.Value.AddYears(1);
                     break;
                 default:
@@ -160,7 +160,7 @@ namespace FinanceManagement.Processor.Services
         public async Task ProcessDueRecurringTransactionsAsync()
         {
 
-            UpdateStepUp();
+            await UpdateStepUp();
 
             var todaysDate = DateTime.UtcNow.Date;
             var pendingTransactions = await _unitOfWork.RecurringTransaction.GetAllPopulatedAsync(t => t.NextTransactionDate.HasValue
@@ -172,7 +172,7 @@ namespace FinanceManagement.Processor.Services
             var changesCount = 0;
             foreach (var pendingTransaction in pendingTransactions)
             {
-                var transaction = CreateTransaction(pendingTransaction);
+                var transaction = await CreateTransaction(pendingTransaction);
                 await _unitOfWork.Transaction.AddAsync(transaction);
 
                 pendingTransaction.LastExecutedDate = DateTime.UtcNow;

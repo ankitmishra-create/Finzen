@@ -1,0 +1,245 @@
+﻿@model FinanceManagement.Application.ViewModels.BudgetVM
+
+@{
+    ViewData["Title"] = "Create Budget";
+}
+
+<div class="container mt-4">
+    <div class="d-flex justify-content-between align-items-center mb-4">
+        <h1 class="mb-0">Create Your Budget</h1>
+        <a asp-action="Index" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Budgets
+        </a>
+    </div>
+
+    <div class="card shadow-sm p-4 rounded-3">
+        <form asp-action="Create" method="post" id="budgetForm">
+            <input asp-for="UserId" type="hidden" />
+
+            <div class="mb-3">
+                <label asp-for="BudgetName" class="form-label fw-semibold required-field">Budget Name</label>
+                <input asp-for="BudgetName"
+                       type="text"
+                       class="form-control"
+                       placeholder="e.g., Monthly Groceries, Vacation Fund" />
+
+                <span asp-validation-for="BudgetName" class="text-danger"></span>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input asp-for="CustomFrequency" class="form-check-input" id="customFrequencySwitch" type="checkbox" />
+                <label class="form-check-label fw-semibold" for="customFrequencySwitch">Enable Custom Frequency</label>
+            </div>
+
+            <div id="frequencySection" class="mb-3">
+                <label asp-for="Frequency" class="form-label fw-semibold required-field">Budget Frequency</label>
+                <select asp-for="Frequency" class="form-select" asp-items="Html.GetEnumSelectList<FinanceManagement.Core.Enums.Frequency>()">
+                    <option value="">-- Select Frequency --</option>
+                </select>
+                <span asp-validation-for="Frequency" class="text-danger"></span>
+            </div>
+
+            <div id="customFrequencyFields" class="row g-3 mb-3" style="display: none;">
+                <div class="col-md-6">
+                    <label asp-for="BudgetStartDate" class="form-label fw-semibold">Start Date</label>
+                    <input asp-for="BudgetStartDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="BudgetStartDate" class="text-danger"></span>
+                </div>
+                <div class="col-md-6">
+                    <label asp-for="BudgetEndDate" class="form-label fw-semibold">End Date</label>
+                    <input asp-for="BudgetEndDate" type="date" class="form-control" value="@DateTime.Now.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="BudgetEndDate" class="text-danger"></span>
+                </div>
+            </div>
+
+            <div class="form-check form-switch mb-3">
+                <input asp-for="CategorySwitch" type="checkbox" class="form-check-input" id="categorySwitch" />
+                <label class="form-check-label fw-semibold">Assign Budget to a Category</label>
+            </div>
+
+            <div id="categorySection" class="mb-3" style="display: none;">
+                <div class="row g-3">
+                    <div class="col-md-6">
+                        <label class="form-label fw-semibold">Category Type</label>
+                        <select id="categoryTypeSelect" class="form-select">
+                            <option value="none">-- All Categories --</option>
+                            <option value="income">Income</option>
+                            <option value="expense">Expense</option>
+                        </select>
+                    </div>
+
+                    <div class="col-md-6">
+                        <label asp-for="CategoryId" id="categoryLabel" class="form-label fw-semibold">Select Category</label>
+                        <select asp-for="CategoryId" id="categoryDropdown" class="form-select">
+                            <option value="">-- Select Category --</option>
+                            @foreach (var cat in Model.UserCategories)
+                            {
+                                <option value="@cat.CategoryId" data-type="@cat.CategoryType.ToString().ToLower()">
+                                    @cat.CategoryName (@cat.CategoryType)
+                                </option>
+                            }
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-danger"></span>
+                    </div>
+                </div>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="Amount" class="form-label fw-semibold required-field">Budget Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text fw-semibold">@Model.UserBaseCurrency</span>
+                    <input asp-for="Amount"
+                           type="number"
+                           class="form-control"
+                           placeholder="Enter amount"
+                           value="@(Model.Amount == 0 ? "" : Model.Amount.ToString())" />
+                </div>
+                <span asp-validation-for="Amount" class="text-danger"></span>
+            </div>
+
+            <div class="mb-3">
+                <label asp-for="AlreadySpentAmount" class="form-label fw-semibold">Already Spent / Saved Budget Amount</label>
+                <div class="input-group">
+                    <span class="input-group-text fw-semibold">@Model.UserBaseCurrency</span>
+                    <input asp-for="AlreadySpentAmount"
+                           type="number"
+                           class="form-control"
+                           placeholder="Enter already spent amount"
+                           value="@(Model.AlreadySpentAmount == 0 ? "" : Model.AlreadySpentAmount.ToString())" />
+                </div>
+                <span asp-validation-for="AlreadySpentAmount" class="text-danger"></span>
+            </div>
+
+            <div class="mb-4">
+                <label asp-for="Description" class="form-label fw-semibold required-field">Description</label>
+                <textarea asp-for="Description" rows="3" class="form-control" placeholder="Describe your budget..."></textarea>
+                <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                <button type="submit" class="btn btn-primary px-4">
+                    <i class="bi bi-check-circle me-2"></i>Create Budget
+                </button>
+            </div>
+        </form>
+    </div>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("budgetForm");
+            const customFrequencySwitch = document.getElementById("customFrequencySwitch");
+            const customFields = document.getElementById("customFrequencyFields");
+            const frequencySection = document.getElementById("frequencySection");
+            const categorySwitch = document.getElementById("categorySwitch");
+            const categorySection = document.getElementById("categorySection");
+            const categoryLabel = document.getElementById("categoryLabel");
+            const categoryTypeSelect = document.getElementById("categoryTypeSelect");
+            const categoryDropdown = document.getElementById("categoryDropdown");
+
+            const startLabel = document.querySelector("label[for='BudgetStartDate']");
+            const endLabel = document.querySelector("label[for='BudgetEndDate']");
+            const frequencyLabel = document.querySelector("label[for='Frequency']");
+
+            // Function to toggle required-field stars dynamically
+            function updateRequiredFields() {
+                // Handle Custom Frequency
+                if (customFrequencySwitch.checked) {
+                    customFields.style.display = "flex";
+                    frequencySection.style.display = "none";
+                    frequencyLabel.classList.remove("required-field");
+                    startLabel.classList.add("required-field");
+                    endLabel.classList.add("required-field");
+                } else {
+                    customFields.style.display = "none";
+                    frequencySection.style.display = "block";
+                    frequencyLabel.classList.add("required-field");
+                    startLabel.classList.remove("required-field");
+                    endLabel.classList.remove("required-field");
+                }
+
+                // Handle Category
+                if (categorySwitch.checked) {
+                    categorySection.style.display = "block";
+                    categoryLabel.classList.add("required-field");
+                } else {
+                    categorySection.style.display = "none";
+                    categoryLabel.classList.remove("required-field");
+                }
+            }
+
+            customFrequencySwitch.addEventListener("change", updateRequiredFields);
+            categorySwitch.addEventListener("change", updateRequiredFields);
+
+            // Filter Category Dropdown based on Type
+            categoryTypeSelect.addEventListener("change", function () {
+                const selectedType = this.value;
+                const options = categoryDropdown.querySelectorAll("option");
+
+                options.forEach(opt => {
+                    if (opt.value === "") return;
+                    const type = opt.dataset.type;
+                    opt.style.display = (selectedType === "none" || type === selectedType) ? "block" : "none";
+                });
+                categoryDropdown.value = "";
+            });
+
+            // Client-side validation before submit
+            form.addEventListener("submit", function (e) {
+                let valid = true;
+                let message = "";
+
+                // ✅ NOTE: The 'BudgetName' validation is now handled automatically
+                // by the data annotations and _ValidationScriptsPartial.
+                // We only need to manually check the ones that depend on the toggles.
+
+                if (customFrequencySwitch.checked) {
+                    const start = document.querySelector("[name='BudgetStartDate']");
+                    const end = document.querySelector("[name='BudgetEndDate']");
+                    if (!start.value || !end.value) {
+                        valid = false;
+                        message += "Start and End Dates are required.\n";
+                    } else if (new Date(end.value) <= new Date(start.value)) {
+                        valid = false;
+                        message += "End Date must be after Start Date.\n";
+                    }
+                } else {
+                    const freq = document.querySelector("[name='Frequency']");
+                    if (!freq.value) {
+                        valid = false;
+                        message += "Budget Frequency is required.\n";
+                    }
+                }
+
+                if (categorySwitch.checked) {
+                    const cat = categoryDropdown.value;
+                    if (!cat) {
+                        valid = false;
+                        message += "Select Category is required.\n";
+                    }
+                }
+
+                if (!valid) {
+                    // This alert is now a 'fallback' for your custom toggle logic.
+                    // The main validation will appear next to the fields.
+                    alert(message);
+                    e.preventDefault();
+                }
+            });
+
+            // Initialize visual state on load
+            updateRequiredFields();
+        });
+    </script>
+
+    <style>
+        .required-field::after {
+            content: " *";
+            color: red;
+            font-weight: bold;
+        }
+    </style>
+}

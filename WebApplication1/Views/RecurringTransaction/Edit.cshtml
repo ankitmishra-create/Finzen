@@ -42,7 +42,7 @@
                             </div>
                             <div class="col-md-6">
                                 <div class="form-floating mb-3">
-                                    <select asp-for="RecurrenceFrequency" class="form-select" asp-items="Html.GetEnumSelectList<RecurrenceFrequency>()"></select>
+                                    <select asp-for="RecurrenceFrequency" class="form-select" asp-items="Html.GetEnumSelectList<Frequency>()"></select>
                                     <label asp-for="RecurrenceFrequency"></label>
                                 </div>
                             </div>
@@ -80,7 +80,7 @@
                                 </div>
                                 <div class="col-md-6">
                                     <div class="form-floating mb-3">
-                                        <select asp-for="StepUpFrequeny" class="form-select" asp-items="Html.GetEnumSelectList<RecurrenceFrequency>()"></select>
+                                        <select asp-for="StepUpFrequeny" class="form-select" asp-items="Html.GetEnumSelectList<Frequency>()"></select>
                                         <label asp-for="StepUpFrequeny"></label>
                                     </div>
                                 </div>

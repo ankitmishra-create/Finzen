@@ -22,7 +22,7 @@ namespace FinanceManagement.Core.Entities
         public Category Category { get; set; }
 
         [Required]
-        public RecurrenceFrequency Frequency { get; set; }
+        public Frequency Frequency { get; set; }
 
         [Required]
         public DateTime StartDate { get; set; } = DateTime.UtcNow;
@@ -61,7 +61,7 @@ namespace FinanceManagement.Core.Entities
         public decimal? StepUpAmount { get; set; }
 
         public decimal? StepUpPercentage { get; set; }
-        public RecurrenceFrequency? StepUpFrequeny { get; set; }
+        public Frequency? StepUpFrequeny { get; set; }
         public DateTime? NextStepUpDate { get; set; }
         public DateTime? LastStepUpDate { get; set; }
     }

@@ -88,6 +88,8 @@ namespace FinanceManagement.Application.Services
                 throw new TransactionLogNotFoundException("The transaction log to recover was not found."); // Obfuscate error
             }
             var transaction = await CreateTransaction(deletedTransaction);
+            deletedTransaction.ActionPerformed = Core.Enums.ActionPerformed.Recovered;
+            _unitOfWork.TransactionLog.Update(deletedTransaction);
             _transactionService.TransactionLog(transaction, Core.Enums.ActionPerformed.Created);
             try
             {

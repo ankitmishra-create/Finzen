@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace FinanceManagement.Application.Exceptions
 {
-    internal class RecurringTransactionNotFoundException : Exception
+    public class RecurringTransactionNotFoundException : Exception
     {
         public RecurringTransactionNotFoundException(string message) :base(message)
         {

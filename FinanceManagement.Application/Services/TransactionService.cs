@@ -20,7 +20,7 @@ namespace FinanceManagement.Application.Services
         private readonly ICurrencyConversionService _currencyConversion;
         private readonly IRecurringTransactionService _recurringTransaction;
         private readonly ILogger<TransactionService> _logger;
-        public TransactionService(ILogger<TransactionService> logger,IRecurringTransactionService recurringTransactions, IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversionService currencyConversion)
+        public TransactionService(ILogger<TransactionService> logger, IRecurringTransactionService recurringTransactions, IUnitOfWork unitOfWork, ILoggedInUser loggedInUser, ICurrencyConversionService currencyConversion)
         {
             _unitOfWork = unitOfWork;
             _loggedInUser = loggedInUser;
@@ -131,9 +131,9 @@ namespace FinanceManagement.Application.Services
             }
             catch (DbUpdateException ex)
             {
-                _logger.LogError(ex,"Database Update Exception");
+                _logger.LogError(ex, "Database Update Exception");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError("AddTransaction: Unexpected Error Occured");
             }
@@ -177,12 +177,12 @@ namespace FinanceManagement.Application.Services
                 var sortedResult = allTransaction.OrderByDescending(t => t.TransactionDate).ThenByDescending(t => t.Amount);
                 return sortedResult;
             }
-            catch(TransactionNotFoundException ex)
+            catch (TransactionNotFoundException ex)
             {
-                _logger.LogError(ex,"Display Transaction: Transaction Not Found");
+                _logger.LogError(ex, "Display Transaction: Transaction Not Found");
                 throw new TransactionNotFoundException("Transaction Not Found");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Database error displaying transactions for user {UserId}", userId);
                 throw new DataRetrievalException("Error loading transactions.", ex);
@@ -311,7 +311,7 @@ namespace FinanceManagement.Application.Services
                 TransactionLog(transaction, ActionPerformed.Deleted);
                 await _unitOfWork.SaveAsync();
             }
-            catch(TransactionNotFoundException ex)
+            catch (TransactionNotFoundException ex)
             {
                 _logger.LogError(ex, "Display Transaction: Transaction Not Found");
                 throw new TransactionNotFoundException("Transaction Not Found");
@@ -324,7 +324,7 @@ namespace FinanceManagement.Application.Services
             {
                 _logger.LogError("AddTransaction: Unexpected Error Occured");
             }
-            
+
         }
         public List<CurrencyData> GetAllAvailableCurrency()
         {

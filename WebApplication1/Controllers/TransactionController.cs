@@ -60,7 +60,7 @@ namespace FinanceManagement.Web.Controllers
                 var addTransactionVM = await _transactionService.CreateView();
                 var allavailableCurriences = _transactionService.GetAllAvailableCurrency();
                 ViewBag.Available = new SelectList(allavailableCurriences, "CurrencyCode", "CurrencyName");
-                ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(RecurrenceFrequency)));
+                ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(Frequency)));
                 return View(addTransactionVM);
             }
             catch (Exception ex) when (ex is UserNotFoundException or InvalidCurrencyException or DataRetrievalException)
@@ -106,7 +106,7 @@ namespace FinanceManagement.Web.Controllers
                 addTransactionVM.Categories = (await _transactionService.CreateView()).Categories;
                 var allavailable = _transactionService.GetAllAvailableCurrency();
                 ViewBag.Available = new SelectList(allavailable, "CurrencyCode", "CurrencyName");
-                ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(RecurrenceFrequency)));
+                ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(Frequency)));
                 return View(addTransactionVM);
             }
             catch (Exception ex) when (ex is UserNotFoundException or InvalidCurrencyException or DataRetrievalException)
@@ -219,7 +219,7 @@ namespace FinanceManagement.Web.Controllers
         {
             var allavailableCurriences = _transactionService.GetAllAvailableCurrency();
             ViewBag.Available = new SelectList(allavailableCurriences, "CurrencyCode", "CurrencyName", selectedCurrency);
-            ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(RecurrenceFrequency)));
+            ViewBag.RecurrenceFrequency = new SelectList(Enum.GetValues(typeof(Frequency)));
             return Task.CompletedTask;
         }
 

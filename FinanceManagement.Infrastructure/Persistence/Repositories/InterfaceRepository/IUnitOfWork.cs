@@ -8,6 +8,7 @@
         ICurrencyRepository Currency { get; }
         IRecurringTransactionRepository RecurringTransaction { get; }
         ITransactionLogRepository TransactionLog { get; }
+        IBudgetRepository Budget { get; }
         
         Task SaveAsync();
     }

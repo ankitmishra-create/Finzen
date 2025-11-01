@@ -4,6 +4,7 @@ using FinanceManagement.Infrastructure.Persistence;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.EntityFrameworkCore.Infrastructure;
 using Microsoft.EntityFrameworkCore.Metadata;
+using Microsoft.EntityFrameworkCore.Migrations;
 using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 
 #nullable disable
@@ -11,9 +12,11 @@ using Microsoft.EntityFrameworkCore.Storage.ValueConversion;
 namespace FinanceManagement.Infrastructure.Migrations
 {
     [DbContext(typeof(ApplicationDbContext))]
-    partial class ApplicationDbContextModelSnapshot : ModelSnapshot
+    [Migration("20251031092344_createdBudgets")]
+    partial class createdBudgets
     {
-        protected override void BuildModel(ModelBuilder modelBuilder)
+        /// <inheritdoc />
+        protected override void BuildTargetModel(ModelBuilder modelBuilder)
         {
 #pragma warning disable 612, 618
             modelBuilder
@@ -28,27 +31,20 @@ namespace FinanceManagement.Infrastructure.Migrations
                         .ValueGeneratedOnAdd()
                         .HasColumnType("uniqueidentifier");
 
-                    b.Property<decimal>("AlreadySpendAmount")
-                        .HasColumnType("decimal(18,2)");
-
                     b.Property<decimal>("BudgetAmount")
                         .HasColumnType("decimal(18,2)");
-
-                    b.Property<DateTime>("BudgetEndDate")
-                        .HasColumnType("datetime2");
-
-                    b.Property<string>("BudgetName")
-                        .IsRequired()
-                        .HasColumnType("nvarchar(max)");
-
-                    b.Property<DateTime>("BudgetStartDate")
-                        .HasColumnType("datetime2");
 
                     b.Property<Guid?>("CategoryId")
                         .HasColumnType("uniqueidentifier");
 
                     b.Property<bool?>("CustomBudget")
                         .HasColumnType("bit");
+
+                    b.Property<DateTime?>("CustomBudgetEndDate")
+                        .HasColumnType("datetime2");
+
+                    b.Property<DateTime?>("CustomBudgetStartDate")
+                        .HasColumnType("datetime2");
 
                     b.Property<string>("Description")
                         .IsRequired()
