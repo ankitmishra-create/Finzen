@@ -6,206 +6,220 @@
     var jsonBudgets = System.Text.Json.JsonSerializer.Serialize(Model);
 }
 
-
-<head>
+@section Scripts {
     <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-</head>
 
-<style>
-    /* Simple style to show which button is active */
-    .btn-group > .btn.active {
-        background-color: var(--bs-primary);
-        color: white;
-    }
-</style>
+    <style>
+        
+        #budgetTypeGroup button.active {
+            background-color: #4f46e5; /* Tailwind's violet-600 */
+            color: white;
+            box-shadow: 0 4px 6px -1px rgb(0 0 0 / 0.1), 0 2px 4px -2px rgb(0 0 0 / 0.1); /* shadow-lg */
+        }
 
-<div class="container my-4">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h1 class="mb-0">Your Budgets</h1>
-        <a asp-controller="Budget" asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Create New Budget
+        #categorySection button.active {
+            background-color: #4f46e5; /* Tailwind's violet-600 */
+            color: white;
+            border-color: #4f46e5; /* violet-600 */
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const budgets = @Html.Raw(jsonBudgets);
+            const chartContainer = document.querySelector("#budgetChart");
+            let chart = null;
+
+            function getTypeLabel(type) {
+                if (type === 1) return "Income"; // This function is still safe to leave
+                if (type === 2) return "Expense";
+                return "General";
+            }
+
+            function setActiveButton(selectedBtn) {
+                document.querySelectorAll('#budgetTypeGroup button').forEach(btn => btn.classList.remove('active'));
+                if (selectedBtn) selectedBtn.classList.add('active');
+            }
+
+            function filterByType(type, btnElement) {
+                setActiveButton(btnElement);
+                const filtered = budgets.filter(b => type === null ? b.CategoryType === null : b.CategoryType === type);
+                const uniqueCategories = [...new Set(filtered.map(b => b.CategoryName || "General"))];
+                const categorySection = document.getElementById("categorySection");
+                categorySection.innerHTML = "";
+                document.getElementById("summaryCards").style.display = "none";
+                document.getElementById("chartTitle").innerText = "";
+                if (chart) { chart.destroy(); chart = null; }
+                chartContainer.innerHTML = "";
+
+                if (uniqueCategories.length === 0) {
+                    categorySection.innerHTML = `<div class="text-gray-500 w-full text-center py-4">No ${getTypeLabel(type)} budgets found.</div>`;
+                    return;
+                }
+
+                uniqueCategories.forEach(cat => {
+                    const btn = document.createElement("button");
+                    btn.classList.add("py-2", "px-4", "rounded-lg", "text-sm", "font-medium", "bg-white", "text-gray-600", "border", "border-gray-300", "transition-all", "duration-200", "hover:shadow-md", "hover:border-violet-500", "hover:text-violet-600");
+                    btn.innerText = cat;
+                    btn.onclick = (e) => {
+                        document.querySelectorAll('#categorySection button').forEach(b => b.classList.remove('active'));
+                        e.target.classList.add('active');
+                        showCategoryData(type, cat, filtered);
+                    };
+                    categorySection.appendChild(btn);
+                });
+
+                const firstCategoryButton = document.querySelector("#categorySection button");
+                if (firstCategoryButton) firstCategoryButton.click();
+            }
+
+            function showCategoryData(type, category, allBudgets) {
+                const catBudgets = allBudgets.filter(b => (b.CategoryName || "General") === category);
+                const totalBudget = catBudgets.reduce((sum, b) => sum + (b.BudgetAmount || 0), 0);
+                const spent = catBudgets.reduce((sum, b) => sum + (b.AlreadySpendAmount || 0), 0);
+                const remaining = totalBudget - spent;
+
+                const validDates = catBudgets.map(b => new Date(b.BudgetEndDate)).filter(d => !isNaN(d));
+                const minEndDate = validDates.length ? new Date(Math.min(...validDates)) : new Date();
+                const daysLeft = Math.ceil((minEndDate - new Date()) / (1000 * 60 * 60 * 24));
+
+                document.getElementById("summaryCards").style.display = "grid";
+                document.getElementById("totalBudget").innerText = `₹ ${totalBudget.toFixed(2)}`;
+                document.getElementById("spentAmount").innerText = `₹ ${spent.toFixed(2)}`;
+                document.getElementById("remainingAmount").innerText = `₹ ${remaining.toFixed(2)}`;
+                document.getElementById("daysLeft").innerText = daysLeft > 0 ? daysLeft + " days" : "Expired";
+
+                const xLabels = catBudgets.map(b => b.BudgetName || b.CategoryName || "Unnamed Budget");
+                const budgetAmounts = catBudgets.map(b => b.BudgetAmount || 0);
+                const spentAmounts = catBudgets.map(b => b.AlreadySpendAmount || 0);
+
+                const options = {
+                    series: [
+                        { name: 'Budget', data: budgetAmounts },
+                        { name: 'Spent', data: spentAmounts }
+                    ],
+                    chart: {
+                        type: 'bar',
+                        height: 400,
+                        toolbar: { show: false },
+                        animations: {
+                            enabled: true,
+                            easing: 'easeinout',
+                            speed: 800
+                        }
+                    },
+                    plotOptions: {
+                        bar: {
+                            borderRadius: 8,
+                            columnWidth: '55%',
+                            dataLabels: { position: 'top' },
+                        }
+                    },
+                    dataLabels: {
+                        enabled: true,
+                        formatter: val => `₹${val.toFixed(0)}`,
+                        style: { fontSize: '12px', colors: ['#374151'] },
+                        offsetY: -20
+                    },
+                    xaxis: {
+                        categories: xLabels,
+                        labels: { rotate: -30, style: { fontSize: '12px', colors: '#6b7280' } },
+                        title: { text: "Budget Name", style: { color: '#374151', fontWeight: 500 } }
+                    },
+                    yaxis: {
+                        labels: { formatter: val => `₹${val.toFixed(0)}`, style: { colors: '#6b7280' } },
+                        title: { text: "Amount (₹)", style: { color: '#374151', fontWeight: 500 } }
+                    },
+                    colors: [
+                        '#8b5cf6', // violet-500
+                        '#ec4899'  // pink-500
+                    ],
+                    fill: {
+                        type: "gradient",
+                        gradient: {
+                            shade: 'light',
+                            type: "vertical",
+                            shadeIntensity: 0.25,
+                            gradientToColors: ['#6d28d9', '#d946ef'], // violet-700, fuchsia-500
+                            inverseColors: false,
+                            opacityFrom: 0.9,
+                            opacityTo: 0.8,
+                        }
+                    },
+                    legend: {
+                        position: 'top',
+                        horizontalAlign: 'center',
+                        fontWeight: 500,
+                        markers: { radius: 12 }
+                    },
+                    grid: { borderColor: '#e5e7eb', strokeDashArray: 4 },
+                    tooltip: {
+                        y: { formatter: val => `₹${val.toFixed(2)}` }
+                    }
+                };
+
+                if (chart) chart.destroy();
+                chart = new ApexCharts(chartContainer, options);
+                chart.render();
+
+                document.getElementById("chartTitle").innerText =
+                    `${getTypeLabel(type)} - ${category} Budget Overview`;
+            }
+
+            document.getElementById("generalBtn").onclick = () => filterByType(null, generalBtn);
+            // --- REMOVED ---
+            // document.getElementById("incomeBtn").onclick = () => filterByType(1, incomeBtn);
+            // ---------------
+            document.getElementById("expenseBtn").onclick = () => filterByType(2, expenseBtn);
+            document.getElementById("generalBtn").click();
+        });
+    </script>
+}
+
+<div class="space-y-6">
+    <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4">
+        <h1 class="text-3xl font-bold text-gray-900">
+            @ViewData["Title"]
+        </h1>
+        <a asp-controller="Budget" asp-action="Create" class="flex items-center justify-center gap-2 bg-violet-600 text-white px-5 py-2.5 rounded-lg text-sm font-semibold shadow-md transition-all duration-300 hover:bg-violet-700 hover:-translate-y-0.5">
+            <i class="bi bi-plus-circle text-base"></i>
+            <span>Create New Budget</span>
         </a>
     </div>
 
-    <div class="btn-group w-100 mb-4" role="group" id="budgetTypeGroup">
-        <button class="btn btn-outline-secondary" data-type="null" id="generalBtn">General</button>
-        <button class="btn btn-outline-success" data-type="1" id="incomeBtn">Income</button>
-        <button class="btn btn-outline-danger" data-type="2" id="expenseBtn">Expense</button>
+    <div class="grid grid-cols-2 gap-1 p-1 bg-gray-200 rounded-lg" id="budgetTypeGroup">
+        <button class="py-2.5 px-4 rounded-md text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white hover:shadow-sm" data-type="null" id="generalBtn">
+            General
+        </button>
+        <button class="py-2.5 px-4 rounded-md text-sm font-medium text-gray-700 transition-all duration-200 hover:bg-white hover:shadow-sm" data-type="2" id="expenseBtn">
+            Expense
+        </button>
     </div>
 
-    <div id="categorySection" class="d-flex flex-wrap gap-2 mb-4"></div>
+    <div id="categorySection" class="flex flex-wrap gap-3 justify-center">
+    </div>
 
-    <div class="row mb-4" id="summaryCards" style="display:none;">
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Total Budget</h6>
-                <h4 id="totalBudget"></h4>
-            </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4" id="summaryCards" style="display: none;">
+        <div class="bg-white shadow-lg rounded-xl p-4 text-center">
+            <h6 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Budget</h6>
+            <h4 id="totalBudget" class="text-2xl font-bold text-gray-900 mt-1"></h4>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Already Spent</h6>
-                <h4 id="spentAmount"></h4>
-            </div>
+        <div class="bg-white shadow-lg rounded-xl p-4 text-center">
+            <h6 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Already Spent</h6>
+            <h4 id="spentAmount" class="text-2xl font-bold text-red-600 mt-1"></h4>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Remaining</h6>
-                <h4 id="remainingAmount"></h4>
-            </div>
+        <div class="bg-white shadow-lg rounded-xl p-4 text-center">
+            <h6 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Remaining</h6>
+            <h4 id="remainingAmount" class="text-2xl font-bold text-green-600 mt-1"></h4>
         </div>
-        <div class="col-md-3">
-            <div class="card shadow-sm p-3">
-                <h6 class="text-muted">Days Left</h6>
-                <h4 id="daysLeft"></h4>
-            </div>
+        <div class="bg-white shadow-lg rounded-xl p-4 text-center">
+            <h6 class="text-sm font-medium text-gray-500 uppercase tracking-wider">Days Left</h6>
+            <h4 id="daysLeft" class="text-2xl font-bold text-gray-900 mt-1"></h4>
         </div>
     </div>
 
-    <div class="card shadow-sm p-3">
-        <h5 id="chartTitle" class="mb-3"></h5>
-        <div id="budgetChart"></div>
+    <div class="bg-white shadow-xl rounded-xl p-4 sm:p-6">
+        <h5 id="chartTitle" class="mb-4 text-xl font-semibold text-gray-800 text-center"></h5>
+        <div id="budgetChart" class="w-full min-h-[400px]"></div>
     </div>
 </div>
-
-<script>
-    document.addEventListener("DOMContentLoaded", function () {
-        const budgets = @Html.Raw(jsonBudgets);
-        console.log("Budgets loaded:", budgets);
-
-        const chartContainer = document.querySelector("#budgetChart");
-        let chart = null;
-
-        function getTypeLabel(type) {
-            if (type === 1) return "Income";
-            if (type === 2) return "Expense";
-            return "General";
-        }
-
-        function setActiveButton(selectedBtn) {
-            document.querySelectorAll('#budgetTypeGroup .btn').forEach(btn => {
-                btn.classList.remove('active');
-            });
-            if (selectedBtn) {
-                selectedBtn.classList.add('active');
-            }
-        }
-
-        function filterByType(type, btnElement) {
-            setActiveButton(btnElement);
-
-            const filtered = budgets.filter(b => {
-                if (type === null) return b.CategoryType === null;
-                return b.CategoryType === type;
-            });
-            const uniqueCategories = [...new Set(filtered.map(b => b.CategoryName || "General"))];
-            const categorySection = document.getElementById("categorySection");
-            categorySection.innerHTML = "";
-            document.getElementById("summaryCards").style.display = "none";
-            document.getElementById("chartTitle").innerText = "";
-            if (chart) {
-                chart.destroy();
-                chart = null;
-            }
-            chartContainer.innerHTML = "";
-
-            if (uniqueCategories.length === 0) {
-                categorySection.innerHTML = `<div class="text-muted w-100 text-center">No ${getTypeLabel(type)} budgets found.</div>`;
-                return;
-            }
-
-            uniqueCategories.forEach(cat => {
-                const btn = document.createElement("button");
-                btn.classList.add("btn", "btn-outline-primary");
-                btn.innerText = cat;
-                btn.onclick = (e) => {
-                    document.querySelectorAll('#categorySection .btn').forEach(b => b.classList.remove('active'));
-                    e.target.classList.add('active');
-                    showCategoryData(type, cat, filtered);
-                };
-                categorySection.appendChild(btn);
-            });
-
-            const firstCategoryButton = document.querySelector("#categorySection button");
-            if (firstCategoryButton) {
-                firstCategoryButton.click();
-            }
-        }
-
-        function showCategoryData(type, category, allBudgets) {
-            console.log("Charts");
-            const catBudgets = allBudgets.filter(b => (b.CategoryName || "General") === category);
-
-            const totalBudget = catBudgets.reduce((sum, b) => sum + (b.BudgetAmount || 0), 0);
-            const spent = catBudgets.reduce((sum, b) => sum + (b.AlreadySpendAmount || 0), 0);
-            const remaining = totalBudget - spent;
-
-            const validDates = catBudgets
-                .map(b => new Date(b.BudgetEndDate))
-                .filter(d => !isNaN(d));
-
-            const minEndDate = validDates.length ? new Date(Math.min(...validDates)) : new Date();
-            const daysLeft = Math.ceil((minEndDate - new Date()) / (1000 * 60 * 60 * 24));
-
-            document.getElementById("summaryCards").style.display = "flex";
-            document.getElementById("totalBudget").innerText = `₹ ${totalBudget.toFixed(2)}`;
-            document.getElementById("spentAmount").innerText = `₹ ${spent.toFixed(2)}`;
-            document.getElementById("remainingAmount").innerText = `₹ ${remaining.toFixed(2)}`;
-            document.getElementById("daysLeft").innerText = daysLeft > 0 ? daysLeft + " days" : "Expired";
-
-            // ✅ Updated section to show BudgetName on x-axis instead of date
-            const xLabels = catBudgets.map(b => b.BudgetName || b.CategoryName || "Unnamed Budget");
-            const budgetAmounts = catBudgets.map(b => b.BudgetAmount || 0);
-            const spentAmounts = catBudgets.map(b => b.AlreadySpendAmount || 0);
-
-            const options = {
-                series: [
-                    { name: 'Budget', data: budgetAmounts },
-                    { name: 'Spent', data: spentAmounts }
-                ],
-                chart: {
-                    height: 350,
-                    type: 'bar',
-                    zoom: { enabled: true }
-                },
-                dataLabels: { enabled: true },
-                stroke: { curve: 'straight' },
-                grid: {
-                    row: {
-                        colors: ['#f3f3f3', 'transparent'],
-                        opacity: 0.5
-                    },
-                },
-                xaxis: {
-                    categories: xLabels,
-                    title: { text: "Budget Name" },
-                    labels: {
-                        rotate: -45,
-                        trim: true,
-                        style: { fontSize: '12px' }
-                    }
-                },
-                colors: ['#007bff', '#dc3545'],
-                legend: { position: 'top' }
-            };
-
-            if (chart) chart.destroy();
-            chart = new ApexCharts(chartContainer, options);
-            chart.render();
-
-            document.getElementById("chartTitle").innerText =
-                `${getTypeLabel(type)} - ${category} Budget Overview`;
-        }
-
-        const generalBtn = document.getElementById("generalBtn");
-        generalBtn.onclick = () => filterByType(null, generalBtn);
-
-        const incomeBtn = document.getElementById("incomeBtn");
-        incomeBtn.onclick = () => filterByType(1, incomeBtn);
-
-        const expenseBtn = document.getElementById("expenseBtn");
-        expenseBtn.onclick = () => filterByType(2, expenseBtn);
-
-        generalBtn.click();
-    });
-</script>

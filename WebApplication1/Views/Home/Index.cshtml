@@ -1,26 +1,124 @@
 ﻿@{
     ViewData["Title"] = "Home Page";
 }
-    
-<div class="text-center my-5">
-    <h1 class="display-4 fw-bold">Welcome to Personal Finance Manager</h1>
-    <p class="lead mt-3">
-        Track your expenses, set budgets, and achieve your financial goals—all in one place.
-    </p>
-    <p>
+
+<div class="relative flex flex-col items-center justify-center min-h-screen overflow-hidden bg-gradient-to-br from-emerald-50 via-white to-emerald-100 text-gray-800">
+    <!-- Background decorative shapes -->
+    <div class="absolute top-0 left-0 w-64 h-64 bg-emerald-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob"></div>
+    <div class="absolute top-20 right-0 w-64 h-64 bg-green-300 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-2000"></div>
+    <div class="absolute bottom-0 left-20 w-64 h-64 bg-teal-200 rounded-full mix-blend-multiply filter blur-3xl opacity-30 animate-blob animation-delay-4000"></div>
+
+    <!-- Main Content -->
+    <div class="relative z-10 text-center max-w-3xl px-6">
+        <div class="flex justify-center mb-6">
+            <img src="https://cdn-icons-png.flaticon.com/512/2331/2331966.png"
+                 alt="Finance Illustration"
+                 class="w-32 h-32 animate-float drop-shadow-lg" />
+        </div>
+
+        <h1 class="text-5xl md:text-6xl font-extrabold text-emerald-700 tracking-tight drop-shadow-sm transition-all duration-700 hover:scale-105">
+            Welcome to <span class="text-emerald-500">Personal Finance Manager</span>
+        </h1>
+
+        <p class="mt-5 text-lg md:text-xl text-gray-700 leading-relaxed">
+            Track your <span class="font-semibold text-emerald-600">expenses</span>, set <span class="font-semibold text-emerald-600">budgets</span>,
+            and achieve your <span class="font-semibold text-emerald-600">financial goals</span> — all in one place.
+        </p>
+
         @if (!User.Identity?.IsAuthenticated ?? true)
         {
-            <a class="btn btn-primary btn-lg mt-4"
-               asp-controller="Register"
-               asp-action="Index">
-                Get Started
-            </a>
-            <a class="btn btn-outline-secondary btn-lg mt-4 ms-2"
-               asp-controller="Login"
-               asp-action="Index">
-                Already have an account? Log In
-            </a>
+            <div class="mt-8 flex flex-col sm:flex-row items-center justify-center gap-4">
+                <a asp-controller="Register" asp-action="Index"
+                   class="group relative inline-flex items-center justify-center px-8 py-3 overflow-hidden text-lg font-medium text-white transition duration-300 ease-out rounded-xl bg-emerald-600 shadow-md hover:bg-emerald-700 hover:shadow-lg">
+                    <span class="absolute inset-0 w-full h-full bg-gradient-to-r from-emerald-400 via-emerald-600 to-emerald-700 opacity-0 group-hover:opacity-100 transition duration-300 ease-out"></span>
+                    <span class="relative z-10">🚀 Get Started</span>
+                </a>
+
+                <a asp-controller="Login" asp-action="Index"
+                   class="inline-flex items-center px-8 py-3 text-lg font-medium text-emerald-700 border border-emerald-400 rounded-xl hover:bg-emerald-50 hover:shadow-md transition duration-300 ease-in-out">
+                    Already have an account? Log In
+                </a>
+            </div>
         }
-        
-    </p>
+    </div>
+
+    <!-- Floating decorative images -->
+    <div class="absolute bottom-10 right-10 w-28 opacity-90 animate-bounce-slow">
+        <img src="https://cdn-icons-png.flaticon.com/512/993/993928.png" alt="Money Bag" />
+    </div>
+
+    <div class="absolute top-16 left-12 w-20 opacity-90 animate-float-slow">
+        <img src="https://cdn-icons-png.flaticon.com/512/2331/2331968.png" alt="Coins" />
+    </div>
 </div>
+
+<!-- Custom Animations -->
+<style>
+    @@keyframes blob {
+        0%, 100% {
+            transform: translate(0px, 0px) scale(1);
+        }
+
+        33% {
+            transform: translate(30px, -50px) scale(1.1);
+        }
+
+        66% {
+            transform: translate(-20px, 20px) scale(0.9);
+        }
+    }
+
+    .animate-blob {
+        animation: blob 8s infinite;
+    }
+
+    .animation-delay-2000 {
+        animation-delay: 2s;
+    }
+
+    .animation-delay-4000 {
+        animation-delay: 4s;
+    }
+
+    @@keyframes float {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-15px);
+        }
+    }
+
+    .animate-float {
+        animation: float 4s ease-in-out infinite;
+    }
+
+    @@keyframes float-slow {
+        0%, 100% {
+            transform: translateY(0px);
+        }
+
+        50% {
+            transform: translateY(-10px);
+        }
+    }
+
+    .animate-float-slow {
+        animation: float-slow 8s ease-in-out infinite;
+    }
+
+    @@keyframes bounce-slow {
+        0%, 100% {
+            transform: translateY(0);
+        }
+
+        50% {
+            transform: translateY(-8px);
+        }
+    }
+
+    .animate-bounce-slow {
+        animation: bounce-slow 6s ease-in-out infinite;
+    }
+</style>

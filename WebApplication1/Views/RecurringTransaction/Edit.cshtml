@@ -1,136 +1,148 @@
 ﻿@model FinanceManagement.Application.ViewModels.RecurringTransactionVM
 @using FinanceManagement.Core.Enums
+
 @{
     ViewData["Title"] = "Edit Recurring Transaction";
 }
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-8 col-lg-7">
-            <div class="card shadow-sm rounded-3 border-0">
-                <div class="card-body p-4 p-md-5">
-                    <h3 class="card-title text-center mb-4 fw-bold">Edit Recurring Transaction</h3>
 
-                    <form asp-controller="RecurringTransaction" asp-action="Edit" method="post">
-                        <input type="hidden" asp-for="RecurringTransactionId" />
+<div class="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8 py-10">
+    <div class="bg-white rounded-2xl shadow-md border border-gray-100 p-6 sm:p-8">
+        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-6">Edit Recurring Transaction</h2>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select asp-for="TransactionTerrority"
-                                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
-                                            class="form-select" disabled></select>
-                                    <label asp-for="TransactionTerrority"></label>
-                                </div>
-                            </div>
+        <form asp-controller="RecurringTransaction" asp-action="Edit" method="post" class="space-y-6">
+            <input type="hidden" asp-for="RecurringTransactionId" />
 
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select asp-for="OriginalCurrency" class="form-select" asp-items="ViewBag.Available" disabled class="form-select" asp-items="ViewBag.Available">
-                                        <option value="">-- Select Currency --</option>
-                                    </select>
-                                    <label asp-for="OriginalCurrency"></label>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Transaction Territory & Currency -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="TransactionTerrority" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="TransactionTerrority"
+                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
+                            class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-60"
+                            disabled>
+                    </select>
+                </div>
 
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <input asp-for="OriginalAmount" class="form-control" />
-                                    <label asp-for="OriginalAmount"></label>
-                                </div>
-                            </div>
-                            <div class="col-md-6">
-                                <div class="form-floating mb-3">
-                                    <select asp-for="RecurrenceFrequency" class="form-select" asp-items="Html.GetEnumSelectList<Frequency>()"></select>
-                                    <label asp-for="RecurrenceFrequency"></label>
-                                </div>
-                            </div>
-                        </div>
-
-                        @if (Model.IsStepUpTransaction)
-                        {
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-
-                                    <input name="IsStepUpTransaction" value="true"
-                                           class="form-check-input" type="checkbox" id="stepUpToggle"
-                                           @(Model.IsStepUpTransaction ? "checked" : "") />
-
-                                    <input type="hidden" name="IsStepUpTransaction" value="false" />
-
-                                    <label class="form-check-label fw-semibold" for="stepUpToggle">Enable Auto Increase</label>
-                                </div>
-                            </div>
-
-                            <div class="row" id="stepUpInputsContainer" style="display:none;">
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-3">
-                                        @if (Model.StepUpAmount != null)
-                                        {
-                                            <input asp-for="StepUpAmount" class="form-control" />
-                                            <label asp-for="StepUpAmount"></label>
-                                        }
-                                        else
-                                        {
-                                            <input asp-for="StepUpPercentage" class="form-control" />
-                                            <label asp-for="StepUpPercentage"></label>
-                                        }
-                                    </div>
-                                </div>
-                                <div class="col-md-6">
-                                    <div class="form-floating mb-3">
-                                        <select asp-for="StepUpFrequeny" class="form-select" asp-items="Html.GetEnumSelectList<Frequency>()"></select>
-                                        <label asp-for="StepUpFrequeny"></label>
-                                    </div>
-                                </div>
-                            </div>
-
-                        }
-
-                        <div class="form-floating mb-3">
-                            <textarea asp-for="Description" class="form-control" style="height:100px"></textarea>
-                            <label asp-for="Description"></label>
-                        </div>
-
-                        <div class="d-grid gap-2 d-md-flex justify-content-md-end mt-4">
-                            <a asp-action="Index" class="btn btn-outline-secondary">Cancel</a>
-                            <button type="submit" class="btn btn-primary">Save Changes</button>
-                        </div>
-                    </form>
+                <div>
+                    <label asp-for="OriginalCurrency" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="OriginalCurrency"
+                            class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500 disabled:opacity-60"
+                            asp-items="ViewBag.Available"
+                            disabled>
+                        <option value="">-- Select Currency --</option>
+                    </select>
                 </div>
             </div>
-        </div>
+
+            <!-- Amount & Frequency -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="OriginalAmount" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="OriginalAmount"
+                           class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                </div>
+
+                <div>
+                    <label asp-for="RecurrenceFrequency" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="RecurrenceFrequency"
+                            class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                            asp-items="Html.GetEnumSelectList<Frequency>()"></select>
+                </div>
+            </div>
+
+            <!-- Step-Up Transaction -->
+            @if (Model.IsStepUpTransaction)
+            {
+                <div class="space-y-4">
+                    <div class="flex items-center gap-3">
+                        <input name="IsStepUpTransaction"
+                               value="true"
+                               class="h-5 w-5 text-indigo-600 border-gray-300 rounded focus:ring-indigo-500"
+                               type="checkbox"
+                               id="stepUpToggle"
+                               @(Model.IsStepUpTransaction ? "checked" : "") />
+
+                        <input type="hidden" name="IsStepUpTransaction" value="false" />
+
+                        <label for="stepUpToggle" class="text-sm font-medium text-gray-700">
+                            Enable Auto Increase
+                        </label>
+                    </div>
+
+                    <div id="stepUpInputsContainer" class="grid grid-cols-1 sm:grid-cols-2 gap-6 hidden">
+                        <div>
+                            <label class="block text-sm font-medium text-gray-700 mb-1">
+                                @(Model.StepUpAmount != null ? "Step Up Amount" : "Step Up Percentage")
+                            </label>
+
+                            @if (Model.StepUpAmount != null)
+                            {
+                                <input asp-for="StepUpAmount"
+                                       class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                            }
+                            else
+                            {
+                                <input asp-for="StepUpPercentage"
+                                       class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500" />
+                            }
+                        </div>
+
+                        <div>
+                            <label asp-for="StepUpFrequeny" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                            <select asp-for="StepUpFrequeny"
+                                    class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"
+                                    asp-items="Html.GetEnumSelectList<Frequency>()"></select>
+                        </div>
+                    </div>
+                </div>
+            }
+
+            <!-- Description -->
+            <div>
+                <label asp-for="Description" class="block text-sm font-medium text-gray-700 mb-1"></label>
+                <textarea asp-for="Description"
+                          rows="3"
+                          class="w-full rounded-xl border-gray-300 shadow-sm focus:ring-indigo-500 focus:border-indigo-500"></textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex justify-end gap-3 pt-4">
+                <a asp-action="Index"
+                   class="inline-flex items-center px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all duration-200 border border-gray-200">
+                    Cancel
+                </a>
+
+                <button type="submit"
+                        class="inline-flex items-center px-5 py-2 text-sm font-medium text-white bg-indigo-600 hover:bg-indigo-700 rounded-xl shadow-sm transition-all duration-200">
+                    Save Changes
+                </button>
+            </div>
+        </form>
     </div>
 </div>
-
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-
-            // 1. Get the two elements
             const stepUpToggle = document.getElementById('stepUpToggle');
             const stepUpInputsContainer = document.getElementById('stepUpInputsContainer');
 
-            // 2. Create a function to show/hide the inputs
-            function toggleStepUpInputs() {
-                if (stepUpToggle.checked) {
-                    // Use 'flex' because "row" is a flex container
-                    stepUpInputsContainer.style.display = 'flex';
-                } else {
-                    stepUpInputsContainer.style.display = 'none';
+            if (stepUpToggle && stepUpInputsContainer) {
+                function toggleStepUpInputs() {
+                    if (stepUpToggle.checked) {
+                        stepUpInputsContainer.classList.remove('hidden');
+                        stepUpInputsContainer.classList.add('grid');
+                    } else {
+                        stepUpInputsContainer.classList.add('hidden');
+                        stepUpInputsContainer.classList.remove('grid');
+                    }
                 }
+
+                stepUpToggle.addEventListener('change', toggleStepUpInputs);
+                toggleStepUpInputs(); // Run once on page load
             }
-
-            // 3. Attach the function to the toggle's 'change' event
-            stepUpToggle.addEventListener('change', toggleStepUpInputs);
-
-            // 4. Run the function once on page load to set the correct initial state
-            toggleStepUpInputs();
-
         });
     </script>
 }

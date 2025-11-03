@@ -6,40 +6,40 @@
     Layout = "_Layout";
 }
 
-<div class="container d-flex justify-content-center align-items-center min-vh-100">
-    <div class="card shadow p-4 rounded-4 border-0" style="max-width: 400px; width: 100%;">
-        <h2 class="text-center mb-4 fw-bold">Login</h2>
+<div class="flex justify-center items-center min-h-[80vh] py-8">
+    <div class="max-w-md w-full bg-white rounded-xl shadow-md p-6 sm:p-8">
+        <h2 class="text-3xl font-bold text-gray-900 text-center mb-6">Login</h2>
 
-        <!-- Manual Login Form -->
-        <form asp-action="Index" method="post">
-            <div asp-validation-summary="All" class="text-danger mb-3"></div>
-            <div class="mb-3">
-                <label asp-for="Email" class="form-label required-field">Email</label>
-                <input asp-for="Email" type="email" class="form-control" placeholder="Enter your email" />
-                <span asp-validation-for="Email" class="text-danger"></span>
+        <form asp-action="Index" method="post" class="space-y-6">
+            <div asp-validation-summary="All" class="text-red-600 text-base list-disc list-inside mb-4"></div>
+
+            <div>
+                <label asp-for="Email" class="block text-base font-medium text-gray-700 mb-1 required-field">Email</label>
+                <input asp-for="Email" type="email" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" placeholder="Enter your email" />
+                <span asp-validation-for="Email" class="text-red-600 text-base mt-1"></span>
             </div>
 
-            <div class="mb-3">
-                <label asp-for="Password" class="form-label required-field">Password</label>
-                <input asp-for="Password" type="password" class="form-control" placeholder="Enter your password" />
-                <span asp-validation-for="Password" class="text-danger"></span>
+            <div>
+                <label asp-for="Password" class="block text-base font-medium text-gray-700 mb-1 required-field">Password</label>
+                <input asp-for="Password" type="password" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" placeholder="Enter your password" />
+                <span asp-validation-for="Password" class="text-red-600 text-base mt-1"></span>
             </div>
 
-            <button type="submit" class="btn btn-primary w-100 btn-lg">Login</button>
+            <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-all duration-300 transform hover:-translate-y-0.5">
+                Login
+            </button>
         </form>
 
-        <!-- Divider -->
-        <div class="d-flex align-items-center my-4">
-            <hr class="flex-grow-1">
-            <span class="px-3 text-muted">OR</span>
-            <hr class="flex-grow-1">
+        <div class="flex items-center my-6">
+            <div class="flex-grow border-t border-gray-300"></div>
+            <span class="flex-shrink mx-4 text-gray-500 text-sm">OR</span>
+            <div class="flex-grow border-t border-gray-300"></div>
         </div>
 
-        <!-- Google Sign-In Form -->
         <form asp-controller="Account" asp-action="ExternalLogin" asp-route-provider="Google" method="post">
-            <div class="d-grid">
-                <button type="submit" class="btn btn-outline-secondary btn-lg d-flex align-items-center justify-content-center">
-                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-google me-2" viewBox="0 0 16 16">
+            <div class="w-full">
+                <button type="submit" class="w-full flex items-center justify-center gap-3 py-3 px-4 border border-gray-400 rounded-lg bg-white text-gray-700 text-base font-medium shadow-sm transition-all duration-200 hover:bg-gray-50 hover:shadow-md">
+                    <svg xmlns="http://www.w3.org/2000/svg" width="20" height="20" fill="currentColor" class="bi bi-google" viewBox="0 0 16 16">
                         <path d="M15.545 6.558a9.42 9.42 0 0 1 .139 1.626c0 2.434-.87 4.492-2.384 5.885h.002C11.978 15.292 10.158 16 8 16A8 8 0 1 1 8 0a7.689 7.689 0 0 1 5.352 2.082l-2.284 2.284A4.347 4.347 0 0 0 8 3.166c-2.087 0-3.86 1.408-4.492 3.25C2.806 7.633 2.5 8.537 2.5 9.5c0 .963.306 1.867.834 2.653C3.96 13.592 5.713 15 8 15c1.453 0 2.652-.46 3.568-1.242l2.284 2.284A7.96 7.96 0 0 1 8 16Z" />
                     </svg>
                     Sign up / Sign in with Google
@@ -47,15 +47,25 @@
             </div>
         </form>
 
-        <!-- Link to Register Page -->
-        <div class="text-center mt-4">
-            <p class="mb-0">Don't have an account? <a asp-controller="Register" asp-action="Index">Sign up here</a></p>
+        <div class="text-center mt-6 text-base text-gray-600">
+            <p class="mb-0">
+                Don't have an account?
+                <a asp-controller="Register" asp-action="Index" class="font-medium text-violet-600 hover:text-violet-500">
+                    Sign up here
+                </a>
+            </p>
         </div>
     </div>
 </div>
 
 @section Scripts {
-    @{
-        <partial name="_ValidationScriptsPartial" />
-    }
+    <partial name="_ValidationScriptsPartial" />
+
+    <style>
+        .required-field::after {
+            content: " *";
+            color: red;
+            font-weight: bold;
+        }
+    </style>
 }

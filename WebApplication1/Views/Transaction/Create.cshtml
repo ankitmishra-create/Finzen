@@ -4,236 +4,216 @@
 
 @{
     ViewData["Title"] = "Create Transaction";
+    Model.TransactionTimeLine = TransactionTimeLine.OneTime;
 }
 
-<div class="container py-5">
-    <div class="row justify-content-center">
-        <div class="col-md-10 col-lg-8">
-            <div class="card shadow rounded-4 border-0">
-                <div class="card-body p-4 p-md-5">
-                    <h3 class="card-title text-center mb-4 fw-bold">Add a New Transaction</h3>
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">@ViewData["Title"]</h1>
+    <a asp-action="Index" class="text-base font-medium text-violet-600 hover:text-violet-500">
+        <i class="bi bi-arrow-left"></i>
+        Back to List
+    </a>
+</div>
 
-                    <form method="post" asp-action="Create">
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-                        <input type="hidden" asp-for="UserId" />
+<div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6 sm:p-8 transition-all duration-300 hover:shadow-lg">
 
-                        <!-- Transaction Timeline (One-Time / Recurring) -->
-                        <div class="mb-3">
-                            <label asp-for="TransactionTimeLine" class="form-label required-field"></label>
-                            <div class="d-flex gap-3">
-                                <!-- One-Time -->
-                                <div class="flex-fill">
-                                    <input class="btn-check"
-                                           type="radio"
-                                           asp-for="TransactionTimeLine"
-                                           value="OneTime"
-                                           id="timeline_OneTime"
-                                           checked />
-                                    <label class="btn btn-outline-primary w-100 p-3 text-center" for="timeline_OneTime">
-                                        <span class="fw-bold d-block">One-Time Payment</span>
-                                    </label>
-                                </div>
-                                <!-- Recurring -->
-                                <div class="flex-fill">
-                                    <input class="btn-check"
-                                           type="radio"
-                                           asp-for="TransactionTimeLine"
-                                           value="Recurring"
-                                           id="timeline_Recurring" />
-                                    <label class="btn btn-outline-success w-100 p-3 text-center" for="timeline_Recurring">
-                                        <span class="fw-bold d-block">Recurring Payment</span>
-                                    </label>
-                                </div>
-                            </div>
-                            <span asp-validation-for="TransactionTimeLine" class="text-danger small"></span>
-                        </div>
+    <form method="post" asp-action="Create">
+        <div asp-validation-summary="ModelOnly" class="text-red-600 text-base list-disc list-inside mb-4" role="alert"></div>
+        <input type="hidden" asp-for="UserId" />
 
-                        <!-- Recurrence Frequency (Conditionally Shown) -->
-                        <div class="mb-3" id="frequencyContainer" style="display:none;">
-                            <label asp-for="RecurrenceFrequency" class="form-label required-field"></label>
-                            <select asp-for="RecurrenceFrequency"
-                                    asp-items="ViewBag.RecurrenceFrequency"
-                                    class="form-select border rounded shadow-sm"
-                                    id="frequencySelect">
-                                <option value="">-- Select Frequency --</option>
-                            </select>
-                            <span asp-validation-for="RecurrenceFrequency" class="text-danger small"></span>
-                        </div>
+        <div class="space-y-6">
 
-                        <!-- Territory & Currency -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="TransactionTerrority" class="form-label required-field"></label>
-                                    <select asp-for="TransactionTerrority"
-                                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
-                                            class="form-select border rounded shadow-sm"
-                                            id="territorySelect">
-                                    </select>
-                                    <span asp-validation-for="TransactionTerrority" class="text-danger small"></span>
-                                </div>
-                            </div>
+            <!-- Transaction TimeLine -->
+            <div>
+                <label asp-for="TransactionTimeLine" class="block text-base font-medium text-gray-700 mb-2"></label>
+                <div class="grid grid-cols-2 gap-4">
+                    <div>
+                        <input class="sr-only peer"
+                               type="radio"
+                               asp-for="TransactionTimeLine"
+                               value="OneTime"
+                               id="timeline_OneTime" />
+                        <label class="block w-full p-4 text-center rounded-lg border-2 border-gray-400 cursor-pointer text-gray-700 font-medium peer-checked:border-violet-600 peer-checked:bg-violet-600 peer-checked:text-white transition-all"
+                               for="timeline_OneTime">
+                            One-Time Payment
+                        </label>
+                    </div>
+                    <div>
+                        <input class="sr-only peer"
+                               type="radio"
+                               asp-for="TransactionTimeLine"
+                               value="Recurring"
+                               id="timeline_Recurring" />
+                        <label class="block w-full p-4 text-center rounded-lg border-2 border-gray-400 cursor-pointer text-gray-700 font-medium peer-checked:border-green-600 peer-checked:bg-green-600 peer-checked:text-white transition-all"
+                               for="timeline_Recurring">
+                            Recurring Payment
+                        </label>
+                    </div>
+                </div>
+                <span asp-validation-for="TransactionTimeLine" class="text-red-600 text-base mt-1"></span>
+            </div>
 
-                            <div class="col-md-6" id="currencyContainer" style="display:none;">
-                                <div class="mb-3">
-                                    <label asp-for="SelectedCurrency" class="form-label"></label>
-                                    <select asp-for="SelectedCurrency"
-                                            class="form-select border rounded shadow-sm"
-                                            asp-items="ViewBag.Available">
-                                        <option value="">-- Select Currency --</option>
-                                    </select>
-                                    <span asp-validation-for="SelectedCurrency" class="text-danger small"></span>
-                                </div>
-                            </div>
-                        </div>
+            <!-- Frequency -->
+            <div id="frequencyContainer" style="display:none;">
+                <label asp-for="RecurrenceFrequency" class="block text-base font-medium text-gray-700 mb-1"></label>
+                <select asp-for="RecurrenceFrequency"
+                        asp-items="ViewBag.RecurrenceFrequency"
+                        class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                        id="frequencySelect">
+                    <option value="">-- Select Frequency --</option>
+                </select>
+                <span asp-validation-for="RecurrenceFrequency" class="text-red-600 text-base mt-1"></span>
+            </div>
 
-                        <!-- Amount & Date -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="Amount" class="form-label required-field"></label>
-                                    <input asp-for="Amount" class="form-control border rounded shadow-sm" placeholder="0.00" />
-                                    <span asp-validation-for="Amount" class="text-danger small"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="TransactionDate" class="form-label required-field"></label>
-                                    <input asp-for="TransactionDate" type="date"
-                                           class="form-control border rounded shadow-sm"
-                                           value="@DateTime.Today.ToString("yyyy-MM-dd")"
-                                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-                                    <span asp-validation-for="TransactionDate" class="text-danger small"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Category Type & Category -->
-                        <div class="row">
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="CategoryType" class="form-label required-field"></label>
-                                    <select asp-for="CategoryType" class="form-select border rounded shadow-sm" id="categoryTypeSelect">
-                                        <option value="">-- Select Type --</option>
-                                        <option value="Income">Income</option>
-                                        <option value="Expense">Expense</option>
-                                    </select>
-                                    <span asp-validation-for="CategoryType" class="text-danger small"></span>
-                                </div>
-                            </div>
-
-                            <div class="col-md-6">
-                                <div class="mb-3">
-                                    <label asp-for="CategoryId" class="form-label required-field"></label>
-                                    <select asp-for="CategoryId" class="form-select border rounded shadow-sm" id="categorySelect">
-                                        <option value="">-- Select Category --</option>
-                                        @if (Model.Categories != null)
-                                        {
-                                            foreach (var category in Model.Categories)
-                                            {
-                                                <option value="@category.CategoryId" data-type="@category.CategoryType.ToString()">
-                                                    @category.CategoryName
-                                                </option>
-                                            }
-                                        }
-                                    </select>
-                                    <span asp-validation-for="CategoryId" class="text-danger small"></span>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Description -->
-                        <div class="mb-3">
-                            <label asp-for="Description" class="form-label" id="descriptionLabel"></label>
-                            <textarea asp-for="Description" class="form-control border rounded shadow-sm" rows="3"></textarea>
-                            <span asp-validation-for="Description" class="text-danger small"></span>
-                        </div>
-
-                        <!-- =================== Auto Increase (Step-Up) Section - PREMIUM CARD =================== -->
-                        <div id="stepUpContainer" style="display:none;">
-                            <div class="mb-3">
-                                <div class="form-check form-switch">
-
-                                    <input asp-for="IsStepUpTransaction" class="form-check-input" type="checkbox" id="stepUpToggle" />
-
-                                    <label class="form-check-label fw-semibold" for="stepUpToggle">Enable Auto Increase</label>
-                                </div>
-                            </div>
-
-                            <!-- Collapsible soft card -->
-                            <div id="stepUpCard" class="soft-card collapse-card" aria-hidden="true" style="display:none;">
-                                <div class="p-3 rounded-3 shadow-sm bg-white">
-                                    <h5 class="mb-3 fw-bold">Auto Increase Settings</h5>
-
-                                    <!-- Step-Up Type -->
-                                    <div class="mb-3">
-                                        <label class="form-label">Increase Type</label>
-                                        <div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="radio" name="stepUpType" id="stepUpTypeAmount" value="Amount" checked>
-                                                <label class="form-check-label" for="stepUpTypeAmount">Fixed Amount</label>
-                                            </div>
-                                            <div class="form-check form-check-inline">
-                                                <input class="form-check-input" type="radio" name="stepUpType" id="stepUpTypePercentage" value="Percentage">
-                                                <label class="form-check-label" for="stepUpTypePercentage">Percentage</label>
-                                            </div>
-                                        </div>
-                                    </div>
-
-                                    <!-- Amount input (bound to ViewModel.StepUpAmount) -->
-                                    <div class="mb-3" id="stepUpAmountGroup">
-                                        <label asp-for="StepUpAmount" class="form-label"></label>
-                                        <input asp-for="StepUpAmount" step="0.01" min="0" class="form-control" id="StepUpAmount" />
-                                        <span asp-validation-for="StepUpAmount" class="text-danger small"></span>
-                                    </div>
-
-                                    <!-- Percentage input (bound to ViewModel.StepUpPercentage) -->
-                                    <div class="mb-3" id="stepUpPercentageGroup" style="display:none;">
-                                        <label asp-for="StepUpPercentage" class="form-label"></label>
-                                        <input asp-for="StepUpPercentage" step="0.01" min="0" max="100" class="form-control" id="StepUpPercentage" />
-                                        <span asp-validation-for="StepUpPercentage" class="text-danger small"></span>
-                                    </div>
-
-                                    <!-- Step-Up Frequency (reuses ViewBag.RecurrenceFrequency) -->
-                                    <div class="mb-0">
-                                        <label asp-for="StepUpFrequeny" class="form-label"></label>
-                                        <select asp-for="StepUpFrequeny" asp-items="ViewBag.RecurrenceFrequency" class="form-select" id="stepUpFrequencySelect">
-                                            <option value="">-- Select Frequency --</option>
-                                        </select>
-                                        <span asp-validation-for="StepUpFrequeny" class="text-danger small"></span>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                        <!-- =================== End Auto Increase Section =================== -->
-                        <!-- Submit Button -->
-                        <div class="d-grid mt-4">
-                            <button type="submit" class="btn btn-primary btn-lg shadow-sm">Save Transaction</button>
-                        </div>
-                    </form>
+            <!-- Territory / Currency -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="TransactionTerrority" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="TransactionTerrority"
+                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
+                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                            id="territorySelect">
+                    </select>
+                    <span asp-validation-for="TransactionTerrority" class="text-red-600 text-base mt-1"></span>
+                </div>
+                <div id="currencyContainer" style="display:none;">
+                    <label asp-for="SelectedCurrency" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="SelectedCurrency"
+                            asp-items="ViewBag.Available"
+                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8">
+                        <option value="">-- Select Currency --</option>
+                    </select>
+                    <span asp-validation-for="SelectedCurrency" class="text-red-600 text-base mt-1"></span>
                 </div>
             </div>
+
+            <!-- Amount + Date -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="Amount" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="Amount" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" placeholder="0.00" />
+                    <span asp-validation-for="Amount" class="text-red-600 text-base mt-1"></span>
+                </div>
+                <div>
+                    <label asp-for="TransactionDate" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <input asp-for="TransactionDate" type="date"
+                           class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                           value="@DateTime.Today.ToString("yyyy-MM-dd")"
+                           max="@DateTime.Today.ToString("yyyy-MM-dd")" />
+                    <span asp-validation-for="TransactionDate" class="text-red-600 text-base mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Category -->
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+                <div>
+                    <label asp-for="CategoryType" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="CategoryType"
+                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                            id="categoryTypeSelect">
+                        <option value="">-- Select Type --</option>
+                        <option value="Income">Income</option>
+                        <option value="Expense">Expense</option>
+                    </select>
+                    <span asp-validation-for="CategoryType" class="text-red-600 text-base mt-1"></span>
+                </div>
+                <div>
+                    <label asp-for="CategoryId" class="block text-base font-medium text-gray-700 mb-1"></label>
+                    <select asp-for="CategoryId"
+                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                            id="categorySelect">
+                        <option value="">-- Select Category --</option>
+                        @if (Model.Categories != null)
+                        {
+                            foreach (var category in Model.Categories)
+                            {
+                                <option value="@category.CategoryId" data-type="@category.CategoryType.ToString()">@category.CategoryName</option>
+                            }
+                        }
+                    </select>
+                    <span asp-validation-for="CategoryId" class="text-red-600 text-base mt-1"></span>
+                </div>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label asp-for="Description" class="block text-base font-medium text-gray-700 mb-1" id="descriptionLabel"></label>
+                <textarea asp-for="Description"
+                          class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                          rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-red-600 text-base mt-1"></span>
+            </div>
+
+            <!-- Step-Up Section -->
+            <div id="stepUpContainer" style="display:none;" class="space-y-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input asp-for="IsStepUpTransaction" type="checkbox" id="stepUpToggle" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <span class="ml-3 text-base font-medium text-gray-700">Enable Auto Increase</span>
+                </label>
+
+                <div id="stepUpCard" class="collapse-card" aria-hidden="true" style="display:none;">
+                    <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
+                        <h5 class="text-lg font-semibold text-gray-900">Auto Increase Settings</h5>
+
+                        <div>
+                            <label class="block text-base font-medium text-gray-700 mb-2">Increase Type</label>
+                            <div class="flex gap-6">
+                                <div class="flex items-center">
+                                    <input class="w-4 h-4 text-violet-600 bg-gray-100 border-gray-400 focus:ring-violet-500" type="radio" name="stepUpType" id="stepUpTypeAmount" value="Amount" checked>
+                                    <label class="ml-2 text-base text-gray-700" for="stepUpTypeAmount">Fixed Amount</label>
+                                </div>
+                                <div class="flex items-center">
+                                    <input class="w-4 h-4 text-violet-600 bg-gray-100 border-gray-400 focus:ring-violet-500" type="radio" name="stepUpType" id="stepUpTypePercentage" value="Percentage">
+                                    <label class="ml-2 text-base text-gray-700" for="stepUpTypePercentage">Percentage</label>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div id="stepUpAmountGroup">
+                            <label asp-for="StepUpAmount" class="block text-base font-medium text-gray-700 mb-1"></label>
+                            <input asp-for="StepUpAmount" step="0.01" min="0"
+                                   class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                   id="StepUpAmount" />
+                            <span asp-validation-for="StepUpAmount" class="text-red-600 text-base mt-1"></span>
+                        </div>
+
+                        <div id="stepUpPercentageGroup" style="display:none;">
+                            <label asp-for="StepUpPercentage" class="block text-base font-medium text-gray-700 mb-1"></label>
+                            <input asp-for="StepUpPercentage" step="0.01" min="0" max="100"
+                                   class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                   id="StepUpPercentage" />
+                            <span asp-validation-for="StepUpPercentage" class="text-red-600 text-base mt-1"></span>
+                        </div>
+
+                        <div>
+                            <label asp-for="StepUpFrequeny" class="block text-base font-medium text-gray-700 mb-1"></label>
+                            <select asp-for="StepUpFrequeny" asp-items="ViewBag.RecurrenceFrequency"
+                                    class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                                    id="stepUpFrequencySelect">
+                                <option value="">-- Select Frequency --</option>
+                            </select>
+                            <span asp-validation-for="StepUpFrequeny" class="text-red-600 text-base mt-1"></span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Submit -->
+            <div class="pt-6">
+                <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-all duration-300 transform hover:-translate-y-0.5">
+                    Save Transaction
+                </button>
+            </div>
+
         </div>
-    </div>
+    </form>
 </div>
 
 @section Scripts {
-    
+    <partial name="_ValidationScriptsPartial" />
+
     <style>
-        /* Adds a smooth transition to the button-cards */
-        .btn-check + .btn {
-            transition: all 0.15s ease-in-out;
-            border-width: 2px; /* Makes the outline a bit stronger */
-        }
-
-        /* Soft card style for the Step-Up section (classy & subtle) */
-        .soft-card .p-3 {
-            background: #fbfcfd; /* subtle off-white */
-            border-radius: .5rem;
-        }
-
-        /* Smooth collapse using max-height */
         .collapse-card {
             overflow: hidden;
             max-height: 0;
@@ -241,215 +221,168 @@
         }
 
             .collapse-card.show {
-                max-height: 800px; /* large enough to contain the content */
+                max-height: 800px;
             }
+
+        .required-field::after {
+            content: " *";
+            color: #dc3545;
+            font-weight: bold;
+            padding-left: 2px;
+        }
     </style>
 
     <script>
-    document.addEventListener("DOMContentLoaded", function () {
+        document.addEventListener("DOMContentLoaded", function () {
+            const timelineOneTime = document.getElementById("timeline_OneTime");
+            const timelineRecurring = document.getElementById("timeline_Recurring");
+            const frequencyContainer = document.getElementById("frequencyContainer");
+            const frequencySelect = document.getElementById("frequencySelect");
 
-        // =================================================================
-        // STEP 1: ALL 'const' (ELEMENTS) GO FIRST
-        // =================================================================
-        
-        // --- Timeline / Frequency Logic ---
-        const timelineOneTime = document.getElementById("timeline_OneTime");
-        const timelineRecurring = document.getElementById("timeline_Recurring");
-        const frequencyContainer = document.getElementById("frequencyContainer");
-        const frequencySelect = document.getElementById("frequencySelect");
+            const territorySelect = document.getElementById("territorySelect");
+            const currencyContainer = document.getElementById("currencyContainer");
+            const currencySelect = currencyContainer.querySelector("select");
 
-        // --- Territory / Currency toggle ---
-        const territorySelect = document.getElementById("territorySelect");
-        const currencyContainer = document.getElementById("currencyContainer");
-        const currencySelect = currencyContainer.querySelector("select");
+            const typeSelect = document.getElementById('categoryTypeSelect');
+            const categorySelect = document.getElementById('categorySelect');
+            const descriptionLabel = document.getElementById('descriptionLabel');
+            const allCategoryOptions = Array.from(categorySelect.options);
 
-        // --- Category filter & description ---
-        const typeSelect = document.getElementById('categoryTypeSelect');
-        const categorySelect = document.getElementById('categorySelect');
-        const descriptionLabel = document.getElementById('descriptionLabel');
-        const allCategoryOptions = Array.from(categorySelect.options);
+            const stepUpContainer = document.getElementById('stepUpContainer');
+            const stepUpToggle = document.getElementById('stepUpToggle');
+            const stepUpCard = document.getElementById('stepUpCard');
+            const stepUpTypeAmount = document.getElementById('stepUpTypeAmount');
+            const stepUpTypePercentage = document.getElementById('stepUpTypePercentage');
+            const stepUpAmountGroup = document.getElementById('stepUpAmountGroup');
+            const stepUpPercentageGroup = document.getElementById('stepUpPercentageGroup');
+            const stepUpAmountInput = document.getElementById('StepUpAmount');
+            const stepUpPercentageInput = document.getElementById('StepUpPercentage');
+            const stepUpFrequencySelect = document.getElementById('stepUpFrequencySelect');
 
-        // --- Step-Up (Auto Increase) Logic ---
-        const stepUpContainer = document.getElementById('stepUpContainer');
-        const stepUpToggle = document.getElementById('stepUpToggle');
-        const stepUpCard = document.getElementById('stepUpCard');
-        const stepUpTypeAmount = document.getElementById('stepUpTypeAmount');
-        const stepUpTypePercentage = document.getElementById('stepUpTypePercentage');
-        const stepUpAmountGroup = document.getElementById('stepUpAmountGroup');
-        const stepUpPercentageGroup = document.getElementById('stepUpPercentageGroup');
-        const stepUpAmountInput = document.getElementById('StepUpAmount');
-        const stepUpPercentageInput = document.getElementById('StepUpPercentage');
-        const stepUpFrequencySelect = document.getElementById('stepUpFrequencySelect');
-
-
-        // =================================================================
-        // STEP 2: ALL 'function' DEFINITIONS GO SECOND
-        // =================================================================
-
-        function toggleFrequency() {
-            if (timelineRecurring.checked) {
-                frequencyContainer.style.display = "block";
-                frequencySelect.setAttribute("required", "required");
-            } else {
-                frequencyContainer.style.display = "none";
-                frequencySelect.removeAttribute("required");
-                frequencySelect.value = ""; // Clear selection if hidden
-            }
-            // ALSO call step-up visibility update
-            updateStepUpAvailability();
-        }
-
-        function toggleCurrency() {
-            const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
-
-            if (selectedOptionText === "International") {
-                currencyContainer.style.display = "block";
-                currencySelect.setAttribute("required", "required"); // Add required attribute
-            } else {
-                currencyContainer.style.display = "none";
-                currencySelect.removeAttribute("required"); // Remove required attribute
-                currencySelect.value = ""; // Clear selection
-            }
-        }
-
-        function filterCategories() {
-            const selectedType = typeSelect.value;
-            const currentCategoryValue = categorySelect.value;
-
-            categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
-            allCategoryOptions.forEach(option => {
-                if (!option.value) return; // Skip the placeholder
-                if (!selectedType || option.getAttribute('data-type') === selectedType) {
-                    categorySelect.appendChild(option.cloneNode(true));
+            function toggleFrequency() {
+                if (timelineRecurring.checked) {
+                    frequencyContainer.style.display = "block";
+                    frequencySelect.setAttribute("required", "required");
+                } else {
+                    frequencyContainer.style.display = "none";
+                    frequencySelect.removeAttribute("required");
+                    frequencySelect.value = "";
                 }
-            });
-
-            if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
-                categorySelect.value = currentCategoryValue;
-            } else {
-                categorySelect.value = "";
+                updateStepUpAvailability();
             }
-        }
 
-        function toggleDescriptionRequirement() {
-            descriptionLabel.classList.add('required-field');
-        }
-
-        function updateStepUpAvailability() {
-            if (timelineRecurring.checked) {
-                stepUpContainer.style.display = "block";
-            } else {
-                // Hide + reset
-                stepUpContainer.style.display = "none";
-                stepUpToggle.checked = false;
-                collapseStepUp(false);
-                clearStepUpFields();
+            function toggleCurrency() {
+                const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
+                if (selectedOptionText === "International") {
+                    currencyContainer.style.display = "block";
+                    currencySelect.setAttribute("required", "required");
+                } else {
+                    currencyContainer.style.display = "none";
+                    currencySelect.removeAttribute("required");
+                    currencySelect.value = "";
+                }
             }
-        }
 
-        function collapseStepUp(show) {
-            if (show) {
-                stepUpCard.style.display = "block";
-                window.requestAnimationFrame(function () {
-                    stepUpCard.classList.add('show');
-                    stepUpCard.setAttribute('aria-hidden', 'false');
+            function filterCategories() {
+                const selectedType = typeSelect.value;
+                const currentCategoryValue = categorySelect.value;
+                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+                allCategoryOptions.forEach(option => {
+                    if (!option.value) return;
+                    if (!selectedType || option.getAttribute('data-type') === selectedType) {
+                        categorySelect.appendChild(option.cloneNode(true));
+                    }
                 });
-            } else {
-                stepUpCard.classList.remove('show');
-                stepUpCard.setAttribute('aria-hidden', 'true');
-                setTimeout(function () {
-                    if (!stepUpCard.classList.contains('show')) stepUpCard.style.display = "none";
-                }, 350);
+                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
+                    categorySelect.value = currentCategoryValue;
+                } else {
+                    categorySelect.value = "";
+                }
             }
-        }
 
-        function clearStepUpFields() {
-            if (stepUpAmountInput) {
+            function toggleDescriptionRequirement() {
+                descriptionLabel.classList.add('required-field');
+            }
+
+            function updateStepUpAvailability() {
+                if (timelineRecurring.checked) {
+                    stepUpContainer.style.display = "block";
+                } else {
+                    stepUpContainer.style.display = "none";
+                    stepUpToggle.checked = false;
+                    collapseStepUp(false);
+                    clearStepUpFields();
+                }
+            }
+
+            function collapseStepUp(show) {
+                if (show) {
+                    stepUpCard.style.display = "block";
+                    window.requestAnimationFrame(() => {
+                        stepUpCard.classList.add('show');
+                        stepUpCard.setAttribute('aria-hidden', 'false');
+                    });
+                } else {
+                    stepUpCard.classList.remove('show');
+                    stepUpCard.setAttribute('aria-hidden', 'true');
+                    setTimeout(() => {
+                        if (!stepUpCard.classList.contains('show')) stepUpCard.style.display = "none";
+                    }, 350);
+                }
+            }
+
+            function clearStepUpFields() {
                 stepUpAmountInput.value = "";
                 stepUpAmountInput.removeAttribute('required');
-            }
-            if (stepUpPercentageInput) {
                 stepUpPercentageInput.value = "";
                 stepUpPercentageInput.removeAttribute('required');
-            }
-            if (stepUpFrequencySelect) {
                 stepUpFrequencySelect.value = "";
                 stepUpFrequencySelect.removeAttribute('required');
             }
-        }
 
-        function updateStepUpTypeUI() {
-            if (stepUpTypePercentage.checked) {
-                stepUpAmountGroup.style.display = 'none';
-                stepUpPercentageGroup.style.display = 'block';
-                if (stepUpToggle.checked) {
-                    stepUpPercentageInput && stepUpPercentageInput.setAttribute('required', 'required');
-                    stepUpAmountInput && stepUpAmountInput.removeAttribute('required');
-                }
-            } else {
-                stepUpAmountGroup.style.display = 'block';
-                stepUpPercentageGroup.style.display = 'none';
-                if (stepUpToggle.checked) {
-                    stepUpAmountInput && stepUpAmountInput.setAttribute('required', 'required');
-                    stepUpPercentageInput && stepUpPercentageInput.removeAttribute('required');
-                }
-            }
-        }
-
-
-        // =================================================================
-        // STEP 3: ALL EVENT LISTENERS GO THIRD
-        // =================================================================
-        
-        timelineOneTime.addEventListener("change", toggleFrequency);
-        timelineRecurring.addEventListener("change", toggleFrequency);
-        
-        territorySelect.addEventListener("change", toggleCurrency);
-        
-        typeSelect.addEventListener('change', function () {
-            filterCategories();
-            toggleDescriptionRequirement();
-        });
-
-        stepUpToggle.addEventListener('change', function () {
-            if (stepUpToggle.checked) {
-                collapseStepUp(true);
-                // Set required based on current type
-                if (stepUpTypeAmount.checked) {
-                    stepUpAmountInput && stepUpAmountInput.setAttribute('required', 'required');
-                    stepUpPercentageInput && stepUpPercentageInput.removeAttribute('required');
+            function updateStepUpTypeUI() {
+                if (stepUpTypePercentage.checked) {
+                    stepUpAmountGroup.style.display = 'none';
+                    stepUpPercentageGroup.style.display = 'block';
+                    if (stepUpToggle.checked) {
+                        stepUpPercentageInput.setAttribute('required', 'required');
+                        stepUpAmountInput.removeAttribute('required');
+                    }
                 } else {
-                    stepUpPercentageInput && stepUpPercentageInput.setAttribute('required', 'required');
-                    stepUpAmountInput && stepUpAmountInput.removeAttribute('required');
+                    stepUpAmountGroup.style.display = 'block';
+                    stepUpPercentageGroup.style.display = 'none';
+                    if (stepUpToggle.checked) {
+                        stepUpAmountInput.setAttribute('required', 'required');
+                        stepUpPercentageInput.removeAttribute('required');
+                    }
                 }
-                stepUpFrequencySelect && stepUpFrequencySelect.setAttribute('required', 'required');
-            } else {
-                collapseStepUp(false);
-                clearStepUpFields();
             }
-        });
-        
-        stepUpTypeAmount.addEventListener('change', updateStepUpTypeUI);
-        stepUpTypePercentage.addEventListener('change', updateStepUpTypeUI);
 
+            timelineOneTime.addEventListener("change", toggleFrequency);
+            timelineRecurring.addEventListener("change", toggleFrequency);
+            territorySelect.addEventListener("change", toggleCurrency);
+            typeSelect.addEventListener("change", filterCategories);
+            categorySelect.addEventListener("change", toggleDescriptionRequirement);
 
-        // =================================================================
-        // STEP 4: ALL INITIAL PAGE-LOAD CALLS GO LAST
-        // =================================================================
-        
-        toggleFrequency(); // This also calls updateStepUpAvailability()
-        toggleCurrency();
-        filterCategories();
-        toggleDescriptionRequirement();
+            stepUpToggle.addEventListener('change', function () {
+                collapseStepUp(this.checked);
+                if (this.checked) {
+                    updateStepUpTypeUI();
+                    stepUpFrequencySelect.setAttribute('required', 'required');
+                } else {
+                    clearStepUpFields();
+                }
+            });
 
-        // Initial step-up UI setup:
-        // (updateStepUpAvailability is already called by toggleFrequency)
-        if (stepUpToggle.checked) {
-            collapseStepUp(true);
+            stepUpTypeAmount.addEventListener('change', updateStepUpTypeUI);
+            stepUpTypePercentage.addEventListener('change', updateStepUpTypeUI);
+
+            // Initialize state
+            toggleFrequency();
+            toggleCurrency();
+            filterCategories();
             updateStepUpTypeUI();
-        } else {
-            collapseStepUp(false);
-        }
-    });
+            updateStepUpAvailability();
+        });
     </script>
 }

@@ -5,96 +5,106 @@
 @{
     ViewData["Title"] = "Manage Categories";
 
-    // --- OPTIMIZATION ---
-    // Separate categories into two lists first to avoid looping through the full list twice.
+    // --- OPTIMIZATION (No change, this logic is perfect) ---
     var incomeCategories = Model.Where(c => c.CategoryType == CategoryType.Income).ToList();
     var expenseCategories = Model.Where(c => c.CategoryType == CategoryType.Expense).ToList();
 }
 
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">Manage Categories</h1>
-    <a asp-action="Create" class="btn btn-primary">
-        <i class="bi bi-plus-circle me-2"></i>Create New Category
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">@ViewData["Title"]</h1>
+        <p class="text-lg text-gray-500">Add, edit, or remove your categories.</p>
+    </div>
+
+    <a asp-action="Create" class="inline-flex items-center justify-center gap-2 px-5 py-3 text-base font-medium text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-300 transform hover:-translate-y-0.5">
+        <i class="bi bi-plus-circle text-xl"></i>
+        <span>Create New Category</span>
     </a>
 </div>
 
-<div class="row g-4">
+<div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
 
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-success text-white">
-                <h4 class="mb-0">Income</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Category Name</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (incomeCategories.Any())
+    <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+        <div class="bg-green-600 text-white p-5">
+            <h2 class="text-2xl font-semibold">Income</h2>
+        </div>
+
+        <div class="w-full overflow-x-auto">
+            <table class="table-auto w-full text-left">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @if (incomeCategories.Any())
+                    {
+                        foreach (var item in incomeCategories)
                         {
-                            foreach (var item in incomeCategories)
-                            {
-                                <tr>
-                                    <td>@item.CategoryName</td>
-                                    <td class="text-end">
-                                        <a asp-action="Edit" asp-route-categoryId="@item.CategoryId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                        <a asp-action="Delete" asp-route-categoryId="@item.CategoryId" class="btn btn-sm btn-outline-danger">Delete</a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">No income categories found.</td>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-lg font-medium text-gray-800">
+                                    @item.CategoryName
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-lg font-medium text-right space-x-2">
+                                    <a asp-action="Edit" asp-route-categoryId="@item.CategoryId" class="px-3 py-1 text-lg font-medium text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 transition-all">Edit</a>
+                                    <a asp-action="Delete" asp-route-categoryId="@item.CategoryId" class="px-3 py-1 text-lg font-medium text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-all">Delete</a>
+                                </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" class="text-center py-10 text-gray-500">
+                                No income categories found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <div class="col-lg-6">
-        <div class="card shadow-sm h-100">
-            <div class="card-header bg-danger text-white">
-                <h4 class="mb-0">Expense</h4>
-            </div>
-            <div class="card-body">
-                <table class="table table-hover">
-                    <thead>
-                        <tr>
-                            <th>Category Name</th>
-                            <th class="text-end">Actions</th>
-                        </tr>
-                    </thead>
-                    <tbody>
-                        @if (expenseCategories.Any())
+    <div class="bg-white rounded-xl shadow-md overflow-hidden transition-all duration-300 hover:shadow-lg">
+        <div class="bg-red-600 text-white p-5">
+            <h2 class="text-2xl font-semibold">Expense</h2>
+        </div>
+
+        <div class="w-full overflow-x-auto">
+            <table class="table-auto w-full text-left">
+                <thead class="bg-gray-50">
+                    <tr>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category Name</th>
+                        <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
+                    </tr>
+                </thead>
+                <tbody class="divide-y divide-gray-200">
+                    @if (expenseCategories.Any())
+                    {
+                        foreach (var item in expenseCategories)
                         {
-                            foreach (var item in expenseCategories)
-                            {
-                                <tr>
-                                    <td>@item.CategoryName</td>
-                                    <td class="text-end">
-                                        <a asp-action="Edit" asp-route-categoryId="@item.CategoryId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                        <a asp-action="Delete" asp-route-categoryId="@item.CategoryId" class="btn btn-sm btn-outline-danger">Delete</a>
-                                    </td>
-                                </tr>
-                            }
-                        }
-                        else
-                        {
-                            <tr>
-                                <td colspan="2" class="text-center text-muted">No expense categories found.</td>
+                            <tr class="hover:bg-gray-50 transition-colors">
+                                <td class="px-6 py-4 whitespace-nowrap text-lg font-medium text-gray-800">
+                                    @item.CategoryName
+                                </td>
+                                <td class="px-6 py-4 whitespace-nowrap text-lg font-medium text-right space-x-2">
+                                    <a asp-action="Edit" asp-route-categoryId="@item.CategoryId" class="px-3 py-1 text-lg font-medium text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 transition-all">Edit</a>
+                                    <a asp-action="Delete" asp-route-categoryId="@item.CategoryId" class="px-3 py-1 text-lg font-medium text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-all">Delete</a>
+                                </td>
                             </tr>
                         }
-                    </tbody>
-                </table>
-            </div>
+                    }
+                    else
+                    {
+                        <tr>
+                            <td colspan="2" class="text-center py-10 text-gray-500">
+                                No expense categories found.
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
         </div>
     </div>
 

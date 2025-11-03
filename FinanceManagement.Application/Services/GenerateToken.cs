@@ -36,7 +36,7 @@ namespace FinanceManagement.Infrastructure.Services
                 throw;
             }
 
-            string baseUrl = "https://localhost:7145";
+            string baseUrl = "https://localhost:5294";
 
             var verifyUrl = $"{baseUrl}/Account/VerifyEmail?userId={Uri.EscapeDataString(user.UserId.ToString())}" +
                             $"&token={Uri.EscapeDataString(user.EmailVerificationToken)}";

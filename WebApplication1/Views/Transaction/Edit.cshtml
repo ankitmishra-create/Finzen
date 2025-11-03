@@ -1,342 +1,174 @@
 ﻿@model FinanceManagement.Application.ViewModels.AddTransactionVM
-
 @using FinanceManagement.Core.Enums
-
 @using Microsoft.AspNetCore.Mvc.Rendering
 
-
-
 @{
-
     ViewData["Title"] = "Edit Transaction";
 
-
-
     var categoryTypes = Enum.GetValues(typeof(CategoryType))
-
-                .Cast<CategoryType>()
-
-                .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
-
-                .ToList();
-
+        .Cast<CategoryType>()
+        .Select(e => new SelectListItem { Value = e.ToString(), Text = e.ToString() })
+        .ToList();
 }
 
-
-
-<div class="container py-5">
-
-    <div class="row justify-content-center">
-
-        <div class="col-md-8 col-lg-6">
-
-            <div class="card shadow-sm rounded-4 border-0">
-
-                <div class="card-body p-4 p-md-5">
-
-                    <h3 class="card-title text-center mb-4 fw-bold">Edit Transaction</h3>
-
-
-
-                    <form asp-controller="Transaction" asp-action="Edit" method="post">
-
-                        <div asp-validation-summary="ModelOnly" class="text-danger mb-3" role="alert"></div>
-
-
-
-                        <input type="hidden" asp-for="UserId" />
-
-                        <input type="hidden" asp-for="TransactionId" />
-
-
-
-                        <div class="row">
-
-                            <!-- Territory Dropdown -->
-
-                            <div class="col-md-6">
-
-                                <div class="mb-3">
-
-                                    <label asp-for="TransactionTerrority" class="form-label required-field"></label>
-
-                                    <select asp-for="TransactionTerrority"
-                                                                  asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
-                                                                  class="form-select"
-                                                                  id="territorySelect">
-                                    </select>
-
-                                    <span asp-validation-for="TransactionTerrority" class="text-danger small"></span>
-
-                                </div>
-
-                            </div>
-
-
-
-                            <!-- Currency Dropdown (shown only for International) -->
-
-                            <div class="col-md-6" id="currencyContainer" style="display:none;">
-
-                                <div class="mb-3">
-
-                                    <label asp-for="SelectedCurrency" class="form-label required-field"></label>
-
-                                    <select asp-for="SelectedCurrency"
-                                                                  class="form-select"
-                                                                  asp-items="ViewBag.Available">
-
-                                        <option value="">-- Select Currency --</option>
-
-                                    </select>
-
-                                    <span asp-validation-for="SelectedCurrency" class="text-danger small"></span>
-
-                                </div>
-
-                            </div>
-
-                        </div>
-
-
-
-                        <!-- Amount -->
-
-                        <div class="mb-3">
-
-                            <label asp-for="Amount" class="form-label required-field"></label>
-
-                            <input asp-for="Amount" class="form-control" />
-
-                            <span asp-validation-for="Amount" class="text-danger small"></span>
-
-                        </div>
-
-
-
-                        <!-- Transaction Date -->
-
-                        <div class="mb-3">
-
-                            <label asp-for="TransactionDate" class="form-label required-field"></label>
-
-                            <input asp-for="TransactionDate" type="date" class="form-control"
-                                                     max="@DateTime.Today.ToString("yyyy-MM-dd")" />
-
-                            <span asp-validation-for="TransactionDate" class="text-danger small"></span>
-
-                        </div>
-
-
-
-                        <!-- Category Type -->
-
-                        <div class="mb-3">
-
-                            <label asp-for="CategoryType" class="form-label required-field"></label>
-
-                            <select asp-for="CategoryType" class="form-select" id="categoryTypeDropdown" asp-items="categoryTypes"></select>
-
-                            <span asp-validation-for="CategoryType" class="text-danger small"></span>
-
-                        </div>
-
-
-
-                        <!-- Category Selection -->
-
-                        <div class="mb-3">
-
-                            <label asp-for="CategoryId" class="form-label required-field"></label>
-
-                            <select asp-for="CategoryId" class="form-select" id="categorySelect">
-
-                                <option value="">-- Select Category --</option>
-
-                                @if (Model.Categories != null && Model.Categories.Any())
-
-                                {
-
-                                    foreach (var category in Model.Categories)
-
-                                    {
-
-                                        <option value="@category.CategoryId"
-                                                                        data-type="@category.CategoryType"
-                                                                        selected="@(Model.CategoryId == category.CategoryId ? "selected" : null)">
-
-                                            @category.CategoryName
-
-                                        </option>
-
-                                    }
-
-                                }
-
-                            </select>
-
-                            <span asp-validation-for="CategoryId" class="text-danger small"></span>
-
-                        </div>
-
-
-
-                        <!-- Description -->
-
-                        <div class="mb-3">
-
-                            <label asp-for="Description" id="descriptionLabel" class="form-label"></label>
-
-                            <textarea asp-for="Description" class="form-control"></textarea>
-
-                            <span asp-validation-for="Description" class="text-danger small"></span>
-
-                        </div>
-
-
-
-                        <!-- Submit Button -->
-
-                        <div class="d-grid mt-4">
-
-                            <button type="submit" class="btn btn-primary btn-lg">Save Changes</button>
-
-                        </div>
-
-                    </form>
-
+<div class="min-h-screen flex items-center justify-center bg-gray-50 py-10">
+    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl border border-gray-100">
+        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-8">Edit Transaction</h2>
+
+        <form asp-controller="Transaction" asp-action="Edit" method="post" class="space-y-6">
+            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-2"></div>
+
+            <input type="hidden" asp-for="UserId" />
+            <input type="hidden" asp-for="TransactionId" />
+
+            <!-- Territory & Currency -->
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div>
+                    <label asp-for="TransactionTerrority" class="block text-gray-700 font-medium mb-1"></label>
+                    <select asp-for="TransactionTerrority"
+                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
+                            id="territorySelect"
+                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                    </select>
+                    <span asp-validation-for="TransactionTerrority" class="text-red-600 text-xs"></span>
                 </div>
 
+                <div id="currencyContainer" style="display:none;">
+                    <label asp-for="SelectedCurrency" class="block text-gray-700 font-medium mb-1"></label>
+                    <select asp-for="SelectedCurrency"
+                            asp-items="ViewBag.Available"
+                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                        <option value="">-- Select Currency --</option>
+                    </select>
+                    <span asp-validation-for="SelectedCurrency" class="text-red-600 text-xs"></span>
+                </div>
             </div>
 
-        </div>
+            <!-- Amount -->
+            <div>
+                <label asp-for="Amount" class="block text-gray-700 font-medium mb-1"></label>
+                <input asp-for="Amount"
+                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5" />
+                <span asp-validation-for="Amount" class="text-red-600 text-xs"></span>
+            </div>
 
+            <!-- Transaction Date -->
+            <div>
+                <label asp-for="TransactionDate" class="block text-gray-700 font-medium mb-1"></label>
+                <input asp-for="TransactionDate"
+                       type="date"
+                       max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5" />
+                <span asp-validation-for="TransactionDate" class="text-red-600 text-xs"></span>
+            </div>
+
+            <!-- Category Type -->
+            <div>
+                <label asp-for="CategoryType" class="block text-gray-700 font-medium mb-1"></label>
+                <select asp-for="CategoryType"
+                        asp-items="categoryTypes"
+                        id="categoryTypeDropdown"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                </select>
+                <span asp-validation-for="CategoryType" class="text-red-600 text-xs"></span>
+            </div>
+
+            <!-- Category Selection -->
+            <div>
+                <label asp-for="CategoryId" class="block text-gray-700 font-medium mb-1"></label>
+                <select asp-for="CategoryId"
+                        id="categorySelect"
+                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                    <option value="">-- Select Category --</option>
+                    @if (Model.Categories != null && Model.Categories.Any())
+                    {
+                        foreach (var category in Model.Categories)
+                        {
+                            <option value="@category.CategoryId"
+                                    data-type="@category.CategoryType"
+                                    selected="@(Model.CategoryId == category.CategoryId ? "selected" : null)">
+                                @category.CategoryName
+                            </option>
+                        }
+                    }
+                </select>
+                <span asp-validation-for="CategoryId" class="text-red-600 text-xs"></span>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label asp-for="Description"
+                       id="descriptionLabel"
+                       class="block text-gray-700 font-medium mb-1"></label>
+                <textarea asp-for="Description"
+                          class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5"
+                          rows="3"></textarea>
+                <span asp-validation-for="Description" class="text-red-600 text-xs"></span>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="pt-4">
+                <button type="submit"
+                        class="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg shadow hover:bg-indigo-700 transition duration-150">
+                    Save Changes
+                </button>
+            </div>
+        </form>
     </div>
-
 </div>
 
-
-
 @section Scripts {
-
     <partial name="_ValidationScriptsPartial" />
 
-
-
     <script>
-
         document.addEventListener("DOMContentLoaded", function () {
-
-            // --- Territory / Currency ---
-
+            // --- Territory / Currency toggle ---
             const territorySelect = document.getElementById("territorySelect");
-
             const currencyContainer = document.getElementById("currencyContainer");
 
-
-
             function updateCurrencyVisibility() {
-
                 const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
-
-                if (selectedOptionText === "International") {
-
-                    currencyContainer.style.display = "block";
-
-                } else {
-
-                    currencyContainer.style.display = "none";
-
-                }
-
+                currencyContainer.style.display = selectedOptionText === "International" ? "block" : "none";
             }
-
-
 
             updateCurrencyVisibility();
-
             territorySelect.addEventListener("change", updateCurrencyVisibility);
 
-
-
-            // --- Category Filter ---
-
-            const typeSelect = document.getElementById('categoryTypeDropdown');
-
-            const categorySelect = document.getElementById('categorySelect');
-
-            const descriptionLabel = document.getElementById('descriptionLabel');
-
-
-
+            // --- Category filtering ---
+            const typeSelect = document.getElementById("categoryTypeDropdown");
+            const categorySelect = document.getElementById("categorySelect");
+            const descriptionLabel = document.getElementById("descriptionLabel");
             const allCategoryOptions = Array.from(categorySelect.options);
 
-
-
             function filterCategories() {
-
                 const selectedType = typeSelect.value;
-
                 const currentCategoryValue = categorySelect.value;
 
-
-
                 categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
-
-
-
                 allCategoryOptions.forEach(option => {
-
                     if (!option.value) return;
-
-                    if (!selectedType || option.getAttribute('data-type') === selectedType) {
-
+                    if (!selectedType || option.getAttribute("data-type") === selectedType)
                         categorySelect.appendChild(option.cloneNode(true));
-
-                    }
-
                 });
 
-
-
-                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
-
+                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`))
                     categorySelect.value = currentCategoryValue;
-
-                } else {
-
+                else
                     categorySelect.value = "";
-
-                }
-
             }
-
-
 
             function toggleDescriptionRequirement() {
-                    descriptionLabel.classList.add('required-field');
+                descriptionLabel.classList.add("after:content-['*'] after:text-red-500 after:ml-1");
             }
 
-
-
-            typeSelect.addEventListener('change', function () {
-
+            typeSelect.addEventListener("change", () => {
                 filterCategories();
-
                 toggleDescriptionRequirement();
-
             });
 
-
-
-            // Initial setup
-
+            // Initial load
             filterCategories();
-
             toggleDescriptionRequirement();
-
         });
-
     </script>
-
 }

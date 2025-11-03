@@ -6,82 +6,77 @@
     ViewData["Title"] = "All Transactions";
 }
 
-<!-- Page Header -->
-<div class="d-flex justify-content-between align-items-center mb-4">
-    <h1 class="mb-0">All Transactions</h1>
+<div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
+    <div>
+        <h1 class="text-3xl font-bold text-gray-900">@ViewData["Title"]</h1>
+        <p class="text-lg text-gray-500">Your complete transaction history.</p>
+    </div>
 
-    <div class="d-flex gap-2">
-        <!-- Manage Recurring Transactions -->
-        <a asp-controller="RecurringTransaction"
-           asp-action="Index"
-           class="btn btn-outline-secondary">
-            <i class="bi bi-arrow-repeat me-2"></i>Manage Recurring Transactions
+    <div class="flex flex-col sm:flex-row gap-3">
+        <a asp-controller="RecurringTransaction" asp-action="Index" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-gray-700 bg-white border border-gray-300 rounded-lg shadow-sm hover:bg-gray-50 transition-all">
+            <i class="bi bi-arrow-repeat"></i>
+            <span>Manage Recurring</span>
         </a>
-
-        <!-- Deleted Transactions Button -->
-        <a asp-controller="TransactionLog" asp-action="Index"
-           class="btn btn-outline-danger position-relative px-4 fw-semibold shadow-sm"
-           style="border-width: 2px;">
-            <i class="bi bi-trash3-fill me-2"></i>
-            Deleted Transactions
-            <span class="position-absolute top-0 start-100 translate-middle badge rounded-pill bg-danger-subtle text-danger border border-danger shadow-sm">
+        <a asp-controller="TransactionLog" asp-action="Index" class="relative inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-red-600 bg-white border-2 border-red-600 rounded-lg shadow-sm hover:bg-red-50 transition-all">
+            <i class="bi bi-trash3-fill"></i>
+            <span>Deleted</span>
+            <span class="absolute -top-2 -right-2 inline-flex items-center justify-center px-2 py-1 text-xs font-bold text-red-600 bg-red-100 border border-red-500 rounded-full">
                 <i class="bi bi-eye-fill"></i>
             </span>
         </a>
-
-        <!-- Create New Transaction -->
-        <a asp-action="Create" class="btn btn-primary">
-            <i class="bi bi-plus-circle me-2"></i>Create New Transaction
+        <a asp-action="Create" class="inline-flex items-center justify-center gap-2 px-4 py-2 text-base font-medium text-white bg-violet-600 rounded-lg shadow-md hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-violet-500 focus:ring-offset-2 transition-all duration-300 transform hover:-translate-y-0.5">
+            <i class="bi bi-plus-circle"></i>
+            <span>Create New</span>
         </a>
     </div>
 </div>
 
-<!-- Main Content Card -->
-<div class="card shadow-sm">
-    <div class="card-body">
-        <table class="table table-hover align-middle">
-            <thead class="table-light">
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <div class="w-full overflow-x-auto">
+        <table class="table-auto w-full text-left">
+            <thead class="bg-gray-50 border-b border-gray-200">
                 <tr>
-                    <th>Date</th>
-                    <th>Category Type</th>
-                    <th>Category Name</th>
-                    <th>Description</th>
-                    <th class="text-end">Amount</th>
-                    <th class="text-end">Actions</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</th>
+                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Actions</th>
                 </tr>
             </thead>
-            <tbody>
+
+            <tbody class="divide-y divide-gray-200">
                 @if (Model.Any())
                 {
                     foreach (var item in Model.OrderByDescending(t => t.TransactionDate))
                     {
-                        var amountColorClass = item.Category.CategoryType == CategoryType.Income ? "text-success" : "text-danger";
+                        var amountColorClass = item.Category.CategoryType == CategoryType.Income ? "text-green-600" : "text-red-600";
                         var amountPrefix = item.Category.CategoryType == CategoryType.Income ? "+" : "-";
+                        var badgeClass = item.Category.CategoryType == CategoryType.Income ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
 
-                        <tr>
-                            <td>@item.TransactionDate?.ToString("MMM dd, yyyy")</td>
-
-                            <td>
-                                <span class="badge @(item.Category.CategoryType == CategoryType.Income ? "bg-success" : "bg-danger")">
+                        <tr class="hover:bg-gray-50 transition-colors">
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-700">
+                                @item.TransactionDate?.ToString("MMM dd, yyyy")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @badgeClass">
                                     @item.Category?.CategoryType
                                 </span>
                             </td>
-
-                            <td>
-                                <span class="badge bg-secondary bg-opacity-25 text-dark-emphasis">
+                            <td class="px-6 py-4 whitespace-nowrap">
+                                <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-800">
                                     @item.Category.CategoryName
                                 </span>
                             </td>
-
-                            <td>@item.Description</td>
-
-                            <td class="text-end fw-bold @amountColorClass">
-                                @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString()
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-600">
+                                @item.Description
                             </td>
-
-                            <td class="text-end">
-                                <a asp-action="Edit" asp-route-transactionId="@item.TransactionId" class="btn btn-sm btn-outline-primary me-1">Edit</a>
-                                <a asp-action="Delete" asp-route-transactionId="@item.TransactionId" class="btn btn-sm btn-outline-danger">Delete</a>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right @amountColorClass">
+                                @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString("N2")
+                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-right space-x-2">
+                                <a asp-action="Edit" asp-route-transactionId="@item.TransactionId" class="px-3 py-1 text-sm font-medium text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 transition-all">Edit</a>
+                                <a asp-action="Delete" asp-route-transactionId="@item.TransactionId" class="px-3 py-1 text-sm font-medium text-red-600 border border-red-600 rounded-lg hover:bg-red-50 transition-all">Delete</a>
                             </td>
                         </tr>
                     }
@@ -89,7 +84,7 @@
                 else
                 {
                     <tr>
-                        <td colspan="6" class="text-center text-muted py-4">
+                        <td colspan="6" class="text-center py-10 text-gray-500">
                             You haven't added any transactions yet.
                         </td>
                     </tr>
