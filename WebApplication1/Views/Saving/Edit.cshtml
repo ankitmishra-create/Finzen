@@ -1,0 +1,163 @@
+﻿@using FinanceManagement.Core.Enums
+@model FinanceManagement.Application.ViewModels.SavingVM
+
+@{
+    ViewData["Title"] = "Edit Saving";
+}
+
+<div class="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
+    <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
+        @ViewData["Title"]
+    </h1>
+    <a asp-action="Index" class="text-base font-medium text-violet-600 hover:text-violet-500 flex items-center gap-1 transition-colors">
+        <i class="bi bi-arrow-left"></i>
+        <span>Back to Savings</span>
+    </a>
+</div>
+
+<div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
+    <form asp-action="Edit" method="post" id="savingForm">
+        <input asp-for="UserId" type="hidden" />
+        <input asp-for="SavingId" type="hidden" />
+
+        <div class="space-y-8">
+
+            <!-- Saving Name -->
+            <div>
+                <label asp-for="SavingName" class="block text-base font-semibold text-gray-800 mb-1 required-field">Saving Name</label>
+                <input asp-for="SavingName"
+                       type="text"
+                       class="block w-full rounded-lg border-gray-300 p-3 text-base shadow-sm focus:border-violet-500 focus:ring-violet-500 transition-all"
+                       placeholder="e.g., Monthly Groceries, Vacation Fund" />
+                <span asp-validation-for="SavingName" class="text-red-600 text-sm mt-1"></span>
+            </div>
+
+            <!-- Category Switch -->
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input asp-for="CategorySwitch" type="checkbox" id="categorySwitch" class="sr-only peer" />
+                    <div class="w-12 h-7 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <span class="ml-3 text-base font-medium text-gray-700">Assign Saving to a Category</span>
+                </label>
+
+                <div id="categorySection" class="mt-5 bg-white rounded-xl border border-gray-200 shadow-sm p-5 hidden transition-all duration-300">
+                    <div>
+                        <label asp-for="CategoryId" id="categoryLabel" class="block text-base font-semibold text-gray-800 mb-1">Select Category</label>
+                        <select asp-for="CategoryId" id="categoryDropdown"
+                                class="block w-full rounded-lg border-gray-300 p-3 text-base focus:border-violet-500 focus:ring-violet-500 transition">
+                            <option value="">-- Select Category --</option>
+                            @foreach (var cat in Model.UserCategories ?? new List<FinanceManagement.Core.Entities.Category>())
+                            {
+                                if (cat.CategoryType == FinanceManagement.Core.Enums.CategoryType.Income)
+                                {
+                                    <option value="@cat.CategoryId"
+                                            data-type="@cat.CategoryType.ToString().ToLower()"
+                                            selected="@(Model.CategoryId == cat.CategoryId ? "selected" : null)">
+                                        @cat.CategoryName (@cat.CategoryType)
+                                    </option>
+                                }
+                            }
+                        </select>
+                        <span asp-validation-for="CategoryId" class="text-red-600 text-sm mt-1"></span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Saving Amount -->
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label asp-for="Amount" class="block text-base font-semibold text-gray-800 mb-1 required-field">Saving Amount</label>
+                <div class="flex rounded-lg overflow-hidden border border-gray-300 focus-within:border-violet-500 transition">
+                    <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600 font-semibold border-r border-gray-300">
+                        @(Model.UserBaseCurrency ?? "")
+                    </span>
+                    <input asp-for="Amount"
+                           type="number"
+                           class="block w-full p-3 focus:outline-none focus:ring-0 text-base"
+                           placeholder="Enter amount" />
+                </div>
+                <span asp-validation-for="Amount" class="text-red-600 text-sm mt-1"></span>
+            </div>
+
+            <!-- Already Spent -->
+            <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
+                <label asp-for="AlreadySavedAmount" class="block text-base font-semibold text-gray-800 mb-1">Already Spent Amount</label>
+                <div class="flex rounded-lg overflow-hidden border border-gray-300 focus-within:border-violet-500 transition">
+                    <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600 font-semibold border-r border-gray-300">
+                        @(Model.UserBaseCurrency ?? "")
+                    </span>
+                    <input asp-for="AlreadySavedAmount"
+                           type="number"
+                           class="block w-full p-3 focus:outline-none focus:ring-0 text-base"
+                           placeholder="Enter already spent amount" />
+                </div>
+                <span asp-validation-for="AlreadySavedAmount" class="text-red-600 text-sm mt-1"></span>
+            </div>
+
+            <!-- Description -->
+            <div>
+                <label asp-for="Description" class="block text-base font-semibold text-gray-800 mb-1 required-field">Description</label>
+                <textarea asp-for="Description" rows="3"
+                          class="block w-full rounded-lg border-gray-300 p-3 text-base shadow-sm focus:border-violet-500 focus:ring-violet-500 transition"
+                          placeholder="Describe your saving..."></textarea>
+                <span asp-validation-for="Description" class="text-red-600 text-sm mt-1"></span>
+            </div>
+
+            <!-- Submit -->
+            <div class="flex justify-end pt-6">
+                <button type="submit"
+                        class="w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-6 rounded-lg shadow-md bg-violet-600 text-white font-semibold text-base hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-300 transition-all duration-300 transform hover:-translate-y-0.5">
+                    <i class="bi bi-check-circle"></i>
+                    <span>Save Changes</span>
+                </button>
+            </div>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+    <style>
+        .required-field::after {
+            content: " *";
+            color: #e11d48;
+            font-weight: bold;
+        }
+    </style>
+
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const form = document.getElementById("savingForm");
+            const categorySwitch = document.getElementById("categorySwitch");
+            const categorySection = document.getElementById("categorySection");
+            const categoryDropdown = document.getElementById("categoryDropdown");
+
+            function updateRequiredFields() {
+                if (categorySwitch.checked) {
+                    categorySection.classList.remove("hidden");
+                } else {
+                    categorySection.classList.add("hidden");
+                }
+            }
+
+            categorySwitch.addEventListener("change", updateRequiredFields);
+
+            // Client-side validation
+            form.addEventListener("submit", function (e) {
+                let valid = true;
+                let message = "";
+
+                if (categorySwitch.checked && !categoryDropdown.value) {
+                    valid = false;
+                    message += "Select Category is required.\n";
+                }
+
+                if (!valid) {
+                    alert(message);
+                    e.preventDefault();
+                }
+            });
+
+            updateRequiredFields();
+        });
+    </script>
+}

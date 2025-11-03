@@ -4,6 +4,7 @@ namespace FinanceManagement.Application.DTO
 {
     public class BudgetDto
     {
+        public Guid BudgetId { get; set; }
         public CategoryType? CategoryType { get; set; }
 
         public string BudgetName { get; set; }
@@ -13,5 +14,6 @@ namespace FinanceManagement.Application.DTO
         public decimal AlreadySpendAmount { get; set; }
         public DateTime BudgetStartDate { get; set; }
         public DateTime BudgetEndDate { get; set; }
+        public string Description { get; set; }
     }
 }

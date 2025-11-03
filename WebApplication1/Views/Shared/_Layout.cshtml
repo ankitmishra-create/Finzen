@@ -64,27 +64,60 @@
         <div class="flex h-screen bg-gray-100">
 
             <aside class="hidden lg:flex w-64 bg-violet-50 text-gray-800 p-6 flex-col fixed h-full shadow-lg">
+
+                @{
+                    // 1. Get the current controller name
+                    var currentController = ViewContext.RouteData.Values["controller"]?.ToString();
+
+                    // 2. Define your styles for cleaner code
+                    string baseLinkClass = "flex items-center gap-3 px-4 py-3 rounded-lg font-medium transition-all duration-200";
+                    string activeLinkClass = "bg-violet-600 text-white";
+                    string inactiveLinkClass = "text-gray-600 hover:bg-violet-100 hover:text-violet-700";
+                }
+
                 <a class="text-3xl font-bold text-violet-800 mb-10" asp-controller="Home" asp-action="Index">
                     <i class="bi bi-bar-chart-fill"></i> FinZen
                 </a>
 
                 <nav class="flex-grow">
                     <ul class="space-y-2">
+
                         <li>
-                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg bg-violet-600 text-white font-medium" 
+                            <a class="@baseLinkClass @(currentController == "Dashboard" ? activeLinkClass : inactiveLinkClass)"
                                asp-controller="Dashboard" asp-action="Index">
                                 <i class="bi bi-grid-1x2-fill text-lg"></i>
                                 <span>Dashboard</span>
                             </a>
                         </li>
                         <li>
-                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg text-gray-600 hover:bg-violet-100 hover:text-violet-700 font-medium transition-all duration-200" 
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Budget" ? activeLinkClass : inactiveLinkClass)"
                                asp-controller="Budget" asp-action="Index">
                                 <i class="bi bi-calculator-fill text-lg"></i>
                                 <span>Budget</span>
                             </a>
                         </li>
-                        </ul>
+                        <li>
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Saving" ? activeLinkClass : inactiveLinkClass)"
+                               asp-controller="Saving" asp-action="Index">
+                                <i class="bi bi-wallet2 text-lg"></i>
+                                <span>Saving</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Transaction" ? activeLinkClass : inactiveLinkClass)"
+                               asp-controller="Transaction" asp-action="Index">
+                                <i class="bi bi-bank text-lg"></i>
+                                <span>Transaction</span>
+                            </a>
+                        </li>
+                        <li>
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Category" ? activeLinkClass : inactiveLinkClass)"
+                               asp-controller="Category" asp-action="Index">
+                                <i class="bi bi-list-check text-lg"></i>
+                                <span>Category</span>
+                            </a>
+                        </li>
+                    </ul>
                 </nav>
 
                 <div>
@@ -93,14 +126,13 @@
                             Hello, @User.Identity.Name
                         </span>
                     </div>
-                    <a class="flex items-center justify-center gap-3 w-full bg-red-600 text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-md transition-all duration-300 hover:bg-red-700" 
+                    <a class="flex items-center justify-center gap-3 w-full bg-red-600 text-white px-4 py-3 rounded-lg text-sm font-semibold shadow-md transition-all duration-300 hover:bg-red-700"
                        asp-controller="Logout" asp-action="Logout">
                         <i class="bi bi-box-arrow-right"></i>
                         <span>Logout</span>
                     </a>
                 </div>
             </aside>
-
             <div class="flex-1 flex flex-col overflow-y-auto lg:ml-64">
 
                 <header class="bg-white shadow-sm p-6 sticky top-0 z-10 hidden lg:flex justify-between items-center">

@@ -1,45 +1,46 @@
-﻿@model FinanceManagement.Application.ViewModels.BudgetVM
+﻿@model FinanceManagement.Application.ViewModels.SavingVM
 
 @{
-    ViewData["Title"] = "Create Budget";
+    ViewData["Title"] = "Create Saving";
 }
 
 <div class="flex flex-col sm:flex-row justify-between sm:items-center mb-8 gap-4">
     <h1 class="text-3xl font-bold text-gray-900 tracking-tight">
         @ViewData["Title"]
     </h1>
-    <a asp-action="Index" class="text-base font-medium text-violet-600 hover:text-violet-500 flex items-center gap-1 transition-colors">
+    <a asp-action="Index"
+       class="text-base font-medium text-violet-600 hover:text-violet-500 flex items-center gap-1 transition-colors">
         <i class="bi bi-arrow-left"></i>
-        <span>Back to Budgets</span>
+        <span>Back to Savings</span>
     </a>
 </div>
 
 <div class="max-w-2xl mx-auto bg-white rounded-2xl shadow-lg border border-gray-100 p-8">
-    <form asp-action="Create" method="post" id="budgetForm">
+    <form asp-action="Create" method="post" id="savingForm">
         <input asp-for="UserId" type="hidden" />
 
         <div class="space-y-8">
 
-            <!-- Budget Name -->
+            <!-- Saving Name -->
             <div>
-                <label asp-for="BudgetName" class="block text-base font-semibold text-gray-800 mb-1 required-field">Budget Name</label>
-                <input asp-for="BudgetName"
-                       type="text"
+                <label asp-for="SavingName" class="block text-base font-semibold text-gray-800 mb-1 required-field">Saving Name</label>
+                <input asp-for="SavingName" type="text"
                        class="block w-full rounded-lg border-gray-300 p-3 text-base shadow-sm focus:border-violet-500 focus:ring-violet-500 transition-all"
-                       placeholder="e.g., Monthly Groceries, Vacation Fund" />
-                <span asp-validation-for="BudgetName" class="text-red-600 text-sm mt-1"></span>
+                       placeholder="e.g., Emergency Fund, Vacation Saving" />
+                <span asp-validation-for="SavingName" class="text-red-600 text-sm mt-1"></span>
             </div>
 
-            <!-- Frequency Switch -->
+            <!-- Frequency Section -->
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input asp-for="CustomFrequency" type="checkbox" id="customFrequencySwitch" class="sr-only peer" />
-                    <div class="w-12 h-7 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <div class="w-12 h-7 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
                     <span class="ml-3 text-base font-medium text-gray-700">Enable Custom Frequency</span>
                 </label>
 
+                <!-- Predefined Frequency -->
                 <div id="frequencySection" class="mt-5">
-                    <label asp-for="Frequency" class="block text-base font-semibold text-gray-800 mb-1 required-field">Budget Frequency</label>
+                    <label asp-for="Frequency" class="block text-base font-semibold text-gray-800 mb-1 required-field">Saving Frequency</label>
                     <select asp-for="Frequency"
                             class="block w-full rounded-lg border-gray-300 p-3 text-base focus:border-violet-500 focus:ring-violet-500 transition"
                             asp-items="Html.GetEnumSelectList<FinanceManagement.Core.Enums.Frequency>()">
@@ -48,42 +49,42 @@
                     <span asp-validation-for="Frequency" class="text-red-600 text-sm mt-1"></span>
                 </div>
 
+                <!-- Custom Frequency -->
                 <div id="customFrequencyFields" class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-5 hidden">
                     <div>
-                        <label asp-for="BudgetStartDate" class="block text-base font-semibold text-gray-800 mb-1">Start Date</label>
-                        <input asp-for="BudgetStartDate" type="date"
+                        <label asp-for="SavingStartDate" class="block text-base font-semibold text-gray-800 mb-1">Start Date</label>
+                        <input asp-for="SavingStartDate" type="date"
                                class="block w-full rounded-lg border-gray-300 p-3 text-base focus:border-violet-500 focus:ring-violet-500 transition"
                                value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                        <span asp-validation-for="BudgetStartDate" class="text-red-600 text-sm mt-1"></span>
+                        <span asp-validation-for="SavingStartDate" class="text-red-600 text-sm mt-1"></span>
                     </div>
                     <div>
-                        <label asp-for="BudgetEndDate" class="block text-base font-semibold text-gray-800 mb-1">End Date</label>
-                        <input asp-for="BudgetEndDate" type="date"
+                        <label asp-for="SavingEndDate" class="block text-base font-semibold text-gray-800 mb-1">End Date</label>
+                        <input asp-for="SavingEndDate" type="date"
                                class="block w-full rounded-lg border-gray-300 p-3 text-base focus:border-violet-500 focus:ring-violet-500 transition"
                                value="@DateTime.Now.ToString("yyyy-MM-dd")" />
-                        <span asp-validation-for="BudgetEndDate" class="text-red-600 text-sm mt-1"></span>
+                        <span asp-validation-for="SavingEndDate" class="text-red-600 text-sm mt-1"></span>
                     </div>
                 </div>
             </div>
 
-            <!-- Category Switch -->
+            <!-- Category Section -->
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input asp-for="CategorySwitch" type="checkbox" id="categorySwitch" class="sr-only peer" />
-                    <div class="w-12 h-7 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
-                    <span class="ml-3 text-base font-medium text-gray-700">Assign Budget to a Category</span>
+                    <div class="w-12 h-7 bg-gray-300 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full after:content-[''] after:absolute after:top-[3px] after:left-[3px] after:bg-white after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <span class="ml-3 text-base font-medium text-gray-700">Assign Saving to a Category</span>
                 </label>
 
                 <div id="categorySection" class="mt-5 bg-white rounded-xl border border-gray-200 shadow-sm p-5 hidden transition-all duration-300">
-                    @* This 'div' will now take up the full width *@
                     <div>
-                        <label asp-for="CategoryId" id="categoryLabel" class="block text-base font-semibold text-gray-800 mb-1">Select Category</label>
+                        <label asp-for="CategoryId" class="block text-base font-semibold text-gray-800 mb-1">Select Category</label>
                         <select asp-for="CategoryId" id="categoryDropdown"
                                 class="block w-full rounded-lg border-gray-300 p-3 text-base focus:border-violet-500 focus:ring-violet-500 transition">
                             <option value="">-- Select Category --</option>
                             @foreach (var cat in Model.UserCategories)
                             {
-                                @if (cat.CategoryType == FinanceManagement.Core.Enums.CategoryType.Expense)
+                                if (cat.CategoryType == FinanceManagement.Core.Enums.CategoryType.Income)
                                 {
                                     <option value="@cat.CategoryId" data-type="@cat.CategoryType.ToString().ToLower()">
                                         @cat.CategoryName (@cat.CategoryType)
@@ -96,36 +97,34 @@
                 </div>
             </div>
 
-            <!-- Budget Amount -->
+            <!-- Saving Amount -->
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <label asp-for="Amount" class="block text-base font-semibold text-gray-800 mb-1 required-field">Budget Amount</label>
+                <label asp-for="Amount" class="block text-base font-semibold text-gray-800 mb-1 required-field">Saving Amount</label>
                 <div class="flex rounded-lg overflow-hidden border border-gray-300 focus-within:border-violet-500 transition">
                     <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600 font-semibold border-r border-gray-300">
                         @Model.UserBaseCurrency
                     </span>
-                    <input asp-for="Amount"
-                           type="number"
-                           class="block w-full p-3 focus:outline-none focus:ring-0 text-base"
+                    <input asp-for="Amount" type="number"
+                           class="block w-full p-3 focus:outline-none text-base"
                            placeholder="Enter amount"
                            value="@(Model.Amount == 0 ? "" : Model.Amount.ToString())" />
                 </div>
                 <span asp-validation-for="Amount" class="text-red-600 text-sm mt-1"></span>
             </div>
 
-            <!-- Already Spent -->
+            <!-- Already Saved Amount -->
             <div class="bg-gray-50 rounded-xl p-4 border border-gray-200">
-                <label asp-for="AlreadySpentAmount" class="block text-base font-semibold text-gray-800 mb-1">Already Spent Amount</label>
+                <label asp-for="AlreadySavedAmount" class="block text-base font-semibold text-gray-800 mb-1">Already Saved Amount</label>
                 <div class="flex rounded-lg overflow-hidden border border-gray-300 focus-within:border-violet-500 transition">
                     <span class="inline-flex items-center px-4 bg-gray-100 text-gray-600 font-semibold border-r border-gray-300">
                         @Model.UserBaseCurrency
                     </span>
-                    <input asp-for="AlreadySpentAmount"
-                           type="number"
-                           class="block w-full p-3 focus:outline-none focus:ring-0 text-base"
-                           placeholder="Enter already spent amount"
-                           value="@(Model.AlreadySpentAmount == 0 ? "" : Model.AlreadySpentAmount.ToString())" />
+                    <input asp-for="AlreadySavedAmount" type="number"
+                           class="block w-full p-3 focus:outline-none text-base"
+                           placeholder="Enter already saved amount"
+                           value="@(Model.AlreadySavedAmount == 0 ? "" : Model.AlreadySavedAmount.ToString())" />
                 </div>
-                <span asp-validation-for="AlreadySpentAmount" class="text-red-600 text-sm mt-1"></span>
+                <span asp-validation-for="AlreadySavedAmount" class="text-red-600 text-sm mt-1"></span>
             </div>
 
             <!-- Description -->
@@ -133,7 +132,7 @@
                 <label asp-for="Description" class="block text-base font-semibold text-gray-800 mb-1 required-field">Description</label>
                 <textarea asp-for="Description" rows="3"
                           class="block w-full rounded-lg border-gray-300 p-3 text-base shadow-sm focus:border-violet-500 focus:ring-violet-500 transition"
-                          placeholder="Describe your budget..."></textarea>
+                          placeholder="Describe your saving goal..."></textarea>
                 <span asp-validation-for="Description" class="text-red-600 text-sm mt-1"></span>
             </div>
 
@@ -142,7 +141,7 @@
                 <button type="submit"
                         class="w-full sm:w-auto flex items-center justify-center gap-2 py-3 px-6 rounded-lg shadow-md bg-violet-600 text-white font-semibold text-base hover:bg-violet-700 focus:outline-none focus:ring-4 focus:ring-violet-300 transition-all duration-300 transform hover:-translate-y-0.5">
                     <i class="bi bi-check-circle"></i>
-                    <span>Create Budget</span>
+                    <span>Create Saving</span>
                 </button>
             </div>
         </div>
@@ -161,55 +160,30 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            const form = document.getElementById("budgetForm");
+            const form = document.getElementById("savingForm");
             const customFrequencySwitch = document.getElementById("customFrequencySwitch");
             const customFields = document.getElementById("customFrequencyFields");
             const frequencySection = document.getElementById("frequencySection");
             const categorySwitch = document.getElementById("categorySwitch");
             const categorySection = document.getElementById("categorySection");
-            const categoryTypeSelect = document.getElementById("categoryTypeSelect");
             const categoryDropdown = document.getElementById("categoryDropdown");
-            const categoryLabel = document.getElementById("categoryLabel");
 
             function updateRequiredFields() {
-                if (customFrequencySwitch.checked) {
-                    customFields.classList.remove("hidden");
-                    frequencySection.classList.add("hidden");
-                } else {
-                    customFields.classList.add("hidden");
-                    frequencySection.classList.remove("hidden");
-                }
-
-                if (categorySwitch.checked) {
-                    categorySection.classList.remove("hidden");
-                } else {
-                    categorySection.classList.add("hidden");
-                }
+                customFields.classList.toggle("hidden", !customFrequencySwitch.checked);
+                frequencySection.classList.toggle("hidden", customFrequencySwitch.checked);
+                categorySection.classList.toggle("hidden", !categorySwitch.checked);
             }
 
             customFrequencySwitch.addEventListener("change", updateRequiredFields);
             categorySwitch.addEventListener("change", updateRequiredFields);
 
-            // Filter categories
-            categoryTypeSelect.addEventListener("change", function () {
-                const selectedType = this.value;
-                const options = categoryDropdown.querySelectorAll("option");
-                options.forEach(opt => {
-                    if (opt.value === "") return;
-                    const type = opt.dataset.type;
-                    opt.style.display = (selectedType === "none" || type === selectedType) ? "block" : "none";
-                });
-                categoryDropdown.value = "";
-            });
-
-            // Client-side validation
             form.addEventListener("submit", function (e) {
                 let valid = true;
                 let message = "";
 
                 if (customFrequencySwitch.checked) {
-                    const start = document.querySelector("[name='BudgetStartDate']");
-                    const end = document.querySelector("[name='BudgetEndDate']");
+                    const start = document.querySelector("[name='SavingStartDate']");
+                    const end = document.querySelector("[name='SavingEndDate']");
                     if (!start.value || !end.value) {
                         valid = false;
                         message += "Start and End Dates are required.\n";
@@ -221,7 +195,7 @@
                     const freq = document.querySelector("[name='Frequency']");
                     if (!freq.value) {
                         valid = false;
-                        message += "Budget Frequency is required.\n";
+                        message += "Saving Frequency is required.\n";
                     }
                 }
 

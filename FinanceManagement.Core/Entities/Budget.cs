@@ -17,7 +17,7 @@ namespace FinanceManagement.Core.Entities
         public Frequency? FrequencyOfBudget { get; set; }
 
         public decimal BudgetAmount { get; set; }
-    
+
         public bool? CustomBudget { get; set; }
         public DateTime BudgetStartDate { get; set; } = DateTime.UtcNow;
         public DateTime BudgetEndDate { get; set; }
@@ -25,8 +25,6 @@ namespace FinanceManagement.Core.Entities
         public string Description { get; set; }
 
         public decimal AlreadySpendAmount { get; set; }
-
-    
     }
 
 }

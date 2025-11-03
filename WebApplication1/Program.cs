@@ -53,6 +53,7 @@ builder.Services.AddScoped<IRecurringTransactionService, RecurringTransactionSer
 builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddScoped<ITransactionLoggerService, TransactionLoggerService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
+builder.Services.AddScoped<ISavingService, SavingService>();
 
 builder.Services.AddSingleton<IPasswordHashing, PasswordHashing>();
 

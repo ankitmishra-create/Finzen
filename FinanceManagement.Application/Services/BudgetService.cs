@@ -43,7 +43,7 @@ namespace FinanceManagement.Application.Services
                 UserId = userId,
                 UserCategories = userCategories.ToList(),
                 CustomFrequency = false,
-                UserBaseCurrency = userBaseCurrencySymbol?.Currency?.CurrencyCode
+                UserBaseCurrency = userBaseCurrencySymbol?.Currency?.CurrencyCode,
             };
             return budgetVM;
         }
@@ -64,7 +64,7 @@ namespace FinanceManagement.Application.Services
                 CustomBudget = budgetVM.CustomFrequency,
                 Description = budgetVM.Description,
                 AlreadySpendAmount = budgetVM.AlreadySpentAmount,
-                BudgetName=budgetVM.BudgetName
+                BudgetName = budgetVM.BudgetName
             };
 
             if (budgetVM.Frequency.HasValue && budgetVM.CustomFrequency == false)
@@ -145,12 +145,118 @@ namespace FinanceManagement.Application.Services
                         AlreadySpendAmount = budget.AlreadySpendAmount,
                         BudgetEndDate = budget.BudgetEndDate,
                         BudgetStartDate = budget.BudgetStartDate,
-                        BudgetName=budget.BudgetName
+                        BudgetName = budget.BudgetName,
+                        Description = budget.Description,
+                        BudgetId = budget.BudgetId
                     };
                     userBudgetsList.Add(budgetDto);
                 }
             }
             return userBudgetsList;
         }
-}
+
+        public async Task<BudgetVM> EditView(Guid BudgetId)
+        {
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var budgetToEdit = await _unitOfWork.Budget.GetPopulatedAsync(b => b.BudgetId == BudgetId && b.UserId == userId, include: q => q.Include(u => u.User));
+            if (budgetToEdit == null)
+            {
+                _logger.LogError("EditVM: Requested budget is not found");
+                throw new BudgetNotFoundException("The requested budget is not found");
+            }
+            BudgetVM budgetVM = new BudgetVM()
+            {
+                BudgetId = budgetToEdit.BudgetId,
+                UserId = budgetToEdit.UserId,
+                CategoryId = budgetToEdit.CategoryId,
+                Frequency = budgetToEdit.FrequencyOfBudget,
+                BudgetName = budgetToEdit.BudgetName,
+                CustomFrequency = (bool)budgetToEdit.CustomBudget,
+                BudgetEndDate = budgetToEdit.BudgetEndDate,
+                BudgetStartDate = budgetToEdit.BudgetStartDate,
+                Amount = budgetToEdit.BudgetAmount,
+                AlreadySpentAmount = budgetToEdit.AlreadySpendAmount,
+                Description = budgetToEdit.Description,
+                UserBaseCurrency = budgetToEdit?.User?.Currency?.CurrencyCode
+            };
+            if (budgetVM.CategoryId != null)
+            {
+                budgetVM.CategorySwitch = true;
+            }
+            else
+            {
+                budgetVM.CategorySwitch = false;
+                budgetVM.CategoryId = null;
+            }
+            var userCategories = await _unitOfWork.Category.GetAllAsync(c => c.UserId == userId && c.CategoryType == CategoryType.Expense);
+            budgetVM.UserCategories = userCategories.ToList();
+            return budgetVM;
+        }
+
+        public async Task<Budget> EditBudget(BudgetVM budgetVM)
+        {
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var originalbudget = await _unitOfWork.Budget.GetAsync(b => b.BudgetId == budgetVM.BudgetId && b.UserId == userId);
+            if (originalbudget == null)
+            {
+                _logger.LogError("Original Budget not found");
+                throw new BudgetNotFoundException("Edit Budget: Requested Budget not found to edit");
+            }
+            originalbudget.BudgetName = budgetVM.BudgetName;
+            if (originalbudget.CategoryId == null && budgetVM.CategorySwitch == true)
+            {
+                originalbudget.CategoryId = budgetVM.CategoryId;
+            }
+            else if (originalbudget.CategoryId != null)
+            {
+                originalbudget.CategoryId = budgetVM.CategoryId;
+            }
+            originalbudget.BudgetAmount = budgetVM.Amount;
+            originalbudget.AlreadySpendAmount = budgetVM.AlreadySpentAmount;
+            originalbudget.Description = budgetVM.Description;
+
+            _unitOfWork.Budget.Update(originalbudget);
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "EditBudget: Db Update failed");
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "EditBudget: Unexpected exception occured");
+                throw ex;
+            }
+            return originalbudget;
+        }
+
+        public async Task DeleteBudget(Guid budgetId)
+        {
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var budgetToDelete = await _unitOfWork.Budget.GetAsync(b => b.BudgetId == budgetId && b.UserId == userId);
+            if (budgetToDelete == null)
+            {
+                _logger.LogError($"Delete Budget: Budget to delete not found for budgetId {budgetId}");
+                throw new BudgetNotFoundException($"Budget not found for id {budgetId}");
+            }
+            _unitOfWork.Budget.Delete(budgetToDelete);
+            try
+            {
+                await _unitOfWork.SaveAsync();
+            }
+            catch (DbUpdateException ex)
+            {
+                _logger.LogError(ex, "DeleteBudget: Db Update failed");
+                throw ex;
+            }
+            catch (Exception ex)
+            {
+                _logger.LogError(ex, "DeleteBudget: Unexpected exception occured");
+                throw ex;
+            }
+        }
+    }
 }
