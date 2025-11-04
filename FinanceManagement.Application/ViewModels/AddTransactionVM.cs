@@ -31,17 +31,17 @@ namespace FinanceManagement.Application.ViewModels
         [Display(Name = "Transaction Currency")]
         public string? SelectedCurrency { get; set; }
 
-        [Display(Name ="Recurrency Frequency")]
+        [Display(Name = "Recurrency Frequency")]
         public Frequency? RecurrenceFrequency { get; set; }
 
-        
 
-        [Required,Display(Name ="Transaction Timeline")] 
+
+        [Required, Display(Name = "Transaction Timeline")]
         public TransactionTimeLine TransactionTimeLine { get; set; }
 
         [Display(Name = "Recurring Start Date")]
         public DateTime? RecurringStartDate { get; set; } = DateTime.UtcNow;
-        [Display(Name ="Recurring End Date")]
+        [Display(Name = "Recurring End Date")]
         public DateTime? RecurringEndDate { get; set; } = DateTime.UtcNow.AddYears(10);
 
 
@@ -49,12 +49,12 @@ namespace FinanceManagement.Application.ViewModels
 
         public bool IsStepUpTransaction { get; set; }
 
-        [Display(Name ="Step Up Amount")]
+        [Display(Name = "Step Up Amount")]
         public decimal? StepUpAmount { get; set; }
 
-        [Display(Name ="Step Up Percentage")]
+        [Display(Name = "Step Up Percentage")]
         public decimal? StepUpPercentage { get; set; }
-        [Display(Name ="Step Up Frequency")]
+        [Display(Name = "Step Up Frequency")]
         public Frequency? StepUpFrequeny { get; set; }
 
     }

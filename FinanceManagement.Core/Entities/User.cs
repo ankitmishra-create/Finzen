@@ -7,7 +7,7 @@ namespace FinanceManagement.Core.Entities
     public class User
     {
         [Key]
-        public Guid UserId { get; set; } 
+        public Guid UserId { get; set; }
 
         [Required]
         public string FullName { get; set; }
@@ -30,22 +30,22 @@ namespace FinanceManagement.Core.Entities
 
         public string Language { get; set; } = "en";
         public string TimeZone { get; set; } = "Asia/Kolkata";
-        public string PreferredCurrency { get; set; } 
+        public string PreferredCurrency { get; set; }
 
-        
+
         public bool IsEmailVerified { get; set; }
 
         public string? EmailVerificationToken { get; set; }
         public DateTime? VerificationTokenExpiresAt { get; set; }
 
-        
+
         public List<Category> Categories { get; set; } = new List<Category>();
         public List<Transaction> Transactions { get; set; } = new List<Transaction>();
 
         public Guid? CurrencyId { get; set; }
         [ForeignKey("CurrencyId")]
         public Currency? Currency { get; set; }
-        
+
         public void GenerateVerificationToken()
         {
             EmailVerificationToken = Guid.NewGuid().ToString("N");

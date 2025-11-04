@@ -14,7 +14,7 @@ namespace FinanceManagement.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ITransactionService _transactionService;
         private readonly ILogger<TransactionLoggerService> _logger;
-        public TransactionLoggerService(ILogger<TransactionLoggerService> logger,ILoggedInUser loggedInUser, IUnitOfWork unitOfWork, ITransactionService transactionService)
+        public TransactionLoggerService(ILogger<TransactionLoggerService> logger, ILoggedInUser loggedInUser, IUnitOfWork unitOfWork, ITransactionService transactionService)
         {
             _loggedInUser = loggedInUser;
             _unitOfWork = unitOfWork;

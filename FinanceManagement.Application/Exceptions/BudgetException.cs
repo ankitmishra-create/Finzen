@@ -4,7 +4,7 @@
     {
         public BudgetNotFoundException(string message) : base(message)
         {
-            
+
         }
     }
 }

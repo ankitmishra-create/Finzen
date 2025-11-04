@@ -7,7 +7,7 @@ namespace FinanceManagement.Core.Entities
         [Key]
         public Guid CurrencyId { get; set; } = Guid.NewGuid();
         [Required]
-        public string CountryName { get; set; } 
+        public string CountryName { get; set; }
         [Required]
         public string CurrencyName { get; set; }
         public string CurrencyCode { get; set; } = string.Empty;

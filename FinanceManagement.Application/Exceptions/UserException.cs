@@ -9,6 +9,4 @@
     {
         public DuplicateEmailException(string message) : base(message) { }
     }
-
-
 }

@@ -1,10 +1,8 @@
 ﻿using FinanceManagement.Application.Interfaces;
-using FinanceManagement.Application.Services;
 using FinanceManagement.Application.Utility;
 using FinanceManagement.Application.ViewModels;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
-using MimeKit.Cryptography;
 
 namespace FinanceManagement.Web.Controllers
 {
@@ -16,7 +14,7 @@ namespace FinanceManagement.Web.Controllers
         private readonly IUserService _userService;
         private readonly ITransactionService _transactionService;
         private readonly ILogger<RecurringTransactionController> _logger;
-        public RecurringTransactionController(ITransactionService transactionService,IUserService userService,IRecurringTransactionService recurringTransactionService, IDashboardService dashboardService,ILogger<RecurringTransactionController> logger)
+        public RecurringTransactionController(ITransactionService transactionService, IUserService userService, IRecurringTransactionService recurringTransactionService, IDashboardService dashboardService, ILogger<RecurringTransactionController> logger)
         {
             _recurringTransactionService = recurringTransactionService;
             _dashboardService = dashboardService;

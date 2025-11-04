@@ -2,7 +2,7 @@
 
 namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository
 {
-    public interface IBudgetRepository :  IRepository<Budget>
+    public interface IBudgetRepository : IRepository<Budget>
     {
     }
 }

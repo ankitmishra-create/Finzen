@@ -64,7 +64,7 @@ namespace FinanceManagement.Web.Controllers
                 if (user != null)
                 {
                     var claims = new List<Claim>()
-                    { 
+                    {
                         new Claim(ClaimTypes.NameIdentifier, user.UserId.ToString()),
                         new Claim(ClaimTypes.Name,user.FullName.Trim()),
                         new Claim(ClaimTypes.DateOfBirth,user.DateOfBirth.ToString()),

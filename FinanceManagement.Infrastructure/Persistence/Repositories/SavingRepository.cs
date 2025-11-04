@@ -3,11 +3,11 @@ using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceReposit
 
 namespace FinanceManagement.Infrastructure.Persistence.Repositories
 {
-    public class SavingRepository : Repository<Saving> , ISavingRepository
+    public class SavingRepository : Repository<Saving>, ISavingRepository
     {
         public SavingRepository(ApplicationDbContext db) : base(db)
         {
-            
+
         }
     }
 }

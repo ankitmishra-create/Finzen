@@ -6,9 +6,7 @@ namespace FinanceManagement.Application.DTO
     {
         public Guid BudgetId { get; set; }
         public CategoryType? CategoryType { get; set; }
-
         public string BudgetName { get; set; }
-
         public string? CategoryName { get; set; }
         public decimal BudgetAmount { get; set; }
         public decimal AlreadySpendAmount { get; set; }

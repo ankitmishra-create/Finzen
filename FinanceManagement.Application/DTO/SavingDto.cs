@@ -6,9 +6,7 @@ namespace FinanceManagement.Application.DTO
     {
         public Guid SavingId { get; set; }
         public CategoryType? CategoryType { get; set; }
-
         public string SavingName { get; set; }
-
         public string? CategoryName { get; set; }
         public decimal SavingAmount { get; set; }
         public decimal AlreadySavedAmount { get; set; }

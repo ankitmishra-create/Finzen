@@ -5,7 +5,6 @@ using FinanceManagement.Infrastructure.Persistence.Repositories;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using FinanceManagement.Infrastructure.Services;
 using FinanceManagement.Processor.Services;
-using Microsoft.Extensions.Http;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;

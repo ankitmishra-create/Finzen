@@ -9,5 +9,4 @@
     {
         public CategoryAlreadyExistException(string message) : base(message) { }
     }
-
 }

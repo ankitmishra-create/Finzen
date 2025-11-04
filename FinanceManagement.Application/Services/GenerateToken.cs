@@ -13,7 +13,7 @@ namespace FinanceManagement.Infrastructure.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly IEmailService _emailService;
         private readonly ILogger<GenerateToken> _logger;
-        public GenerateToken(ILogger<GenerateToken> logger,IUnitOfWork unitOfWork, IEmailService emailService)
+        public GenerateToken(ILogger<GenerateToken> logger, IUnitOfWork unitOfWork, IEmailService emailService)
         {
             _unitOfWork = unitOfWork;
             _emailService = emailService;
@@ -30,7 +30,7 @@ namespace FinanceManagement.Infrastructure.Services
             {
                 await _unitOfWork.SaveAsync();
             }
-            catch(DbUpdateException ex)
+            catch (DbUpdateException ex)
             {
                 _logger.LogError("Generate Token: Exception Occured while generating token for {User}", user);
                 throw;
@@ -52,7 +52,7 @@ namespace FinanceManagement.Infrastructure.Services
             {
                 await _emailService.SendEmailAsync(user.Email, "Email Verification", mailBody);
             }
-            catch(EmailSendException ex)
+            catch (EmailSendException ex)
             {
                 _logger.LogError(ex, "Registration failed: Could not send verification email for {Email}", user.Email);
                 throw new TokenGenerationException("Failed to generate or send email token.", ex);

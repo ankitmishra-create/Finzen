@@ -16,7 +16,7 @@ namespace FinanceManagement.Application.Services
         private readonly IUnitOfWork _unitOfWork;
         private readonly ICurrencyConversionService _currencyConversionService;
         private readonly ILogger<RecurringTransactionService> _logger;
-        public RecurringTransactionService(ILogger<RecurringTransactionService> logger,ICurrencyConversionService currencyConversionService, ILoggedInUser loggedInUser, IUnitOfWork unitOfWork)
+        public RecurringTransactionService(ILogger<RecurringTransactionService> logger, ICurrencyConversionService currencyConversionService, ILoggedInUser loggedInUser, IUnitOfWork unitOfWork)
         {
             _loggedInUser = loggedInUser;
             _logger = logger;
@@ -43,11 +43,11 @@ namespace FinanceManagement.Application.Services
         public async Task DeleteRecurringTransaction(Guid recurringTransactionId)
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var recurredTransaction = await _unitOfWork.RecurringTransaction.GetAsync(t => t.RecurringTransactionId == recurringTransactionId && t.UserId==userId);
+            var recurredTransaction = await _unitOfWork.RecurringTransaction.GetAsync(t => t.RecurringTransactionId == recurringTransactionId && t.UserId == userId);
             if (recurredTransaction == null)
             {
                 _logger.LogError("Delete Recurring Transaction: Recurring Tranaction not found for {recurringTransactionId}", recurringTransactionId);
-                throw new RecurringTransactionNotFoundException("Recurring Transaction not Found"); 
+                throw new RecurringTransactionNotFoundException("Recurring Transaction not Found");
             }
             if (recurredTransaction != null)
             {
@@ -107,7 +107,7 @@ namespace FinanceManagement.Application.Services
                 }
                 recurringTransaction.StepUpFrequeny = addTransactionVM.StepUpFrequeny;
                 recurringTransaction.LastStepUpDate = DateTime.UtcNow;
-                
+
                 var nextStepUpDate = addTransactionVM.StepUpFrequeny;
                 switch ((Frequency)nextStepUpDate)
                 {
@@ -129,7 +129,6 @@ namespace FinanceManagement.Application.Services
                 }
             }
 
-
             var nextTransactionDate = addTransactionVM.RecurrenceFrequency;
             switch ((Frequency)nextTransactionDate)
             {
@@ -149,15 +148,13 @@ namespace FinanceManagement.Application.Services
                     recurringTransaction.NextTransactionDate = recurringTransaction.LastExecutedDate.Value.AddYears(1);
                     break;
             }
-
-
             return recurringTransaction;
         }
 
         public async Task<RecurringTransactions> EditRecurringTransaction(RecurringTransactionVM recurringTransactionVM)
         {
             var userId = _loggedInUser.CurrentLoggedInUser();
-            var recurringTransaction = await _unitOfWork.RecurringTransaction.GetAsync(r => r.RecurringTransactionId == recurringTransactionVM.RecurringTransactionId && r.UserId==userId);
+            var recurringTransaction = await _unitOfWork.RecurringTransaction.GetAsync(r => r.RecurringTransactionId == recurringTransactionVM.RecurringTransactionId && r.UserId == userId);
             if (recurringTransaction == null)
             {
                 _logger.LogError("Edit Recurring Transaction: Edit Failed for {recurrintransactionid}", recurringTransactionVM.RecurringTransactionId);
@@ -176,7 +173,8 @@ namespace FinanceManagement.Application.Services
                 var user = await _unitOfWork.User.GetPopulatedAsync(u => u.UserId == userId, include: q => q.Include(c => c.Currency));
                 if (user == null)
                 {
-                    return null;
+                    _logger.LogError($"Edit Recurring Transaction: User not found for {userId}");
+                    throw new UserNotFoundException($"Edit Recurring Transaction: User not found for {userId}");
                 }
                 var convertedRates = await _currencyConversionService.GetConvertedRates(recurringTransaction.OriginalCurrency, user.Currency.CurrencyCode);
                 recurringTransaction.Amount = recurringTransactionVM.OriginalAmount * convertedRates.conversion_rate;
@@ -242,10 +240,10 @@ namespace FinanceManagement.Application.Services
             {
                 await _unitOfWork.SaveAsync();
             }
-            catch(DatabaseException ex)
+            catch (DatabaseException ex)
             {
-                _logger.LogError(ex,"Database Error Exception Occured");
-                throw new DatabaseException("Database Exception",ex);
+                _logger.LogError(ex, "Database Error Exception Occured");
+                throw new DatabaseException("Database Exception", ex);
             }
             catch (Exception ex)
             {

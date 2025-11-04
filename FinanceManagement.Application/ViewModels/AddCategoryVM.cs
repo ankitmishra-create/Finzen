@@ -10,10 +10,10 @@ namespace FinanceManagement.Application.ViewModels
         [AllowNull]
         public string? UserId { get; set; } = null;
 
-        [Required, MaxLength(100),Display(Name ="Category Name")]
+        [Required, MaxLength(100), Display(Name = "Category Name")]
         public string? CategoryName { get; set; }
 
-        [Required, Display(Name ="Category Type")]
+        [Required, Display(Name = "Category Type")]
         public CategoryType? CategoryType { get; set; }
 
         public SubType? SubType { get; set; } = null;

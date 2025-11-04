@@ -130,17 +130,17 @@ namespace FinanceManagement.Web.Controllers
                 await _budgetService.DeleteBudget(id);
                 return RedirectToAction("Index");
             }
-            catch(BudgetNotFoundException ex)
+            catch (BudgetNotFoundException ex)
             {
                 _logger.LogError(ex, "Budget to delete not found");
                 return View("Error");
             }
-            catch(DbUpdateException ex)
+            catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, $"Db update exception while deleting the budget for id{id}");
                 return View("Error");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, $"Unexpected exception occured for id {id}");
                 return View("Error");

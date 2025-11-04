@@ -13,7 +13,7 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.File("C:\\Users\\Coditas\\Desktop\\FinanceManagement\\Logs", 
+    .WriteTo.File("C:\\Users\\Coditas\\Desktop\\FinanceManagement\\Logs\\logs.txt",
     outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}").CreateLogger();
 builder.Host.UseSerilog();
 

@@ -1,5 +1,4 @@
 ﻿using FinanceManagement.Application.DTO;
-using FinanceManagement.Application.Utility;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Entities;
 using FinanceManagement.Core.Enums;

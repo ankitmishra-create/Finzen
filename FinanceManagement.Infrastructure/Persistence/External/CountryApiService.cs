@@ -1,4 +1,5 @@
 ﻿using FinanceManagement.Infrastructure.Interface;
+using FinanceManagement.Infrastructure.Persistence.External.Exceptions;
 using Newtonsoft.Json;
 
 namespace FinanceManagement.Infrastructure.Persistence.External
@@ -18,7 +19,7 @@ namespace FinanceManagement.Infrastructure.Persistence.External
 
             if (!response.IsSuccessStatusCode)
             {
-                return null;
+                throw new ResponseNotFoundException($"The api had error returning the response. The Status Code returned is {response.StatusCode}");
             }
 
             var jsonResponse = await response.Content.ReadAsStringAsync();

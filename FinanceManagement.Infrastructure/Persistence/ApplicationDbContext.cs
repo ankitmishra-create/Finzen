@@ -31,7 +31,7 @@ namespace FinanceManagement.Infrastructure.Persistence
                 .HasOne(t => t.Category)
                 .WithMany(c => c.Transactions)
                 .HasForeignKey(t => t.CategoryId)
-                .OnDelete(DeleteBehavior.Cascade);
+                .OnDelete(DeleteBehavior.ClientCascade);
 
             modelBuilder.Entity<Category>()
                 .HasOne(t => t.User)
@@ -39,6 +39,5 @@ namespace FinanceManagement.Infrastructure.Persistence
                 .HasForeignKey(t => t.UserId)
                 .OnDelete(DeleteBehavior.NoAction);
         }
-
     }
 }

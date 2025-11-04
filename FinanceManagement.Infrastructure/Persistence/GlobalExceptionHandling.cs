@@ -22,7 +22,7 @@ namespace FinanceManagement.Infrastructure.Persistence
             }
             catch (Exception e)
             {
-                _logger.LogInformation("Unhandled Exception Occured");
+                _logger.LogError("Unhandled Exception Occured");
                 var response = new
                 {
                     TimeStamp = DateTime.Now,

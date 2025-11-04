@@ -88,7 +88,7 @@ namespace FinanceManagement.Web.Controllers
                 _logger.LogError(ex, "Failed to re-populate dropdowns after registration error.");
                 ModelState.AddModelError(string.Empty, "Error loading page data. Please refresh.");
             }
-            return RedirectToAction("Verify","Login");
+            return RedirectToAction("Verify", "Login");
         }
 
         private async Task PopulateDropdownsAsync()

@@ -17,5 +17,4 @@
     {
         public DataRetrievalException(string message, Exception ex) : base(message, ex) { }
     }
-
 }

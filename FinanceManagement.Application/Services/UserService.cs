@@ -17,7 +17,7 @@ namespace FinanceManagement.Application.Services
         private readonly IGenerateToken _generateToken;
         private readonly ILoggedInUser _loggedInUser;
         private readonly ILogger<UserService> _logger;
-        public UserService(ILogger<UserService> logger,IUnitOfWork unitOfWork, IPasswordHashing passwordHashing, IGenerateToken generateToken, ILoggedInUser loggedInUser)
+        public UserService(ILogger<UserService> logger, IUnitOfWork unitOfWork, IPasswordHashing passwordHashing, IGenerateToken generateToken, ILoggedInUser loggedInUser)
         {
             _unitOfWork = unitOfWork;
             _passwordHashing = passwordHashing;
@@ -60,12 +60,12 @@ namespace FinanceManagement.Application.Services
                 _logger.LogError("Registration failed: Token Generation cannot access Database");
                 throw new DbUpdateException("Database Connection Failed");
             }
-            catch(EmailSendException ex)
+            catch (EmailSendException ex)
             {
                 _logger.LogError(ex, "Registration failed: Could not send verification email for {Email}", newUser.Email);
                 throw new TokenGenerationException("Failed to generate or send email token.", ex);
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Registration failed: An unexpected error occurred during token generation for {Email}", newUser.Email);
                 throw new TokenGenerationException("An unexpected error occurred during token generation.", ex);
@@ -74,7 +74,7 @@ namespace FinanceManagement.Application.Services
             {
                 await _unitOfWork.User.AddUserDataAsync(newUser);
             }
-            catch(DbUpdateException ex)
+            catch (DbUpdateException ex)
             {
                 _logger.LogError(ex, "Registration failed: Database error for {Email}. {ErrorMessage}", newUser.Email, ex.InnerException?.Message);
                 throw new DatabaseException("Failed to save new user to the database.", ex);
@@ -121,7 +121,7 @@ namespace FinanceManagement.Application.Services
                 availableCountries.currencies = response.ToList();
                 return availableCountries;
             }
-            catch(Exception ex) 
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Failed to populate registration page: Database error.");
                 throw new DatabaseException("Could not retrieve currencies from the database.", ex);

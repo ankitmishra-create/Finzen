@@ -1,13 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Text;
-using System.Threading.Tasks;
-
-namespace FinanceManagement.Core.Enums
+﻿namespace FinanceManagement.Core.Enums
 {
     public enum Gender
     {
-        Male=1,Female=2,NotMentioned=3
+        Male = 1, Female = 2, NotMentioned = 3
     }
 }

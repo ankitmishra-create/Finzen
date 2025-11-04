@@ -14,7 +14,7 @@ namespace FinanceManagement.Web.Controllers
         private ICategoryService _categoryService;
         private readonly ILogger<CategoryController> _logger;
 
-        public CategoryController(ICategoryService categoryService,ILogger<CategoryController> logger)
+        public CategoryController(ICategoryService categoryService, ILogger<CategoryController> logger)
         {
             _categoryService = categoryService;
             _logger = logger;
@@ -27,17 +27,17 @@ namespace FinanceManagement.Web.Controllers
                 IEnumerable<Category> usersCategories = await _categoryService.DisplayCategoryAsync();
                 return View(usersCategories);
             }
-            catch(DatabaseException ex)
+            catch (DatabaseException ex)
             {
                 _logger.LogError(ex, "Database error on Category Index page.");
-                return View("Error"); 
+                return View("Error");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error on Category Index page.");
                 return View("Error");
             }
-            
+
         }
 
         [HttpGet]
@@ -101,7 +101,7 @@ namespace FinanceManagement.Web.Controllers
             catch (CategoryNotFoundException ex)
             {
                 _logger.LogWarning(ex, "Edit (GET) category failed: {ErrorMessage}", ex.Message);
-                return View("Error"); 
+                return View("Error");
             }
             catch (DatabaseException ex)
             {
@@ -170,7 +170,7 @@ namespace FinanceManagement.Web.Controllers
                 _logger.LogError("Database exception occured {ErroMessage}", ex.Message);
                 return View("Error");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error deleting category {CategoryId}", categoryId);
                 return View("Error");

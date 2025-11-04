@@ -10,7 +10,7 @@
         ITransactionLogRepository TransactionLog { get; }
         IBudgetRepository Budget { get; }
         ISavingRepository Saving { get; }
-        
+
         Task SaveAsync();
     }
 }

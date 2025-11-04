@@ -27,11 +27,11 @@ namespace FinanceManagement.Application.Utility
                             CurrencyCode = regionInfo.ISOCurrencySymbol
                         };
                     }
-                    catch
+                    catch(Exception ex)
                     {
-                        return null;
+                        throw ex;
                     }
-                }).Where(x => x != null && x.ToString().Length>1).Distinct().OrderBy(x => x.CurrencyCode).ToList();
+                }).Where(x => x != null && x.ToString().Length > 1).Distinct().OrderBy(x => x.CurrencyCode).ToList();
             return uniqueCurrencies;
         }
     }

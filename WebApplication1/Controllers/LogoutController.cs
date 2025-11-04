@@ -21,7 +21,7 @@ namespace FinanceManagement.Web.Controllers
             {
                 await HttpContext.SignOutAsync("MyCookie");
             }
-            catch(Exception ex)
+            catch (Exception ex)
             {
                 _logger.LogError(ex, "Error during sign out for user {UserName}.", userName);
             }

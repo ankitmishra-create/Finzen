@@ -5,6 +5,6 @@
         Created = 1,
         Edited = 2,
         Deleted = 3,
-        Recovered=4
+        Recovered = 4
     }
 }

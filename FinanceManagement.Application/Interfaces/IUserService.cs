@@ -1,7 +1,6 @@
 ﻿using FinanceManagement.Application.DTO;
 using FinanceManagement.Application.ViewModels;
 using FinanceManagement.Core.Entities;
-using Microsoft.AspNetCore.Authentication;
 
 namespace FinanceManagement.Application.Interfaces
 {
