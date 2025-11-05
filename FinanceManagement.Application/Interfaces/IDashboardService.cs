@@ -6,6 +6,7 @@ namespace FinanceManagement.Application.Interfaces
     {
         Task<DashboardDto> GetDashboardDataAsync();
         Task<decimal> CurrencyConversion(string currencyToConvert);
+        Task<YearlyTransactionSummary> DashboardGraphData();
     }
 
 }

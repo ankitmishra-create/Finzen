@@ -2,6 +2,7 @@
 using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.Utility;
+using FinanceManagement.Application.ViewModels;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Mvc.Rendering;
@@ -18,13 +19,21 @@ namespace FinanceManagement.Web.Controllers
             _dashboardService = dashboardService;
             _logger = logger;
         }
+        
+        [HttpGet]
         public async Task<IActionResult> Index()
         {
             try
             {
                 var dashboardData = await _dashboardService.GetDashboardDataAsync();
                 SetupCurrencyDropdown(dashboardData.BaseCurrencyCode);
-                return View(dashboardData);
+                var dashboardGraphData = await _dashboardService.DashboardGraphData();
+                DashboardVM dashboardVM = new DashboardVM()
+                {
+                    DashboardDto = dashboardData,
+                    YearlySummary = dashboardGraphData
+                };
+                return View(dashboardVM);
             }
             catch (UserNotFoundException ex)
             {
@@ -48,33 +57,19 @@ namespace FinanceManagement.Web.Controllers
             }
         }
 
-        private void SetupCurrencyDropdown(string selectedCurrencyCode)
-        {
-            var currencySymbols = CurrencySymbol.GetCultures();
-
-            ViewBag.CurrencyList = currencySymbols.Select(c => new SelectListItem
-            {
-                Value = c.CurrencyCode,
-                Text = $"{c.CurrencyName} ({c.CurrencySymbol})",
-                Selected = c.CurrencyCode == selectedCurrencyCode
-            }).ToList();
-
-            var selectedSymbol = currencySymbols
-                .FirstOrDefault(c => c.CurrencyCode == selectedCurrencyCode)?.CurrencySymbol ?? "$";
-
-            ViewBag.CurrencySymbol = selectedSymbol;
-
-            ViewBag.UserCurrencyCode = selectedCurrencyCode;
-        }
-
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Index(string selectedCurrencyCode)
         {
+            DashboardVM dashboardVM;
             DashboardDto dashboardDto;
+            YearlyTransactionSummary dashboardGraphData;
             try
             {
                 dashboardDto = await _dashboardService.GetDashboardDataAsync();
+                dashboardGraphData = await _dashboardService.DashboardGraphData();
+                SetupCurrencyDropdown(selectedCurrencyCode);
+                
             }
             catch (Exception ex)
             {
@@ -113,8 +108,40 @@ namespace FinanceManagement.Web.Controllers
                     transaction.Amount *= conversionRate;
                 }
             }
-            SetupCurrencyDropdown(selectedCurrencyCode);
-            return View(dashboardDto);
+            foreach(var month in dashboardGraphData.Months)
+            {
+                foreach(var category in month.Categories)
+                {
+                    category.Amount = category.Amount * conversionRate;
+                }
+            }
+            dashboardVM = new DashboardVM()
+            {
+                DashboardDto = dashboardDto,
+                YearlySummary = dashboardGraphData
+            };
+            return View(dashboardVM);
         }
+        
+
+        private void SetupCurrencyDropdown(string selectedCurrencyCode)
+        {
+            var currencySymbols = CurrencySymbol.GetCultures();
+
+            ViewBag.CurrencyList = currencySymbols.Select(c => new SelectListItem
+            {
+                Value = c.CurrencyCode,
+                Text = $"{c.CurrencyName} ({c.CurrencySymbol})",
+                Selected = c.CurrencyCode == selectedCurrencyCode
+            }).ToList();
+
+            var selectedSymbol = currencySymbols
+                .FirstOrDefault(c => c.CurrencyCode == selectedCurrencyCode)?.CurrencySymbol ?? "$";
+
+            ViewBag.CurrencySymbol = selectedSymbol;
+
+            ViewBag.UserCurrencyCode = selectedCurrencyCode;
+        }
+
     }
 }

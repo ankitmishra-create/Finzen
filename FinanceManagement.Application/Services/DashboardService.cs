@@ -7,6 +7,7 @@ using FinanceManagement.Infrastructure.Interface;
 using FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Logging;
+using System.Globalization;
 
 namespace FinanceManagement.Application.Services
 {
@@ -129,6 +130,29 @@ namespace FinanceManagement.Application.Services
                 _logger.LogError(ex, "Currency conversion failed. {Base} to {Target}", userBaseCurrencyCode, currencyToConvert);
                 throw new CurrencyConversionException($"An unexpected error occurred during currency conversion: {ex.Message}", ex);
             }
+        }
+
+        public async Task<YearlyTransactionSummary> DashboardGraphData()
+        {
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var userTransaction = await _unitOfWork.Transaction.GetAllPopulatedAsync(t => t.UserId == userId, include: q => q.Include(c => c.Category));
+            var orderedTransaction = userTransaction.Where(t => t.TransactionDate.HasValue)
+               .GroupBy(t => t.TransactionDate.Value.Year).OrderByDescending(t => t.Key).Take(1).Select(y => new YearlyTransactionSummary
+               {
+                   Year = y.Key,
+                   Months = y.GroupBy(t => t.TransactionDate.Value.Month).OrderBy(m => m.Key)
+                   .Select(m => new MonthSummary
+                   {
+                       MonthName = CultureInfo.CurrentCulture.DateTimeFormat.GetMonthName(m.Key),
+                       Categories = m.GroupBy(t => t.Category.CategoryType).Select(c => new CategorySummary
+                       {
+                           CategoryType = (CategoryType)c.Key,
+                           Amount = (decimal)c.Sum(t => t.Amount)
+                       }).ToList()
+                   }).ToList()
+               }).ToList();
+
+            return orderedTransaction[0];
         }
     }
 }

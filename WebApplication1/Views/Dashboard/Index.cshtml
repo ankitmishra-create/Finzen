@@ -1,19 +1,13 @@
-﻿@using FinanceManagement.Application.Utility
-@using FinanceManagement.Core.Entities
+﻿@using FinanceManagement.Application.ViewModels
 @using FinanceManagement.Core.Enums
-@using FinanceManagement.Application.DTO
-
-@* --- The Model is correct --- *@
-@model DashboardDto
+@using Newtonsoft.Json
+@model DashboardVM
 
 @{
     ViewData["Title"] = "Dashboard";
 }
 
-@* We don't need the old <style> block anymore.
-    All styling is now handled by Tailwind utility classes.
-*@
-
+<!-- Header -->
 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
     <div>
         <h1 class="text-3xl font-bold text-gray-900">
@@ -37,8 +31,9 @@
     </div>
 </div>
 
+<!-- Summary Cards -->
 <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
-
+    <!-- Total Income -->
     <div class="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <div class="flex items-center gap-4">
             <div class="p-3 rounded-full inline-flex items-center justify-center bg-green-100">
@@ -47,12 +42,13 @@
             <div>
                 <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Income</p>
                 <p class="text-3xl font-bold text-gray-900 mt-1">
-                    @ViewBag.CurrencySymbol @Model.TotalIncome.ToString("N2")
+                    @ViewBag.CurrencySymbol @Model.DashboardDto.TotalIncome.ToString("N2")
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- Total Expense -->
     <div class="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <div class="flex items-center gap-4">
             <div class="p-3 rounded-full inline-flex items-center justify-center bg-red-100">
@@ -61,12 +57,13 @@
             <div>
                 <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Total Expense</p>
                 <p class="text-3xl font-bold text-gray-900 mt-1">
-                    @ViewBag.CurrencySymbol @Model.TotalExpense.ToString("N2")
+                    @ViewBag.CurrencySymbol @Model.DashboardDto.TotalExpense.ToString("N2")
                 </p>
             </div>
         </div>
     </div>
 
+    <!-- Balance -->
     <div class="bg-white rounded-xl shadow-md p-6 transition-all duration-300 hover:shadow-lg hover:-translate-y-1">
         <div class="flex items-center gap-4">
             <div class="p-3 rounded-full inline-flex items-center justify-center bg-violet-100">
@@ -75,25 +72,34 @@
             <div>
                 <p class="text-sm font-medium text-gray-500 uppercase tracking-wider">Balance Available</p>
                 <p class="text-3xl font-bold text-gray-900 mt-1">
-                    @ViewBag.CurrencySymbol @Model.TotalBalance.ToString("N2")
+                    @ViewBag.CurrencySymbol @Model.DashboardDto.TotalBalance.ToString("N2")
                 </p>
             </div>
         </div>
     </div>
 </div>
 
+<!-- Chart Section -->
+<div class="mt-10 bg-white rounded-xl shadow-md p-6">
+    <h2 class="text-xl font-semibold text-gray-900 mb-4">
+        Income vs Expense (@Model.YearlySummary.Year)
+    </h2>
+    <div id="incomeExpenseChart"></div>
+</div>
 
-<div class="mt-8 bg-white rounded-xl shadow-md overflow-hidden">
-
+<!-- Recent Transactions -->
+<div class="mt-10 bg-white rounded-xl shadow-md overflow-hidden">
     <div class="flex flex-col sm:flex-row justify-between sm:items-center p-5 border-b border-gray-200">
         <h2 class="text-xl font-semibold text-gray-900 mb-3 sm:mb-0">
             Recent Transactions
         </h2>
         <div class="flex gap-3">
-            <a asp-controller="Transaction" asp-action="Index" class="px-4 py-2 text-sm font-medium text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 transition-all">
+            <a asp-controller="Transaction" asp-action="Index"
+               class="px-4 py-2 text-sm font-medium text-violet-600 border border-violet-600 rounded-lg hover:bg-violet-50 transition-all">
                 Manage Transactions
             </a>
-            <a asp-controller="Category" asp-action="Index" class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
+            <a asp-controller="Category" asp-action="Index"
+               class="px-4 py-2 text-sm font-medium text-gray-600 border border-gray-300 rounded-lg hover:bg-gray-50 transition-all">
                 Manage Categories
             </a>
         </div>
@@ -110,26 +116,16 @@
                     <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</th>
                 </tr>
             </thead>
-
             <tbody class="divide-y divide-gray-200">
-                @if (Model.RecentTransaction != null && Model.RecentTransaction.Any())
+                @if (Model.DashboardDto.RecentTransaction != null && Model.DashboardDto.RecentTransaction.Any())
                 {
-                    @foreach (var item in Model.RecentTransaction)
+                    foreach (var item in Model.DashboardDto.RecentTransaction)
                     {
-                        // --- Safe variables (same logic as before) ---
                         var categoryType = item.Category?.CategoryType ?? CategoryType.Expense;
                         var categoryName = item.Category?.CategoryName ?? "Unknown Category";
                         var amountPrefix = categoryType == CategoryType.Income ? "+" : "-";
-
-                        // --- NEW Tailwind Badge Classes ---
-                        var badgeClass = categoryType == CategoryType.Income ?
-                        "bg-green-100 text-green-800" :
-                        "bg-red-100 text-red-800";
-
-                        // --- NEW Tailwind Amount Classes ---
-                        var amountClass = categoryType == CategoryType.Income ?
-                        "text-green-600" :
-                        "text-red-600";
+                        var badgeClass = categoryType == CategoryType.Income ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+                        var amountClass = categoryType == CategoryType.Income ? "text-green-600" : "text-red-600";
 
                         <tr class="hover:bg-gray-50 transition-colors">
                             <td class="px-6 py-4 whitespace-nowrap">
@@ -137,15 +133,9 @@
                                     @categoryType
                                 </span>
                             </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">
-                                @categoryName
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @item.Description
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">
-                                @item.TransactionDate?.ToShortDateString()
-                            </td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">@categoryName</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.Description</td>
+                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.TransactionDate?.ToShortDateString()</td>
                             <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right @amountClass">
                                 @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString("N2")
                             </td>
@@ -155,12 +145,86 @@
                 else
                 {
                     <tr>
-                        <td colspan="5" class="text-center py-10 text-gray-500">
-                            No recent transactions found.
-                        </td>
+                        <td colspan="5" class="text-center py-10 text-gray-500">No recent transactions found.</td>
                     </tr>
                 }
             </tbody>
         </table>
     </div>
 </div>
+
+@section Scripts {
+    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+    <script>
+        (function () {
+            const data = @Html.Raw(JsonConvert.SerializeObject(Model.YearlySummary));
+
+            // --- ADDED THIS LINE ---
+            // Get the currency symbol from ViewBag into JavaScript
+            const currencySymbol = '@Html.Raw(ViewBag.CurrencySymbol)';
+
+            if (!data || !data.Months || data.Months.length === 0) {
+                document.querySelector("#incomeExpenseChart").innerHTML =
+                    "<p class='text-gray-500 text-center py-8'>No yearly transaction data available.</p>";
+                return;
+            }
+
+            // Extract month names dynamically from backend
+            const months = data.Months.map(m => m.MonthName);
+
+            const incomeData = [];
+            const expenseData = [];
+
+            data.Months.forEach(month => {
+                let income = 0, expense = 0;
+
+                month.Categories.forEach(cat => {
+                    if (cat.CategoryType === 1) income = cat.Amount;
+                    if (cat.CategoryType === 2) expense = cat.Amount;
+                });
+
+                incomeData.push(income);
+                expenseData.push(expense);
+            });
+
+            const netBalance = incomeData.map((inc, i) => inc - expenseData[i]);
+
+            const options = {
+                series: [
+                    { name: 'Income', type: 'column', data: incomeData },
+                    { name: 'Expense', type: 'column', data: expenseData },
+                    { name: 'Net Balance', type: 'line', data: netBalance }
+                ],
+                chart: { height: 380, type: 'line', toolbar: { show: false } },
+                stroke: { width: [0, 0, 3], curve: 'smooth' },
+                plotOptions: { bar: { columnWidth: '40%', borderRadius: 6 } },
+                dataLabels: { enabled: false },
+                legend: { position: 'top' },
+                xaxis: { categories: months, labels: { rotate: -45 } },
+                yaxis: {
+                    // --- MODIFIED THIS LINE ---
+                    title: { text: `Amount (${currencySymbol})` },
+                    // --- END OF MODIFICATION ---
+
+                    labels: {
+                        formatter: function (val) {
+                            return val.toLocaleString(undefined, {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
+                        }
+                    }
+                },
+                colors: ['#16a34a', '#dc2626', '#8b5cf6'],
+                tooltip: {
+                    shared: true,
+                    intersect: false,
+                    y: { formatter: val => val?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? "0.00" }
+                }
+            };
+
+            const chart = new ApexCharts(document.querySelector("#incomeExpenseChart"), options);
+            chart.render();
+        })();
+    </script>
+}
