@@ -11,110 +11,166 @@
         .ToList();
 }
 
-<div class="min-h-screen flex items-center justify-center bg-gray-50 py-10">
-    <div class="bg-white shadow-lg rounded-2xl p-8 w-full max-w-2xl border border-gray-100">
-        <h2 class="text-2xl font-semibold text-center text-gray-800 mb-8">Edit Transaction</h2>
+<div class="flex justify-between items-center mb-6">
+    <h1 class="text-3xl font-bold text-gray-900">@ViewData["Title"]</h1>
+    <a asp-action="Index" class="text-base font-medium text-violet-600 hover:text-violet-500">
+        <i class="bi bi-arrow-left"></i> Back to List
+    </a>
+</div>
 
-        <form asp-controller="Transaction" asp-action="Edit" method="post" class="space-y-6">
-            <div asp-validation-summary="ModelOnly" class="text-red-600 text-sm mb-2"></div>
+<div class="max-w-2xl mx-auto bg-white rounded-xl shadow-md p-6 sm:p-8 transition-all duration-300 hover:shadow-lg">
+    <form asp-controller="Transaction" asp-action="Edit" method="post" class="space-y-6">
+        <div asp-validation-summary="ModelOnly" class="text-red-600 text-base list-disc list-inside mb-4"></div>
 
-            <input type="hidden" asp-for="UserId" />
-            <input type="hidden" asp-for="TransactionId" />
+        <input type="hidden" asp-for="UserId" />
+        <input type="hidden" asp-for="TransactionId" />
 
-            <!-- Territory & Currency -->
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
-                <div>
-                    <label asp-for="TransactionTerrority" class="block text-gray-700 font-medium mb-1"></label>
-                    <select asp-for="TransactionTerrority"
-                            asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
-                            id="territorySelect"
-                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
-                    </select>
-                    <span asp-validation-for="TransactionTerrority" class="text-red-600 text-xs"></span>
-                </div>
-
-                <div id="currencyContainer" style="display:none;">
-                    <label asp-for="SelectedCurrency" class="block text-gray-700 font-medium mb-1"></label>
-                    <select asp-for="SelectedCurrency"
-                            asp-items="ViewBag.Available"
-                            class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
-                        <option value="">-- Select Currency --</option>
-                    </select>
-                    <span asp-validation-for="SelectedCurrency" class="text-red-600 text-xs"></span>
-                </div>
-            </div>
-
-            <!-- Amount -->
+        <!-- Transaction Territory + Currency -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div>
-                <label asp-for="Amount" class="block text-gray-700 font-medium mb-1"></label>
-                <input asp-for="Amount"
-                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5" />
-                <span asp-validation-for="Amount" class="text-red-600 text-xs"></span>
-            </div>
-
-            <!-- Transaction Date -->
-            <div>
-                <label asp-for="TransactionDate" class="block text-gray-700 font-medium mb-1"></label>
-                <input asp-for="TransactionDate"
-                       type="date"
-                       max="@DateTime.Today.ToString("yyyy-MM-dd")"
-                       class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5" />
-                <span asp-validation-for="TransactionDate" class="text-red-600 text-xs"></span>
-            </div>
-
-            <!-- Category Type -->
-            <div>
-                <label asp-for="CategoryType" class="block text-gray-700 font-medium mb-1"></label>
-                <select asp-for="CategoryType"
-                        asp-items="categoryTypes"
-                        id="categoryTypeDropdown"
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
+                <label asp-for="TransactionTerrority" class="block text-gray-700 font-medium mb-1"></label>
+                <select asp-for="TransactionTerrority"
+                        asp-items="Html.GetEnumSelectList<TransactionTerrority>()"
+                        id="territorySelect"
+                        class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8">
                 </select>
-                <span asp-validation-for="CategoryType" class="text-red-600 text-xs"></span>
             </div>
+            <div id="currencyContainer" style="display:none;">
+                <label asp-for="SelectedCurrency" class="block text-gray-700 font-medium mb-1"></label>
+                <select asp-for="SelectedCurrency"
+                        asp-items="ViewBag.Available"
+                        id="currencySelect"
+                        class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8">
+                    <option value="">-- Select Currency --</option>
+                </select>
+            </div>
+        </div>
 
-            <!-- Category Selection -->
-            <div>
-                <label asp-for="CategoryId" class="block text-gray-700 font-medium mb-1"></label>
-                <select asp-for="CategoryId"
-                        id="categorySelect"
-                        class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5">
-                    <option value="">-- Select Category --</option>
-                    @if (Model.Categories != null && Model.Categories.Any())
+        <!-- Amount + Date -->
+        <div>
+            <label asp-for="Amount" class="block text-gray-700 font-medium mb-1"></label>
+            <input asp-for="Amount" id="Amount" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" />
+        </div>
+
+        <div>
+            <label asp-for="TransactionDate" class="block text-gray-700 font-medium mb-1"></label>
+            <input asp-for="TransactionDate" type="date"
+                   value="@(Model.TransactionDate?.ToString("yyyy-MM-dd") ?? DateTime.Today.ToString("yyyy-MM-dd"))"
+                   max="@DateTime.Today.ToString("yyyy-MM-dd")"
+                   class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" />
+        </div>
+
+        <!-- Category Type + Category -->
+        <div>
+            <label asp-for="CategoryType" class="block text-gray-700 font-medium mb-1"></label>
+            <select asp-for="CategoryType"
+                    asp-items="categoryTypes"
+                    id="categoryTypeDropdown"
+                    class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base">
+            </select>
+        </div>
+
+        <div>
+            <label asp-for="CategoryId" class="block text-gray-700 font-medium mb-1"></label>
+            <select asp-for="CategoryId" id="categorySelect"
+                    class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base">
+                <option value="">-- Select Category --</option>
+                @foreach (var category in Model.Categories)
+                {
+                    <option value="@category.CategoryId"
+                            data-type="@category.CategoryType"
+                            selected="@(Model.CategoryId == category.CategoryId ? "selected" : null)">
+                        @category.CategoryName
+                    </option>
+                }
+            </select>
+        </div>
+
+        <!-- Description -->
+        <div>
+            <label asp-for="Description" id="descriptionLabel" class="block text-gray-700 font-medium mb-1"></label>
+            <textarea asp-for="Description"
+                      class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                      rows="3"></textarea>
+        </div>
+
+        <!-- Savings Allocations -->
+        <div id="savingsAllocationContainer" style="display:none;" class="space-y-4">
+            <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
+                <h5 class="text-lg font-semibold text-gray-900">Savings Allocations</h5>
+                <div id="savingsList" class="space-y-3">
+                    @for (int i = 0; i < Model.AvailableSavings.Count; i++)
                     {
-                        foreach (var category in Model.Categories)
-                        {
-                            <option value="@category.CategoryId"
-                                    data-type="@category.CategoryType"
-                                    selected="@(Model.CategoryId == category.CategoryId ? "selected" : null)">
-                                @category.CategoryName
-                            </option>
-                        }
+                        var saving = Model.AvailableSavings[i];
+                        var categoryId = saving.CategoryId?.ToString() ?? "general";
+                        var categoryName = saving.CategoryId == null
+                            ? "General"
+                            : Model.Categories.FirstOrDefault(c => c.CategoryId == saving.CategoryId)?.CategoryName ?? "General";
+                        var allocation = Model.SavingAllocationVms.FirstOrDefault(a => a.AllocatedSavigId == saving.SavingId);
+                        var amountValue = allocation?.Amount;
+
+                        <div class="saving-item flex items-center gap-3" data-category-id="@categoryId" style="display:none;">
+                            <input type="checkbox" class="toggle-item w-5 h-5 accent-violet-600" checked />
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">@saving.SavingName (@categoryName)</label>
+                                <input type="hidden" name="SavingAllocationVms[@i].AllocatedSavigId" value="@saving.SavingId" />
+                                <input type="number" step="0.01" min="0"
+                                       name="SavingAllocationVms[@i].Amount"
+                                       value="@amountValue?.ToString("0.00")"
+                                       class="allocation-amount block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                       placeholder="0.00" data-container="savings" />
+                            </div>
+                        </div>
                     }
-                </select>
-                <span asp-validation-for="CategoryId" class="text-red-600 text-xs"></span>
+                </div>
+                <div class="pt-2 border-t border-gray-200">
+                    <strong>Total Allocated: <span id="savingsTotal">0.00</span></strong>
+                </div>
             </div>
+        </div>
 
-            <!-- Description -->
-            <div>
-                <label asp-for="Description"
-                       id="descriptionLabel"
-                       class="block text-gray-700 font-medium mb-1"></label>
-                <textarea asp-for="Description"
-                          class="w-full border-gray-300 rounded-lg shadow-sm focus:ring-2 focus:ring-indigo-500 focus:border-indigo-500 p-2.5"
-                          rows="3"></textarea>
-                <span asp-validation-for="Description" class="text-red-600 text-xs"></span>
-            </div>
+        <!-- Budget Allocations -->
+        <div id="budgetAllocationContainer" style="display:none;" class="space-y-4">
+            <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
+                <h5 class="text-lg font-semibold text-gray-900">Budget Allocations</h5>
+                <div id="budgetList" class="space-y-3">
+                    @for (int i = 0; i < Model.AvailableBudgets?.Count; i++)
+                    {
+                        var budget = Model.AvailableBudgets[i];
+                        var categoryId = budget.CategoryId?.ToString() ?? "general";
+                        var categoryName = budget.CategoryId == null
+                            ? "General"
+                            : Model.Categories.FirstOrDefault(c => c.CategoryId == budget.CategoryId)?.CategoryName ?? "General";
+                        var allocation = Model.BudgetAllocationVMs.FirstOrDefault(a => a.AllocatedBudgetId == budget.BudgetId);
+                        var amountValue = allocation?.Amount;
 
-            <!-- Submit Button -->
-            <div class="pt-4">
-                <button type="submit"
-                        class="w-full bg-indigo-600 text-white font-semibold py-2.5 rounded-lg shadow hover:bg-indigo-700 transition duration-150">
-                    Save Changes
-                </button>
+                        <div class="budget-item flex items-center gap-3" data-category-id="@categoryId" style="display:none;">
+                            <input type="checkbox" class="toggle-item w-5 h-5 accent-violet-600" checked />
+                            <div class="flex-1">
+                                <label class="block text-sm font-medium text-gray-700">@budget.BudgetName (@categoryName)</label>
+                                <input type="hidden" name="BudgetAllocationVMs[@i].AllocatedBudgetId" value="@budget.BudgetId" />
+                                <input type="number" step="0.01" min="0"
+                                       name="BudgetAllocationVMs[@i].Amount"
+                                       value="@amountValue?.ToString("0.00")"
+                                       class="allocation-amount block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                       placeholder="0.00" data-container="budget" />
+                            </div>
+                        </div>
+                    }
+                </div>
+                <div class="pt-2 border-t border-gray-200">
+                    <strong>Total Allocated: <span id="budgetTotal">0.00</span></strong>
+                </div>
             </div>
-        </form>
-    </div>
+        </div>
+
+        <div class="pt-4">
+            <button type="submit"
+                    class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-violet-600 hover:bg-violet-700">
+                Save Changes
+            </button>
+        </div>
+    </form>
 </div>
 
 @section Scripts {
@@ -122,53 +178,107 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
-            // --- Territory / Currency toggle ---
-            const territorySelect = document.getElementById("territorySelect");
-            const currencyContainer = document.getElementById("currencyContainer");
-
-            function updateCurrencyVisibility() {
-                const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
-                currencyContainer.style.display = selectedOptionText === "International" ? "block" : "none";
-            }
-
-            updateCurrencyVisibility();
-            territorySelect.addEventListener("change", updateCurrencyVisibility);
-
-            // --- Category filtering ---
             const typeSelect = document.getElementById("categoryTypeDropdown");
             const categorySelect = document.getElementById("categorySelect");
-            const descriptionLabel = document.getElementById("descriptionLabel");
-            const allCategoryOptions = Array.from(categorySelect.options);
+            const mainAmountInput = document.getElementById("Amount");
+            const allSavingItems = document.querySelectorAll(".saving-item");
+            const allBudgetItems = document.querySelectorAll(".budget-item");
 
-            function filterCategories() {
-                const selectedType = typeSelect.value;
-                const currentCategoryValue = categorySelect.value;
+            const allocationCache = { savings: {}, budgets: {} };
 
-                categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
-                allCategoryOptions.forEach(option => {
-                    if (!option.value) return;
-                    if (!selectedType || option.getAttribute("data-type") === selectedType)
-                        categorySelect.appendChild(option.cloneNode(true));
+            function cacheVisibleAllocations(type, catType, catId) {
+                const cacheKey = `${catType}_${catId || 'none'}`;
+                const cacheContainer = type === "savings" ? allocationCache.savings : allocationCache.budgets;
+                const items = type === "savings" ? allSavingItems : allBudgetItems;
+                const values = {};
+                items.forEach(item => {
+                    const input = item.querySelector(".allocation-amount");
+                    const id = item.querySelector("input[type=hidden]").value;
+                    values[id] = input.value;
                 });
-
-                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`))
-                    categorySelect.value = currentCategoryValue;
-                else
-                    categorySelect.value = "";
+                cacheContainer[cacheKey] = values;
             }
 
-            function toggleDescriptionRequirement() {
-                descriptionLabel.classList.add("after:content-['*'] after:text-red-500 after:ml-1");
+            function filterAllocationItems(items, selectedCategoryId) {
+                const selectedType = typeSelect.value;
+                const cacheKey = `${selectedType}_${selectedCategoryId || 'none'}`;
+                const cacheContainer = selectedType === "Income" ? allocationCache.savings : allocationCache.budgets;
+                const savedValues = cacheContainer[cacheKey] || {};
+
+                items.forEach(item => {
+                    const itemCatId = item.getAttribute("data-category-id");
+                    const input = item.querySelector(".allocation-amount");
+                    const toggle = item.querySelector(".toggle-item");
+                    const id = item.querySelector("input[type=hidden]").value;
+
+                    if (selectedCategoryId && (itemCatId === selectedCategoryId || itemCatId === "general")) {
+                        item.style.display = "flex";
+                        if (savedValues[id]) input.value = savedValues[id];
+                    } else {
+                        item.style.display = "none";
+                    }
+
+                    // ✅ Add listener for toggle (already existed)
+                    toggle.addEventListener("change", () => {
+                        if (!toggle.checked) {
+                            cacheContainer[cacheKey] = cacheContainer[cacheKey] || {};
+                            cacheContainer[cacheKey][id] = input.value;
+                            input.disabled = true;
+                            input.value = "";
+                        } else {
+                            input.disabled = false;
+                            if (cacheContainer[cacheKey]?.[id]) input.value = cacheContainer[cacheKey][id];
+                        }
+                        validateAllocations(selectedType === "Income" ? "savings" : "budget");
+                    });
+
+                    // ✅ Add live recalculation when input changes
+                    input.addEventListener("input", () => {
+                        validateAllocations(selectedType === "Income" ? "savings" : "budget");
+                    });
+                });
             }
 
-            typeSelect.addEventListener("change", () => {
-                filterCategories();
-                toggleDescriptionRequirement();
+            function validateAllocations(type) {
+                const mainAmount = parseFloat(mainAmountInput.value) || 0;
+                const inputs = type === "savings"
+                    ? document.querySelectorAll(".allocation-amount[data-container='savings']")
+                    : document.querySelectorAll(".allocation-amount[data-container='budget']");
+                let total = 0;
+                inputs.forEach(i => {
+                    if (i.offsetParent !== null && !i.disabled) total += parseFloat(i.value) || 0;
+                });
+                document.getElementById(type === "savings" ? "savingsTotal" : "budgetTotal").textContent = total.toFixed(2);
+            }
+
+            function updateAllocationVisibility() {
+                const type = typeSelect.value;
+                const catId = categorySelect.value;
+                if (type === "Income") {
+                    document.getElementById("savingsAllocationContainer").style.display = "block";
+                    document.getElementById("budgetAllocationContainer").style.display = "none";
+                } else if (type === "Expense") {
+                    document.getElementById("savingsAllocationContainer").style.display = "none";
+                    document.getElementById("budgetAllocationContainer").style.display = "block";
+                } else {
+                    document.getElementById("savingsAllocationContainer").style.display = "none";
+                    document.getElementById("budgetAllocationContainer").style.display = "none";
+                }
+                filterAllocationItems(allSavingItems, catId);
+                filterAllocationItems(allBudgetItems, catId);
+                validateAllocations("savings");
+                validateAllocations("budget");
+            }
+
+            typeSelect.addEventListener("change", updateAllocationVisibility);
+            categorySelect.addEventListener("change", updateAllocationVisibility);
+            mainAmountInput.addEventListener("input", () => {
+                validateAllocations("savings");
+                validateAllocations("budget");
             });
 
-            // Initial load
-            filterCategories();
-            toggleDescriptionRequirement();
+            updateAllocationVisibility();
         });
     </script>
+
 }

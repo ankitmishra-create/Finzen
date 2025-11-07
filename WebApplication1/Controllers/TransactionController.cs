@@ -90,15 +90,33 @@ namespace FinanceManagement.Web.Controllers
 
             if (ModelState.IsValid)
             {
+
                 try
                 {
+                    if (addTransactionVM.IsForSaving)
+                    {
+                        addTransactionVM.AvailableBudgets = null;
+                        addTransactionVM.BudgetAllocationVMs = null;
+                    }
+                    else if (addTransactionVM.IsForBudget)
+                    {
+                        addTransactionVM.SavingAllocationVms = null;
+                        addTransactionVM.AvailableSavings = null;
+                    }
+                    else
+                    {
+                        addTransactionVM.SavingAllocationVms = null;
+                        addTransactionVM.AvailableSavings = null;
+                        addTransactionVM.BudgetAllocationVMs = null;
+                        addTransactionVM.AvailableBudgets = null;
+                    }
                     await _transactionService.AddTransactionAsync(addTransactionVM);
                     return RedirectToAction("Index");
                 }
                 catch (Exception ex)
                 {
                     _logger.LogError(ex, "Unexpected error loading Create Transaction.");
-                    return RedirectToAction("Index");
+                    return View("Error");
                 }
             }
             try
@@ -112,12 +130,12 @@ namespace FinanceManagement.Web.Controllers
             catch (Exception ex) when (ex is UserNotFoundException or InvalidCurrencyException or DataRetrievalException)
             {
                 _logger.LogError(ex, "Failed to load Create Transaction view: {ErrorMessage}", ex.Message);
-                return RedirectToAction("Index");
+                return View("Error");
             }
             catch (Exception ex)
             {
                 _logger.LogError(ex, "Unexpected error loading Create Transaction view.");
-                return RedirectToAction("Index");
+                return View("Error");
             }
 
         }
@@ -159,6 +177,18 @@ namespace FinanceManagement.Web.Controllers
             }
             try
             {
+                if (addTransactionVM.CategoryType == CategoryType.Income)
+                {
+                    addTransactionVM.BudgetAllocationVMs = null;
+                    addTransactionVM.AvailableBudgets = null;
+                    addTransactionVM.IsForBudget = false;
+                }
+                else if (addTransactionVM.CategoryType == CategoryType.Expense)
+                {
+                    addTransactionVM.SavingAllocationVms = null;
+                    addTransactionVM.AvailableSavings = null;
+                    addTransactionVM.IsForSaving = false;
+                }
                 await _transactionService.Edit(addTransactionVM);
                 return RedirectToAction(nameof(Index));
             }

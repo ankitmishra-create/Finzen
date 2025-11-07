@@ -42,6 +42,9 @@ namespace FinanceManagement.Application.Services
                     _logger.LogError("User {UserId} has no base currency configured.", userId);
                     throw new InvalidCurrencyException("User base currency not set.");
                 }
+
+                var userSavings = await _unitOfWork.Saving.GetAllAsync(s => s.UserId == userId);
+                var userBudget = await _unitOfWork.Budget.GetAllAsync(b => b.UserId == userId);
                 AddTransactionVM addTransactionVM = new AddTransactionVM()
                 {
                     UserId = userId,
@@ -51,6 +54,16 @@ namespace FinanceManagement.Application.Services
                     TransactionTimeLine = TransactionTimeLine.OneTime,
                     IsStepUpTransaction = false
                 };
+
+                if (userSavings != null)
+                {
+                    addTransactionVM.AvailableSavings = userSavings;
+                }
+                if (userBudget != null)
+                {
+                    addTransactionVM.AvailableBudgets = userBudget;
+                }
+
                 return addTransactionVM;
             }
             catch (Exception ex)
@@ -58,6 +71,76 @@ namespace FinanceManagement.Application.Services
                 _logger.LogError(ex, "Erro loading CreateView for user {UserId}", userId);
                 throw new DataRetrievalException("Error loading transaction data.", ex);
             }
+        }
+
+        private async Task<List<TransactionSavingsOrBudgetsMapping>> HandleSavingOrBudgetTransaction(AddTransactionVM addTransactionVM, Guid transactionId, decimal? convertedAmount)
+        {
+            List<TransactionSavingsOrBudgetsMapping> transactionSavingsOrBudgets = new List<TransactionSavingsOrBudgetsMapping>();
+            var userId = _loggedInUser.CurrentLoggedInUser();
+            var user = await _unitOfWork.User.GetByIdAsync(userId);
+            if (user == null)
+            {
+                _logger.LogError($"HandleSavingOrBudgetTransaction: Requested user not found: {userId}");
+                throw new UserNotFoundException($"Requested User Not Found{userId}");
+            }
+            if (addTransactionVM.IsForSaving)
+            {
+                foreach (var item in addTransactionVM.SavingAllocationVms)
+                {
+                    if (item.Amount.HasValue && item.Amount > 0)
+                    {
+                        var userSaving = await _unitOfWork.Saving.GetAsync(s => s.SavingId == item.AllocatedSavigId);
+                        if (userSaving == null)
+                        {
+                            _logger.LogError($"HandleSavingOrBudgetTransaction: Requested Saving not found {item.AllocatedSavigId}");
+                            throw new SavingNotFoundException($"Requested Saving not found {item.AllocatedSavigId}");
+                        }
+                        if (convertedAmount != null)
+                        {
+                            item.Amount *= (decimal)convertedAmount;
+                        }
+                        userSaving.AlreadySavedAmount += (decimal)item.Amount;
+                        TransactionSavingsOrBudgetsMapping transactionSavingsOrBudgetsMapping = new TransactionSavingsOrBudgetsMapping()
+                        {
+                            SavingId = item.AllocatedSavigId,
+                            SavedAmount = item.Amount,
+                            TransactionId = transactionId
+                        };
+                        _unitOfWork.Saving.Update(userSaving);
+                        transactionSavingsOrBudgets.Add(transactionSavingsOrBudgetsMapping);
+                    }
+                }
+            }
+            if (addTransactionVM.IsForBudget)
+            {
+                foreach (var item in addTransactionVM?.BudgetAllocationVMs)
+                {
+
+                    if (item.Amount > 0M)
+                    {
+                        var userBudget = await _unitOfWork.Budget.GetAsync(s => s.BudgetId == item.AllocatedBudgetId);
+                        if (userBudget == null)
+                        {
+                            _logger.LogError($"HandleSavingOrBudgetTransaction: Requested budget not found {item.AllocatedBudgetId}");
+                            throw new SavingNotFoundException($"Requested Saving not found {item.AllocatedBudgetId}");
+                        }
+                        if (convertedAmount != null)
+                        {
+                            item.Amount *= (decimal)convertedAmount;
+                        }
+                        userBudget.AlreadySpendAmount += (decimal)item.Amount;
+                        TransactionSavingsOrBudgetsMapping transactionSavingsOrBudgetsMapping = new TransactionSavingsOrBudgetsMapping()
+                        {
+                            BudgetId = item.AllocatedBudgetId,
+                            SavedAmount = item.Amount,
+                            TransactionId = transactionId
+                        };
+                        _unitOfWork.Budget.Update(userBudget);
+                        transactionSavingsOrBudgets.Add(transactionSavingsOrBudgetsMapping);
+                    }
+                }
+            }
+            return transactionSavingsOrBudgets;
         }
 
         public async Task AddTransactionAsync(AddTransactionVM addTransactionVM)
@@ -87,7 +170,7 @@ namespace FinanceManagement.Application.Services
             Currency findUsedCurrency;
             Currency findUserBaseCurrency = await _unitOfWork.Currency.GetAsync(c => c.CurrencyId == user.CurrencyId);
             ConvertedRates convertedAmount;
-
+            decimal convertedRates = 1m;
             if (addTransactionVM.TransactionTerrority.ToString() == "International")
             {
                 currencyUsed = addTransactionVM.SelectedCurrency.ToUpper();
@@ -98,6 +181,7 @@ namespace FinanceManagement.Application.Services
                     convertedAmount = await _currencyConversion.GetConvertedRates(findUsedCurrency.CurrencyCode, findUserBaseCurrency.CurrencyCode);
                     addTransactionVM.Amount = convertedAmount.conversion_rate * addTransactionVM.Amount;
                     addTransactionVM.SelectedCurrency = addTransactionVM.SelectedCurrency;
+                    convertedRates = convertedAmount.conversion_rate;
                 }
 
             }
@@ -116,6 +200,16 @@ namespace FinanceManagement.Application.Services
                 OriginalAmount = originalAmount,
                 OriginalCurrency = findUserBaseCurrency.CurrencyCode,
             };
+
+            if (addTransactionVM.IsForSaving || addTransactionVM.IsForBudget)
+            {
+                var mappedTransaction = await HandleSavingOrBudgetTransaction(addTransactionVM, transaction.TransactionId, convertedRates);
+                foreach (var item in mappedTransaction)
+                {
+                    await _unitOfWork.Mapping.AddAsync(item);
+
+                }
+            }
 
             if (addTransactionVM.TransactionTimeLine.ToString() == "Recurring" && addTransactionVM.RecurringStartDate.HasValue)
             {
@@ -196,6 +290,13 @@ namespace FinanceManagement.Application.Services
             var categories = await _unitOfWork.Category.GetAllAsync(u => u.UserId == userId);
             var user = await _unitOfWork.User.GetByIdAsync(userId);
 
+            var savingMapped = await _unitOfWork.Mapping.GetAllPopulatedAsync(sm => sm.TransactionId == transactionId && sm.SavingId.HasValue, include: q => q.Include(s => s.Saving));
+            var budgetMapped = await _unitOfWork.Mapping.GetAllPopulatedAsync(bm => bm.TransactionId == transactionId && bm.BudgetId.HasValue, include: q => q.Include(b => b.Budget));
+
+            var savings = savingMapped.Select(x => x.Saving).Where(s => s != null).ToList();
+            var budgets = budgetMapped.Select(x => x.Budget).Where(b => b != null).ToList();
+
+
             Currency userCurrency;
             string userBaseCurrency;
             ConvertedRates convertedRates;
@@ -219,6 +320,39 @@ namespace FinanceManagement.Application.Services
                     CategoryType = transaction.Category.CategoryType,
                     TransactionDate = transaction.TransactionDate,
                 };
+
+                if (savingMapped != null)
+                {
+                    List<SavingAllocationVm> savingAllocationVms = new List<SavingAllocationVm>();
+                    foreach (var item in savingMapped)
+                    {
+                        SavingAllocationVm savingAllocationVm = new SavingAllocationVm()
+                        {
+                            AllocatedSavigId = (Guid)item.SavingId,
+                            Amount = item.SavedAmount * convertedRates.conversion_rate
+                        };
+                        savingAllocationVms.Add(savingAllocationVm);
+                    }
+                    addTransactionVM.AvailableSavings = savings;
+                    addTransactionVM.SavingAllocationVms = savingAllocationVms;
+                }
+
+                if (budgetMapped != null)
+                {
+                    List<BudgetAllocationVM> budgetAllocationVMs = new List<BudgetAllocationVM>();
+                    foreach (var item in budgetMapped)
+                    {
+                        BudgetAllocationVM budgetAllocationVM = new BudgetAllocationVM()
+                        {
+                            AllocatedBudgetId = (Guid)item.BudgetId,
+                            Amount = item.SavedAmount * convertedRates.conversion_rate
+                        };
+                        budgetAllocationVMs.Add(budgetAllocationVM);
+                    }
+                    addTransactionVM.AvailableBudgets = budgets;
+                    addTransactionVM.BudgetAllocationVMs = budgetAllocationVMs;
+                }
+
                 return addTransactionVM;
             }
 
@@ -235,6 +369,38 @@ namespace FinanceManagement.Application.Services
                 CategoryType = transaction.Category.CategoryType,
                 TransactionDate = transaction.TransactionDate,
             };
+
+            if (savingMapped != null)
+            {
+                List<SavingAllocationVm> savingAllocationVms = new List<SavingAllocationVm>();
+                foreach (var item in savingMapped)
+                {
+                    SavingAllocationVm savingAllocationVm = new SavingAllocationVm()
+                    {
+                        AllocatedSavigId = (Guid)item.SavingId,
+                        Amount = item.SavedAmount * convertedUpdatedRates
+                    };
+                    addTransactionVM1.AvailableSavings = savings;
+                    savingAllocationVms.Add(savingAllocationVm);
+                }
+                addTransactionVM1.SavingAllocationVms = savingAllocationVms;
+            }
+
+            if (budgetMapped != null)
+            {
+                List<BudgetAllocationVM> budgetAllocationVMs = new List<BudgetAllocationVM>();
+                foreach (var item in budgetMapped)
+                {
+                    BudgetAllocationVM budgetAllocationVM = new BudgetAllocationVM()
+                    {
+                        AllocatedBudgetId = (Guid)item.BudgetId,
+                        Amount = item.SavedAmount * convertedUpdatedRates
+                    };
+                    budgetAllocationVMs.Add(budgetAllocationVM);
+                }
+                addTransactionVM1.BudgetAllocationVMs = budgetAllocationVMs;
+            }
+
             return addTransactionVM1;
         }
 
@@ -261,10 +427,14 @@ namespace FinanceManagement.Application.Services
             transaction.UpdatedAt = DateTime.UtcNow;
             transaction.TransactionTerrority = addTransactionVM.TransactionTerrority;
 
+
+
+
             string currencyUsed;
             Currency findUsedCurrency;
             Currency findUserBaseCurrency;
             ConvertedRates convertedAmount;
+            decimal convertedRates = 1;
             if (addTransactionVM.TransactionTerrority.ToString() == "Domestic")
             {
                 transaction.SelectedCurrency = user.Currency.CurrencyCode;
@@ -281,11 +451,54 @@ namespace FinanceManagement.Application.Services
                     convertedAmount = await _currencyConversion.GetConvertedRates(findUsedCurrency.CurrencyCode, findUserBaseCurrency.CurrencyCode);
                     addTransactionVM.Amount = convertedAmount.conversion_rate * addTransactionVM.Amount;
                     addTransactionVM.SelectedCurrency = addTransactionVM.SelectedCurrency;
+                    convertedRates = convertedAmount.conversion_rate;
                 }
                 transaction.SelectedCurrency = addTransactionVM.SelectedCurrency;
                 transaction.Amount = addTransactionVM.Amount;
 
             }
+
+            if (addTransactionVM.BudgetAllocationVMs?.Count > 0)
+            {
+                foreach (var item in addTransactionVM.BudgetAllocationVMs)
+                {
+                    if (item != null)
+                    {
+                        if (item.Amount == null) item.Amount = 0;
+                        var userMappedBudget = await _unitOfWork.Mapping.GetAsync(m => m.TransactionId == addTransactionVM.TransactionId && m.BudgetId == item.AllocatedBudgetId);
+                        userMappedBudget.SavedAmount = item.Amount*=convertedRates;
+                        if (userMappedBudget.SavedAmount == 0)
+                        {
+                           _unitOfWork.Mapping.Delete(userMappedBudget);
+                        }
+                        else
+                        {
+                            _unitOfWork.Mapping.Update(userMappedBudget);
+                        }
+                    }
+                }
+            }
+            else if (addTransactionVM.SavingAllocationVms?.Count > 0)
+            {
+                foreach (var item in addTransactionVM.SavingAllocationVms)
+                {
+                    if (item != null)
+                    {
+                        if (item.Amount == null) item.Amount = 0;
+                        var userMappingSaving = await _unitOfWork.Mapping.GetAsync(m => m.TransactionId == addTransactionVM.TransactionId && m.SavingId == item.AllocatedSavigId);
+                        userMappingSaving.SavedAmount = item.Amount*convertedRates;
+                        if (userMappingSaving.SavedAmount == 0)
+                        {
+                            _unitOfWork.Mapping.Delete(userMappingSaving);
+                        }
+                        else
+                        {
+                            _unitOfWork.Mapping.Update(userMappingSaving);
+                        }
+                    }
+                }
+            }
+
             _unitOfWork.Transaction.Update(transaction);
             TransactionLog(transaction, ActionPerformed.Edited);
             try

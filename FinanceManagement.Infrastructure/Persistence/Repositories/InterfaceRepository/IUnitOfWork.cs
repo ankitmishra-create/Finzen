@@ -1,4 +1,6 @@
-﻿namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository
+﻿using FinanceManagement.Core.Entities;
+
+namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRepository
 {
     public interface IUnitOfWork
     {
@@ -10,6 +12,7 @@
         ITransactionLogRepository TransactionLog { get; }
         IBudgetRepository Budget { get; }
         ISavingRepository Saving { get; }
+        ITransactionSavingsOrBudgetsMappingRepository Mapping {get;}
 
         Task SaveAsync();
     }

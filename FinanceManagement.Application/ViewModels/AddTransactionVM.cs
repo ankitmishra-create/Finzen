@@ -1,5 +1,6 @@
 ﻿using FinanceManagement.Core.Entities;
 using FinanceManagement.Core.Enums;
+using MimeKit.Cryptography;
 using System.ComponentModel.DataAnnotations;
 
 namespace FinanceManagement.Application.ViewModels
@@ -35,7 +36,6 @@ namespace FinanceManagement.Application.ViewModels
         public Frequency? RecurrenceFrequency { get; set; }
 
 
-
         [Required, Display(Name = "Transaction Timeline")]
         public TransactionTimeLine TransactionTimeLine { get; set; }
 
@@ -57,7 +57,26 @@ namespace FinanceManagement.Application.ViewModels
         [Display(Name = "Step Up Frequency")]
         public Frequency? StepUpFrequeny { get; set; }
 
+        //savings and budgets
+        public bool IsForSaving { get; set; }
+        public bool IsForBudget { get; set; }
+
+        public List<Saving>? AvailableSavings { get; set; } = new List<Saving>();
+        public List<Budget>? AvailableBudgets { get; set; } = new List<Budget>();
+
+        public List<SavingAllocationVm>? SavingAllocationVms { get; set; } = new List<SavingAllocationVm>();
+        public List<BudgetAllocationVM>? BudgetAllocationVMs { get; set; } = new List<BudgetAllocationVM>(); 
     }
 
+    public class SavingAllocationVm
+    {
+        public Guid AllocatedSavigId { get; set; }
+        public decimal? Amount { get; set; }
+    }
 
+    public class BudgetAllocationVM
+    {
+        public Guid AllocatedBudgetId { get; set; }
+        public decimal? Amount { get; set; }
+    }
 }

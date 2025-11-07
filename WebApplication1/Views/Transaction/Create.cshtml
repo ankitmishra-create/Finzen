@@ -23,7 +23,7 @@
 
         <div class="space-y-6">
 
-            <!-- Transaction TimeLine -->
+            <!-- Transaction TimeLine (Existing) -->
             <div>
                 <label asp-for="TransactionTimeLine" class="block text-base font-medium text-gray-700 mb-2"></label>
                 <div class="grid grid-cols-2 gap-4">
@@ -53,7 +53,7 @@
                 <span asp-validation-for="TransactionTimeLine" class="text-red-600 text-base mt-1"></span>
             </div>
 
-            <!-- Frequency -->
+            <!-- Frequency (Existing) -->
             <div id="frequencyContainer" style="display:none;">
                 <label asp-for="RecurrenceFrequency" class="block text-base font-medium text-gray-700 mb-1"></label>
                 <select asp-for="RecurrenceFrequency"
@@ -65,7 +65,7 @@
                 <span asp-validation-for="RecurrenceFrequency" class="text-red-600 text-base mt-1"></span>
             </div>
 
-            <!-- Territory / Currency -->
+            <!-- Territory / Currency (Existing) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <label asp-for="TransactionTerrority" class="block text-base font-medium text-gray-700 mb-1"></label>
@@ -80,18 +80,20 @@
                     <label asp-for="SelectedCurrency" class="block text-base font-medium text-gray-700 mb-1"></label>
                     <select asp-for="SelectedCurrency"
                             asp-items="ViewBag.Available"
-                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8">
+                            class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base appearance-none bg-no-repeat bg-right pr-8"
+                            id="currencySelect">
+                        <!-- <-- Added ID -->
                         <option value="">-- Select Currency --</option>
                     </select>
                     <span asp-validation-for="SelectedCurrency" class="text-red-600 text-base mt-1"></span>
                 </div>
             </div>
 
-            <!-- Amount + Date -->
+            <!-- Amount + Date (Existing) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <label asp-for="Amount" class="block text-base font-medium text-gray-700 mb-1"></label>
-                    <input asp-for="Amount" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" placeholder="0.00" />
+                    <input asp-for="Amount" id="Amount" class="block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base" placeholder="0.00" />
                     <span asp-validation-for="Amount" class="text-red-600 text-base mt-1"></span>
                 </div>
                 <div>
@@ -104,7 +106,7 @@
                 </div>
             </div>
 
-            <!-- Category -->
+            <!-- Category (Existing) -->
             <div class="grid grid-cols-1 sm:grid-cols-2 gap-6">
                 <div>
                     <label asp-for="CategoryType" class="block text-base font-medium text-gray-700 mb-1"></label>
@@ -135,7 +137,101 @@
                 </div>
             </div>
 
-            <!-- Description -->
+            <!-- Savings Allocation (Existing) -->
+            <div id="savingsAllocationContainer" style="display:none;" class="space-y-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input asp-for="IsForSaving" type="checkbox" id="isForSavingToggle" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <span class="ml-3 text-base font-medium text-gray-700">Add Transaction to Savings</span>
+                </label>
+
+                <div id="savingsCard" class="collapse-card" aria-hidden="true" style="display:none;">
+                    <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
+                        <h5 class="text-lg font-semibold text-gray-900">Available Savings</h5>
+                        <div id="savingsList" class="space-y-3">
+                            @if (Model.AvailableSavings.Any())
+                            {
+                                for (int i = 0; i < Model.AvailableSavings.Count; i++)
+                                {
+                                    var saving = Model.AvailableSavings[i];
+                                    var categoryId = saving.CategoryId?.ToString() ?? "general";
+
+                                    var categoryName = saving.CategoryId == null
+                                    ? "General"
+                                    : Model.Categories.FirstOrDefault(c => c.CategoryId == saving.CategoryId)?.CategoryName ?? "General";
+
+                                    <div class="saving-item" data-category-id="@categoryId" style="display:none;">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            @saving.SavingName (@categoryName)
+                                        </label>
+                                        <input type="hidden" name="SavingAllocationVms[@i].AllocatedSavigId" value="@saving.SavingId" />
+                                        <input type="number" step="0.01" min="0" name="SavingAllocationVms[@i].Amount"
+                                               class="allocation-amount block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                               placeholder="0.00" data-container="savings" />
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No savings goals found.</p>
+                            }
+                        </div>
+                        <div class="pt-2 border-t border-gray-200">
+                            <strong class="text-base">Total Allocated: <span id="savingsTotal">0.00</span></strong>
+                            <span id="savingsError" class="text-red-600 text-sm block" style="display:none;">Total allocation cannot exceed transaction amount.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Budget Allocation (Existing) -->
+            <div id="budgetAllocationContainer" style="display:none;" class="space-y-4">
+                <label class="relative inline-flex items-center cursor-pointer">
+                    <input asp-for="IsForBudget" type="checkbox" id="isForBudgetToggle" class="sr-only peer" />
+                    <div class="w-11 h-6 bg-gray-200 rounded-full peer peer-focus:ring-4 peer-focus:ring-violet-300 peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-gray-300 after:border after:rounded-full after:h-5 after:w-5 after:transition-all peer-checked:bg-violet-600"></div>
+                    <span class="ml-3 text-base font-medium text-gray-700">Add Transaction to Budgets</span>
+                </label>
+
+                <div id="budgetCard" class="collapse-card" aria-hidden="true" style="display:none;">
+                    <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
+                        <h5 class="text-lg font-semibold text-gray-900">Available Budgets</h5>
+                        <div id="budgetList" class="space-y-3">
+                            @if (Model.AvailableBudgets.Any())
+                            {
+                                for (int i = 0; i < Model.AvailableBudgets.Count; i++)
+                                {
+                                    var budget = Model.AvailableBudgets[i];
+                                    var categoryId = budget.CategoryId?.ToString() ?? "general";
+
+                                    var categoryName = budget.CategoryId == null
+                                    ? "General"
+                                    : Model.Categories.FirstOrDefault(c => c.CategoryId == budget.CategoryId)?.CategoryName ?? "General";
+
+                                    <div class="budget-item" data-category-id="@categoryId" style="display:none;">
+                                        <label class="block text-sm font-medium text-gray-700">
+                                            @budget.BudgetName (@categoryName)
+                                        </label>
+                                        <input type="hidden" name="BudgetAllocationVMs[@i].AllocatedBudgetId" value="@budget.BudgetId" />
+                                        <input type="number" step="0.01" min="0" name="BudgetAllocationVMs[@i].Amount"
+                                               class="allocation-amount block w-full rounded-lg border-gray-400 p-2.5 shadow-sm focus:border-violet-500 focus:ring-violet-500 text-base"
+                                               placeholder="0.00" data-container="budget" />
+                                    </div>
+                                }
+                            }
+                            else
+                            {
+                                <p class="text-gray-500">No budgets found.</p>
+                            }
+                        </div>
+                        <div class="pt-2 border-t border-gray-200">
+                            <strong class="text-base">Total Allocated: <span id="budgetTotal">0.00</span></strong>
+                            <span id="budgetError" class="text-red-600 text-sm block" style="display:none;">Total allocation cannot exceed transaction amount.</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Description (Existing) -->
             <div>
                 <label asp-for="Description" class="block text-base font-medium text-gray-700 mb-1" id="descriptionLabel"></label>
                 <textarea asp-for="Description"
@@ -144,7 +240,7 @@
                 <span asp-validation-for="Description" class="text-red-600 text-base mt-1"></span>
             </div>
 
-            <!-- Step-Up Section -->
+            <!-- Step-Up Section (MODIFIED) -->
             <div id="stepUpContainer" style="display:none;" class="space-y-4">
                 <label class="relative inline-flex items-center cursor-pointer">
                     <input asp-for="IsStepUpTransaction" type="checkbox" id="stepUpToggle" class="sr-only peer" />
@@ -156,6 +252,7 @@
                     <div class="p-4 rounded-lg bg-gray-50 shadow-inner space-y-4">
                         <h5 class="text-lg font-semibold text-gray-900">Auto Increase Settings</h5>
 
+                        <!-- --- START OF RESTORED HTML --- -->
                         <div>
                             <label class="block text-base font-medium text-gray-700 mb-2">Increase Type</label>
                             <div class="flex gap-6">
@@ -195,11 +292,14 @@
                             </select>
                             <span asp-validation-for="StepUpFrequeny" class="text-red-600 text-base mt-1"></span>
                         </div>
+                        <!-- --- END OF RESTORED HTML --- -->
+
                     </div>
                 </div>
             </div>
 
-            <!-- Submit -->
+
+            <!-- Submit (Existing) -->
             <div class="pt-6">
                 <button type="submit" class="w-full flex justify-center py-3 px-4 border border-transparent rounded-lg shadow-sm text-lg font-medium text-white bg-violet-600 hover:bg-violet-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-violet-500 transition-all duration-300 transform hover:-translate-y-0.5">
                     Save Transaction
@@ -221,7 +321,7 @@
         }
 
             .collapse-card.show {
-                max-height: 800px;
+                max-height: 800px; /* Adjust as needed */
             }
 
         .required-field::after {
@@ -234,23 +334,33 @@
 
     <script>
         document.addEventListener("DOMContentLoaded", function () {
+
+            // --- Cache All Selectors ---
+            const mainAmountInput = document.getElementById('Amount');
+
+            // Timeline / Frequency
             const timelineOneTime = document.getElementById("timeline_OneTime");
             const timelineRecurring = document.getElementById("timeline_Recurring");
             const frequencyContainer = document.getElementById("frequencyContainer");
             const frequencySelect = document.getElementById("frequencySelect");
 
+            // Territory / Currency
             const territorySelect = document.getElementById("territorySelect");
             const currencyContainer = document.getElementById("currencyContainer");
-            const currencySelect = currencyContainer.querySelector("select");
+            const currencySelect = document.getElementById("currencySelect"); // <-- MODIFIED: Use ID
+            const userBaseCurrency = '@(ViewBag.UserCurrencyCode ?? "")'; // <-- NEW: Get base currency
 
+            // Category
             const typeSelect = document.getElementById('categoryTypeSelect');
             const categorySelect = document.getElementById('categorySelect');
             const descriptionLabel = document.getElementById('descriptionLabel');
             const allCategoryOptions = Array.from(categorySelect.options);
 
+            // --- MODIFIED: Step-Up Selectors ---
             const stepUpContainer = document.getElementById('stepUpContainer');
             const stepUpToggle = document.getElementById('stepUpToggle');
             const stepUpCard = document.getElementById('stepUpCard');
+            // --- RESTORED SELECTORS ---
             const stepUpTypeAmount = document.getElementById('stepUpTypeAmount');
             const stepUpTypePercentage = document.getElementById('stepUpTypePercentage');
             const stepUpAmountGroup = document.getElementById('stepUpAmountGroup');
@@ -258,7 +368,44 @@
             const stepUpAmountInput = document.getElementById('StepUpAmount');
             const stepUpPercentageInput = document.getElementById('StepUpPercentage');
             const stepUpFrequencySelect = document.getElementById('stepUpFrequencySelect');
+            // --- END RESTORED SELECTORS ---
 
+            // Savings
+            const savingsAllocationContainer = document.getElementById('savingsAllocationContainer');
+            const isForSavingToggle = document.getElementById('isForSavingToggle');
+            const savingsCard = document.getElementById('savingsCard');
+            const allSavingItems = document.querySelectorAll('.saving-item');
+            const savingsAllocationInputs = document.querySelectorAll('.allocation-amount[data-container="savings"]');
+            const savingsTotalDisplay = document.getElementById('savingsTotal');
+            const savingsErrorDisplay = document.getElementById('savingsError');
+
+            // Budget
+            const budgetAllocationContainer = document.getElementById('budgetAllocationContainer');
+            const isForBudgetToggle = document.getElementById('isForBudgetToggle');
+            const budgetCard = document.getElementById('budgetCard');
+            const allBudgetItems = document.querySelectorAll('.budget-item');
+            const budgetAllocationInputs = document.querySelectorAll('.allocation-amount[data-container="budget"]');
+            const budgetTotalDisplay = document.getElementById('budgetTotal');
+            const budgetErrorDisplay = document.getElementById('budgetError');
+
+            // --- Generic Collapse Function ---
+            function toggleCollapseCard(cardElement, show) {
+                if (show) {
+                    cardElement.style.display = "block";
+                    window.requestAnimationFrame(() => {
+                        cardElement.classList.add('show');
+                        cardElement.setAttribute('aria-hidden', 'false');
+                    });
+                } else {
+                    cardElement.classList.remove('show');
+                    cardElement.setAttribute('aria-hidden', 'true');
+                    setTimeout(() => {
+                        if (!cardElement.classList.contains('show')) cardElement.style.display = "none";
+                    }, 350);
+                }
+            }
+
+            // --- Existing Functions ---
             function toggleFrequency() {
                 if (timelineRecurring.checked) {
                     frequencyContainer.style.display = "block";
@@ -271,11 +418,17 @@
                 updateStepUpAvailability();
             }
 
+            // --- MODIFIED: toggleCurrency ---
             function toggleCurrency() {
                 const selectedOptionText = territorySelect.options[territorySelect.selectedIndex].text;
                 if (selectedOptionText === "International") {
                     currencyContainer.style.display = "block";
                     currencySelect.setAttribute("required", "required");
+                    // --- NEW: Set default currency ---
+                    if (userBaseCurrency) {
+                        currencySelect.value = userBaseCurrency;
+                    }
+                    // --- END NEW ---
                 } else {
                     currencyContainer.style.display = "none";
                     currencySelect.removeAttribute("required");
@@ -287,13 +440,15 @@
                 const selectedType = typeSelect.value;
                 const currentCategoryValue = categorySelect.value;
                 categorySelect.innerHTML = '<option value="">-- Select Category --</option>';
+
                 allCategoryOptions.forEach(option => {
                     if (!option.value) return;
                     if (!selectedType || option.getAttribute('data-type') === selectedType) {
                         categorySelect.appendChild(option.cloneNode(true));
                     }
                 });
-                if (categorySelect.querySelector(`option[value='${currentCategoryValue}']`)) {
+
+                if (categorySelect.querySelector(`option[value="${currentCategoryValue}"]`)) {
                     categorySelect.value = currentCategoryValue;
                 } else {
                     categorySelect.value = "";
@@ -304,33 +459,7 @@
                 descriptionLabel.classList.add('required-field');
             }
 
-            function updateStepUpAvailability() {
-                if (timelineRecurring.checked) {
-                    stepUpContainer.style.display = "block";
-                } else {
-                    stepUpContainer.style.display = "none";
-                    stepUpToggle.checked = false;
-                    collapseStepUp(false);
-                    clearStepUpFields();
-                }
-            }
-
-            function collapseStepUp(show) {
-                if (show) {
-                    stepUpCard.style.display = "block";
-                    window.requestAnimationFrame(() => {
-                        stepUpCard.classList.add('show');
-                        stepUpCard.setAttribute('aria-hidden', 'false');
-                    });
-                } else {
-                    stepUpCard.classList.remove('show');
-                    stepUpCard.setAttribute('aria-hidden', 'true');
-                    setTimeout(() => {
-                        if (!stepUpCard.classList.contains('show')) stepUpCard.style.display = "none";
-                    }, 350);
-                }
-            }
-
+            // --- RESTORED: Step-Up Functions ---
             function clearStepUpFields() {
                 stepUpAmountInput.value = "";
                 stepUpAmountInput.removeAttribute('required');
@@ -358,30 +487,157 @@
                 }
             }
 
+            // --- MODIFIED: updateStepUpAvailability ---
+            function updateStepUpAvailability() {
+                if (timelineRecurring.checked) {
+                    stepUpContainer.style.display = "block";
+                } else {
+                    stepUpContainer.style.display = "none";
+                    stepUpToggle.checked = false;
+                    toggleCollapseCard(stepUpCard, false);
+                    clearStepUpFields(); // <-- RESTORED
+                }
+            }
+
+            // --- MODIFIED: Allocation Functions ---
+            function updateAllocationVisibility() {
+                const selectedType = typeSelect.value;
+                const selectedCategoryId = categorySelect.value;
+
+                // Hide/show top-level containers
+                // --- MODIFIED: Added check for selectedCategoryId ---
+                if (selectedType === 'Income' && selectedCategoryId) {
+                    savingsAllocationContainer.style.display = 'block';
+                    budgetAllocationContainer.style.display = 'none';
+                    isForBudgetToggle.checked = false;
+                    toggleCollapseCard(budgetCard, false);
+                    clearAllocationInputs(budgetAllocationInputs);
+                } else if (selectedType === 'Expense' && selectedCategoryId) { // <-- MODIFIED
+                    savingsAllocationContainer.style.display = 'none';
+                    budgetAllocationContainer.style.display = 'block';
+                    isForSavingToggle.checked = false;
+                    toggleCollapseCard(savingsCard, false);
+                    clearAllocationInputs(savingsAllocationInputs);
+                } else {
+                    savingsAllocationContainer.style.display = 'none';
+                    budgetAllocationContainer.style.display = 'none';
+                    isForSavingToggle.checked = false;
+                    isForBudgetToggle.checked = false;
+                    toggleCollapseCard(savingsCard, false);
+                    toggleCollapseCard(budgetCard, false);
+                    clearAllocationInputs(savingsAllocationInputs);
+                    clearAllocationInputs(budgetAllocationInputs);
+                }
+                // --- END MODIFICATION ---
+
+                // Filter items within containers
+                filterAllocationItems(allSavingItems, selectedCategoryId);
+                filterAllocationItems(allBudgetItems, selectedCategoryId);
+
+                // Re-validate
+                validateAllocations('savings');
+                validateAllocations('budget');
+            }
+
+            function filterAllocationItems(items, selectedCategoryId) {
+                items.forEach(item => {
+                    const itemCatId = item.getAttribute('data-category-id');
+                    if (!selectedCategoryId || itemCatId === selectedCategoryId || itemCatId === 'general') {
+                        item.style.display = 'block';
+                    } else {
+                        item.style.display = 'none';
+                        const input = item.querySelector('.allocation-amount');
+                        if (input) input.value = '';
+                    }
+                });
+            }
+
+            function clearAllocationInputs(inputs) {
+                inputs.forEach(input => input.value = '');
+            }
+
+            function validateAllocations(type) {
+                const mainAmount = parseFloat(mainAmountInput.value) || 0;
+                let totalAllocation = 0;
+                let inputs, totalDisplay, errorDisplay;
+
+                if (type === 'savings') {
+                    inputs = savingsAllocationInputs;
+                    totalDisplay = savingsTotalDisplay;
+                    errorDisplay = savingsErrorDisplay;
+                } else {
+                    inputs = budgetAllocationInputs;
+                    totalDisplay = budgetTotalDisplay;
+                    errorDisplay = budgetErrorDisplay;
+                }
+
+                inputs.forEach(input => {
+                    if (input.offsetParent !== null) {
+                        totalAllocation += parseFloat(input.value) || 0;
+                    }
+                });
+
+                totalDisplay.textContent = totalAllocation.toFixed(2);
+
+                if (totalAllocation > mainAmount) {
+                    errorDisplay.style.display = 'block';
+                } else {
+                    errorDisplay.style.display = 'none';
+                }
+            }
+
+            // --- Event Listeners ---
             timelineOneTime.addEventListener("change", toggleFrequency);
             timelineRecurring.addEventListener("change", toggleFrequency);
             territorySelect.addEventListener("change", toggleCurrency);
-            typeSelect.addEventListener("change", filterCategories);
             categorySelect.addEventListener("change", toggleDescriptionRequirement);
 
+            // Allocation listeners
+            typeSelect.addEventListener("change", () => {
+                filterCategories();
+                updateAllocationVisibility();
+            });
+            categorySelect.addEventListener("change", updateAllocationVisibility);
+
+            isForSavingToggle.addEventListener('change', function () {
+                toggleCollapseCard(savingsCard, this.checked);
+            });
+            isForBudgetToggle.addEventListener('change', function () {
+                toggleCollapseCard(budgetCard, this.checked);
+            });
+
+            // Validation Listeners
+            mainAmountInput.addEventListener('input', () => {
+                validateAllocations('savings');
+                validateAllocations('budget');
+            });
+            savingsAllocationInputs.forEach(input => input.addEventListener('input', () => validateAllocations('savings')));
+            budgetAllocationInputs.forEach(input => input.addEventListener('input', () => validateAllocations('budget')));
+
+            // --- MODIFIED: Step-Up Listeners ---
             stepUpToggle.addEventListener('change', function () {
-                collapseStepUp(this.checked);
+                toggleCollapseCard(stepUpCard, this.checked);
+                // --- RESTORED ---
                 if (this.checked) {
                     updateStepUpTypeUI();
                     stepUpFrequencySelect.setAttribute('required', 'required');
                 } else {
                     clearStepUpFields();
                 }
+                // --- END RESTORED ---
             });
 
+            // --- RESTORED LISTENERS ---
             stepUpTypeAmount.addEventListener('change', updateStepUpTypeUI);
             stepUpTypePercentage.addEventListener('change', updateStepUpTypeUI);
+            // --- END RESTORED LISTENERS ---
 
-            // Initialize state
+            // --- Initialize State ---
             toggleFrequency();
             toggleCurrency();
             filterCategories();
-            updateStepUpTypeUI();
+            updateAllocationVisibility();
+            updateStepUpTypeUI(); // <-- RESTORED
             updateStepUpAvailability();
         });
     </script>

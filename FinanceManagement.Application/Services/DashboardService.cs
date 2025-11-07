@@ -43,6 +43,20 @@ namespace FinanceManagement.Application.Services
                     _logger.LogError("User {UserId} has no base currency assigned", userId);
                     throw new InvalidCurrencyException("User's base currency is not configured.");
                 }
+
+                var userTransaction = await _unitOfWork.Transaction.GetAllPopulatedAsync(t => t.UserId == userId, include: q => q.Include(c => c.Category));
+                var incomeTransactions = userTransaction.Where(t => t.Category.CategoryType==CategoryType.Income).GroupBy(t => t.Category.CategoryName).Select(x => new CategorySummaryDto
+                {
+                    CategoryName=x.Key,
+                    Amount=x.Sum(a => a.Amount)
+                }).ToList();
+
+                var expenseTransactions = userTransaction.Where(t => t.Category.CategoryType == CategoryType.Expense).GroupBy(t => t.Category.CategoryName).Select(x => new CategorySummaryDto
+                {
+                    CategoryName=x.Key,
+                    Amount = x.Sum(t => t.Amount)
+                }).ToList();
+
                 var totalIncome = await GetTotalAmountByTypeAsync(userId, CategoryType.Income);
                 var totalExpense = await GetTotalAmountByTypeAsync(userId, CategoryType.Expense);
 
@@ -55,6 +69,8 @@ namespace FinanceManagement.Application.Services
                     RecentTransaction = recentTransaction,
                     BaseCurrencyCode = user.Currency.CurrencyCode
                 };
+                dashboardDto.IncomeCategorySummary = incomeTransactions;
+                dashboardDto.ExpenseCategorySummary = expenseTransactions;
                 return dashboardDto;
             }
             catch (UserNotFoundException)

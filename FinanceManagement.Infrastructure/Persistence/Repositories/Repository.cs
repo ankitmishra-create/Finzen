@@ -51,7 +51,7 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
             return await dbset.FirstOrDefaultAsync(predicate);
         }
 
-        public async Task<IEnumerable<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
+        public async Task<List<T>> GetAllAsync(Expression<Func<T, bool>> predicate)
         {
             return await dbset.Where(predicate).ToListAsync();
         }

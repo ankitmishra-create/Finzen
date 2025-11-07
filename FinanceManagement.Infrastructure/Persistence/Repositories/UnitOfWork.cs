@@ -13,6 +13,7 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
         public ITransactionLogRepository TransactionLog { get; private set; }
         public IBudgetRepository Budget { get; private set; }
         public ISavingRepository Saving { get; private set; }
+        public ITransactionSavingsOrBudgetsMappingRepository Mapping { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -25,6 +26,7 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
             TransactionLog = new TransactionLogRepository(_db);
             Budget = new BudgetRepository(_db);
             Saving = new SavingRepository(_db);
+            Mapping = new TransactionSavingsOrBudgetsMappingRepository(_db);
         }
         public async Task SaveAsync()
         {

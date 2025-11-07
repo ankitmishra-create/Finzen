@@ -17,6 +17,8 @@ namespace FinanceManagement.Infrastructure.Persistence
         public DbSet<TransactionLog> TransactionLogs { get; set; }
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Saving> Savings { get; set; }
+        public DbSet<TransactionSavingsOrBudgetsMapping> SavingsOrBudgetsMappings { get; set; }
+
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             base.OnModelCreating(modelBuilder);

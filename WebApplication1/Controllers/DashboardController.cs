@@ -19,7 +19,7 @@ namespace FinanceManagement.Web.Controllers
             _dashboardService = dashboardService;
             _logger = logger;
         }
-        
+
         [HttpGet]
         public async Task<IActionResult> Index()
         {
@@ -69,7 +69,7 @@ namespace FinanceManagement.Web.Controllers
                 dashboardDto = await _dashboardService.GetDashboardDataAsync();
                 dashboardGraphData = await _dashboardService.DashboardGraphData();
                 SetupCurrencyDropdown(selectedCurrencyCode);
-                
+
             }
             catch (Exception ex)
             {
@@ -108,9 +108,9 @@ namespace FinanceManagement.Web.Controllers
                     transaction.Amount *= conversionRate;
                 }
             }
-            foreach(var month in dashboardGraphData.Months)
+            foreach (var month in dashboardGraphData.Months)
             {
-                foreach(var category in month.Categories)
+                foreach (var category in month.Categories)
                 {
                     category.Amount = category.Amount * conversionRate;
                 }
@@ -122,7 +122,7 @@ namespace FinanceManagement.Web.Controllers
             };
             return View(dashboardVM);
         }
-        
+
 
         private void SetupCurrencyDropdown(string selectedCurrencyCode)
         {
