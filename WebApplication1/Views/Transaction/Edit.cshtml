@@ -175,7 +175,39 @@
 
 @section Scripts {
     <partial name="_ValidationScriptsPartial" />
+    <script>
+        document.addEventListener("DOMContentLoaded", function () {
+            const territorySelect = document.getElementById("territorySelect");
+            const currencyContainer = document.getElementById("currencyContainer");
+            const currencySelect = document.getElementById("currencySelect");
 
+            function isInternational() {
+                if (!territorySelect) return false;
+                const opt = territorySelect.options[territorySelect.selectedIndex];
+                // Compare by text so we don't rely on enum numeric values
+                return (opt?.text || "").trim().toLowerCase() === "international";
+            }
+
+            function updateCurrencyVisibility() {
+                const show = isInternational();
+
+                currencyContainer.style.display = show ? "block" : "none";
+                currencySelect.required = show;
+                currencySelect.disabled = !show;
+
+                if (!show) {
+                    // Clear any previously chosen currency when switching back to Domestic
+                    currencySelect.value = "";
+                }
+            }
+
+            // Initial state on load
+            updateCurrencyVisibility();
+
+            // React to changes
+            territorySelect.addEventListener("change", updateCurrencyVisibility);
+        });
+    </script>
     <script>
         document.addEventListener("DOMContentLoaded", function () {
             const typeSelect = document.getElementById("categoryTypeDropdown");

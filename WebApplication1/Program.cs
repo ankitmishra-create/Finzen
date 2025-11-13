@@ -13,10 +13,11 @@ using Serilog;
 var builder = WebApplication.CreateBuilder(args);
 
 Log.Logger = new LoggerConfiguration()
-    .WriteTo.File("C:\\Users\\Coditas\\Desktop\\FinanceManagement\\Logs\\logs.txt",
+    .WriteTo.File("logs/logs.txt",
     outputTemplate: "[{Timestamp:yyyy-MM-dd HH:mm:ss} {Level:u3}] {Message:lj}{NewLine}{Exception}").CreateLogger();
 builder.Host.UseSerilog();
 
+builder.Services.AddRazorPages();
 builder.Services.AddControllersWithViews();
 builder.Services.AddHttpContextAccessor();
 
@@ -54,6 +55,8 @@ builder.Services.AddScoped<IExternalAuthService, ExternalAuthService>();
 builder.Services.AddScoped<ITransactionLoggerService, TransactionLoggerService>();
 builder.Services.AddScoped<IBudgetService, BudgetService>();
 builder.Services.AddScoped<ISavingService, SavingService>();
+builder.Services.AddScoped<IReportService, ReportService>();
+builder.Services.AddScoped<IInvestmentService, InvestmentService>();    
 
 builder.Services.AddSingleton<IPasswordHashing, PasswordHashing>();
 
@@ -79,6 +82,7 @@ if (!app.Environment.IsDevelopment())
     app.UseHsts();
 }
 
+
 app.UseHttpsRedirection();
 app.MapStaticAssets();
 app.UseRouting();
@@ -86,6 +90,7 @@ app.UseRouting();
 app.UseAuthentication();
 app.UseAuthorization();
 
+app.MapRazorPages();
 app.MapControllerRoute(
     name: "default",
     pattern: "{controller=Home}/{action=Index}/{id?}");

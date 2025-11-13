@@ -38,7 +38,7 @@ namespace FinanceManagement.Application.Services
                 using (var client = new MailKit.Net.Smtp.SmtpClient())
                 {
                     await client.ConnectAsync("sandbox.smtp.mailtrap.io", 2525, SecureSocketOptions.StartTls);
-                    await client.AuthenticateAsync("e8f914e04144e4", "cb476df26d1599");
+                    await client.AuthenticateAsync("cb9c5770aef454", "b2a4e9ea1506d1");
 
                     await client.SendAsync(emailMessage);
                     await client.DisconnectAsync(true);

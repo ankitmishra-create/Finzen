@@ -167,8 +167,12 @@ namespace FinanceManagement.Application.Services
                        }).ToList()
                    }).ToList()
                }).ToList();
+            if (orderedTransaction.Count > 0)
+            {
+                return orderedTransaction[0];    
+            }
+            return null;
 
-            return orderedTransaction[0];
         }
     }
 }

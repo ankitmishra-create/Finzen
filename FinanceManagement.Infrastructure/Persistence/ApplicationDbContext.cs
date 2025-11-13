@@ -18,6 +18,8 @@ namespace FinanceManagement.Infrastructure.Persistence
         public DbSet<Budget> Budgets { get; set; }
         public DbSet<Saving> Savings { get; set; }
         public DbSet<TransactionSavingsOrBudgetsMapping> SavingsOrBudgetsMappings { get; set; }
+        public DbSet<StockHoldings>  StockHoldings { get; set; }
+        public DbSet<StockTransactions> StockTransactions { get; set; }
 
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

@@ -4,7 +4,9 @@
 @model DashboardVM
 
 @{
-    ViewData["Title"] = "Dashboard";
+ViewData["Title"] = "Dashboard";
+// Safely derive a display year without touching controller/service.
+var displayYear = Model?.YearlySummary != null ? Model.YearlySummary.Year.ToString() : "—";
 }
 
 <div class="flex flex-col sm:flex-row justify-between sm:items-center gap-4 mb-6">
@@ -76,7 +78,7 @@
 
 <div class="mt-10 bg-white rounded-xl shadow-md p-6">
     <h2 class="text-xl font-semibold text-gray-900 mb-4">
-        Income vs Expense (@Model.YearlySummary.Year)
+        Income vs Expense (@displayYear)
     </h2>
     <div id="incomeExpenseChart"></div>
 </div>
@@ -89,17 +91,10 @@
                 Income by Category
             </h2>
             <div id="income-filter-group" class="flex rounded-lg shadow-sm" role="group">
-                <button type="button" data-period="Weekly" class="filter-btn-income relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Weekly
-                </button>
-                <button type="button" data-period="Monthly" class="filter-btn-income relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Monthly
-                </button>
-                <button type="button" data-period="Yearly" class="filter-btn-income relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Yearly
-                </button>
+               
+                
                 <button type="button" data-period="All" class="filter-btn-income filter-btn-active relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    All Time
+                    Yearly
                 </button>
             </div>
         </div>
@@ -112,23 +107,17 @@
                 Expense by Category
             </h2>
             <div id="expense-filter-group" class="flex rounded-lg shadow-sm" role="group">
-                <button type="button" data-period="Weekly" class="filter-btn-expense relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-l-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Weekly
-                </button>
-                <button type="button" data-period="Monthly" class="filter-btn-expense relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Monthly
-                </button>
-                <button type="button" data-period="Yearly" class="filter-btn-expense relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border-t border-b border-gray-200 hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    Yearly
-                </button>
+               
+               
                 <button type="button" data-period="All" class="filter-btn-expense filter-btn-active relative inline-flex items-center px-4 py-2 text-sm font-medium text-gray-900 bg-white border border-gray-200 rounded-r-lg hover:bg-gray-100 focus:z-10 focus:ring-2 focus:ring-violet-700">
-                    All Time
+                    Yearly
                 </button>
             </div>
         </div>
         <div id="expenseDonutChart" style="min-height: 380px;"></div>
     </div>
 </div>
+
 <div class="mt-10 bg-white rounded-xl shadow-md overflow-hidden">
     <div class="flex flex-col sm:flex-row justify-between sm:items-center p-5 border-b border-gray-200">
         <h2 class="text-xl font-semibold text-gray-900 mb-3 sm:mb-0">
@@ -149,306 +138,250 @@
     <div class="w-full overflow-x-auto">
         <table class="table-auto w-full text-left">
             <thead class="bg-gray-50 border-b border-gray-200">
-                <tr>
-                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
-                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
-                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
-                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
-                    <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</th>
-                </tr>
+            <tr>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Type</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Category</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Description</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider">Date</th>
+                <th class="px-6 py-3 text-xs font-medium text-gray-500 uppercase tracking-wider text-right">Amount</th>
+            </tr>
             </thead>
             <tbody class="divide-y divide-gray-200">
-                @if (Model.DashboardDto.RecentTransaction != null && Model.DashboardDto.RecentTransaction.Any())
-                {
-                    foreach (var item in Model.DashboardDto.RecentTransaction)
-                    {
-                        var categoryType = item.Category?.CategoryType ?? CategoryType.Expense;
-                        var categoryName = item.Category?.CategoryName ?? "Unknown Category";
-                        var amountPrefix = categoryType == CategoryType.Income ? "+" : "-";
-                        var badgeClass = categoryType == CategoryType.Income ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
-                        var amountClass = categoryType == CategoryType.Income ? "text-green-600" : "text-red-600";
+            @if (Model.DashboardDto.RecentTransaction != null && Model.DashboardDto.RecentTransaction.Any())
+            {
+            foreach (var item in Model.DashboardDto.RecentTransaction)
+            {
+            var categoryType = item.Category?.CategoryType ?? CategoryType.Expense;
+            var categoryName = item.Category?.CategoryName ?? "Unknown Category";
+            var amountPrefix = categoryType == CategoryType.Income ? "+" : "-";
+            var badgeClass = categoryType == CategoryType.Income ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800";
+            var amountClass = categoryType == CategoryType.Income ? "text-green-600" : "text-red-600";
 
-                        <tr class="hover:bg-gray-50 transition-colors">
-                            <td class="px-6 py-4 whitespace-nowrap">
+            <tr class="hover:bg-gray-50 transition-colors">
+                <td class="px-6 py-4 whitespace-nowrap">
                                 <span class="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium @badgeClass">
                                     @categoryType
                                 </span>
-                            </td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">@categoryName</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.Description</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.TransactionDate?.ToShortDateString()</td>
-                            <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right @amountClass">
-                                @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString("N2")
-                            </td>
-                        </tr>
-                    }
-                }
-                else
-                {
-                    <tr>
-                        <td colspan="5" class="text-center py-10 text-gray-500">No recent transactions found.</td>
-                    </tr>
-                }
+                </td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-medium text-gray-800">@categoryName</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.Description</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm text-gray-500">@item.TransactionDate?.ToShortDateString()</td>
+                <td class="px-6 py-4 whitespace-nowrap text-sm font-semibold text-right @amountClass">
+                    @amountPrefix @ViewBag.CurrencySymbol @item.Amount?.ToString("N2")
+                </td>
+            </tr>
+            }
+            }
+            else
+            {
+            <tr>
+                <td colspan="5" class="text-center py-10 text-gray-500">No recent transactions found.</td>
+            </tr>
+            }
             </tbody>
         </table>
     </div>
 </div>
 
 @section Scripts {
-    <script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
-    <script>
-        // Store the 'All Time' data that's loaded with the page
-        const allTimeIncomeData = @Html.Raw(JsonConvert.SerializeObject(Model.DashboardDto.IncomeCategorySummary));
-        const allTimeExpenseData = @Html.Raw(JsonConvert.SerializeObject(Model.DashboardDto.ExpenseCategorySummary));
-        const currencySymbol = '@Html.Raw(ViewBag.CurrencySymbol)';
+<script src="https://cdn.jsdelivr.net/npm/apexcharts"></script>
+<script>
+    // Store the 'All Time' data that's loaded with the page
+    const allTimeIncomeData = @Html.Raw(JsonConvert.SerializeObject(Model.DashboardDto.IncomeCategorySummary));
+    const allTimeExpenseData = @Html.Raw(JsonConvert.SerializeObject(Model.DashboardDto.ExpenseCategorySummary));
+    const currencySymbol = '@Html.Raw(ViewBag.CurrencySymbol)';
 
-        (function () {
-            // ==================================================
-            // 1. Yearly Income vs Expense Bar Chart
-            // ==================================================
-            const yearlyData = @Html.Raw(JsonConvert.SerializeObject(Model.YearlySummary));
-            const incomeExpenseChartEl = document.querySelector("#incomeExpenseChart");
+    (function () {
+        // ==================================================
+        // 1. Yearly Income vs Expense Bar Chart
+        // ==================================================
+        const yearlyData = @Html.Raw(JsonConvert.SerializeObject(Model.YearlySummary));
+        const incomeExpenseChartEl = document.querySelector("#incomeExpenseChart");
 
-            if (!yearlyData || !yearlyData.Months || yearlyData.Months.length === 0) {
-                incomeExpenseChartEl.innerHTML =
-                    "<p class='text-gray-500 text-center py-8'>No yearly transaction data available.</p>";
-            } else {
-                const months = yearlyData.Months.map(m => m.MonthName);
-                const incomeData = [];
-                const expenseData = [];
+        if (!yearlyData || !yearlyData.Months || yearlyData.Months.length === 0) {
+            incomeExpenseChartEl.innerHTML =
+                "<p class='text-gray-500 text-center py-8'>No yearly transaction data available.</p>";
+        } else {
+            const months = yearlyData.Months.map(m => m.MonthName);
+            const incomeData = [];
+            const expenseData = [];
 
-                yearlyData.Months.forEach(month => {
-                    let income = 0, expense = 0;
-                    month.Categories.forEach(cat => {
-                        if (cat.CategoryType === 1) income = cat.Amount; // Assuming 1 is Income
-                        if (cat.CategoryType === 2) expense = cat.Amount; // Assuming 2 is Expense
-                    });
-                    incomeData.push(income);
-                    expenseData.push(expense);
+            yearlyData.Months.forEach(month => {
+                let income = 0, expense = 0;
+                month.Categories.forEach(cat => {
+                    if (cat.CategoryType === 1) income = cat.Amount; // 1 = Income
+                    if (cat.CategoryType === 2) expense = cat.Amount; // 2 = Expense
                 });
+                incomeData.push(income);
+                expenseData.push(expense);
+            });
 
-                const netBalance = incomeData.map((inc, i) => inc - expenseData[i]);
+            const netBalance = incomeData.map((inc, i) => inc - expenseData[i]);
 
-                const barChartOptions = {
-                    series: [
-                        { name: 'Income', type: 'column', data: incomeData },
-                        { name: 'Expense', type: 'column', data: expenseData },
-                        { name: 'Net Balance', type: 'line', data: netBalance }
-                    ],
-                    chart: { height: 380, type: 'line', toolbar: { show: false } },
-                    stroke: { width: [0, 0, 3], curve: 'smooth' },
-                    plotOptions: { bar: { columnWidth: '40%', borderRadius: 6 } },
-                    dataLabels: { enabled: false },
-                    legend: { position: 'top' },
-                    xaxis: { categories: months, labels: { rotate: -45 } },
-                    yaxis: {
-                        title: { text: `Amount (${currencySymbol})` },
-                        labels: {
-                            formatter: function (val) {
-                                return val.toLocaleString(undefined, {
-                                    minimumFractionDigits: 0,
-                                    maximumFractionDigits: 0
-                                });
-                            }
+            const barChartOptions = {
+                series: [
+                    { name: 'Income', type: 'column', data: incomeData },
+                    { name: 'Expense', type: 'column', data: expenseData },
+                    { name: 'Net Balance', type: 'line', data: netBalance }
+                ],
+                chart: { height: 380, type: 'line', toolbar: { show: false } },
+                stroke: { width: [0, 0, 3], curve: 'smooth' },
+                plotOptions: { bar: { columnWidth: '40%', borderRadius: 6 } },
+                dataLabels: { enabled: false },
+                legend: { position: 'top' },
+                xaxis: { categories: months, labels: { rotate: -45 } },
+                yaxis: {
+                    title: { text: `Amount (${currencySymbol})` },
+                    labels: {
+                        formatter: function (val) {
+                            return val.toLocaleString(undefined, {
+                                minimumFractionDigits: 0,
+                                maximumFractionDigits: 0
+                            });
                         }
-                    },
-                    colors: ['#16a34a', '#dc2626', '#8b5cf6'], // Green, Red, Violet
-                    tooltip: {
-                        shared: true,
-                        intersect: false,
-                        y: { formatter: val => val?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? "0.00" }
                     }
-                };
-
-                const barChart = new ApexCharts(incomeExpenseChartEl, barChartOptions);
-                barChart.render();
-            }
-
-
-            // ==================================================
-            // 2. Donut Charts (Now with filter logic)
-            // ==================================================
-
-            // Render the initial 'All Time' charts
-            renderDonutChart(
-                "#incomeDonutChart",
-                allTimeIncomeData,
-                "Income",
-                currencySymbol
-            );
-
-            renderDonutChart(
-                "#expenseDonutChart",
-                allTimeExpenseData,
-                "Expense",
-                currencySymbol
-            );
-
-            // --- NEW: Add click handlers for filter buttons ---
-
-            // Income buttons
-            document.querySelectorAll('.filter-btn-income').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Update active button visual
-                    document.querySelectorAll('.filter-btn-income').forEach(b => b.classList.remove('filter-btn-active'));
-                    btn.classList.add('filter-btn-active');
-
-                    const period = btn.dataset.period;
-                    if (period === 'All') {
-                        renderDonutChart("#incomeDonutChart", allTimeIncomeData, "Income", currencySymbol);
-                    } else {
-                        fetchCategoryData('Income', period, "#incomeDonutChart");
-                    }
-                });
-            });
-
-            // Expense buttons
-            document.querySelectorAll('.filter-btn-expense').forEach(btn => {
-                btn.addEventListener('click', () => {
-                    // Update active button visual
-                    document.querySelectorAll('.filter-btn-expense').forEach(b => b.classList.remove('filter-btn-active'));
-                    btn.classList.add('filter-btn-active');
-
-                    const period = btn.dataset.period;
-                    if (period === 'All') {
-                        renderDonutChart("#expenseDonutChart", allTimeExpenseData, "Expense", currencySymbol);
-                    } else {
-                        fetchCategoryData('Expense', period, "#expenseDonutChart");
-                    }
-                });
-            });
-
-        })();
-
-        // --- NEW: Function to fetch data from the server ---
-        async function fetchCategoryData(type, period, chartSelector) {
-            const chartEl = document.querySelector(chartSelector);
-            chartEl.innerHTML = "<p class='text-gray-500 text-center flex items-center justify-center' style='min-height: 380px;'>Loading data...</p>";
-
-            // 'Income' -> type 1, 'Expense' -> type 2
-            const categoryType = (type === 'Income' ? 1 : 2);
-
-            try {
-                // This is the new backend endpoint
-                const response = await fetch(`/Dashboard/GetCategoryData?period=${period}&type=${categoryType}`);
-
-                if (!response.ok) {
-                    throw new Error('Network response was not ok');
+                },
+                colors: ['#16a34a', '#dc2626', '#8b5cf6'],
+                tooltip: {
+                    shared: true,
+                    intersect: false,
+                    y: { formatter: val => val?.toLocaleString(undefined, { minimumFractionDigits: 2 }) ?? "0.00" }
                 }
+            };
 
-                const newData = await response.json();
-
-                // Render the chart with the new data
-                renderDonutChart(chartSelector, newData, type, currencySymbol);
-
-            } catch (error) {
-                console.error('Error fetching chart data:', error);
-                chartEl.innerHTML = "<p class='text-red-500 text-center flex items-center justify-center' style='min-height: 380px;'>Failed to load data.</p>";
-            }
+            const barChart = new ApexCharts(incomeExpenseChartEl, barChartOptions);
+            barChart.render();
         }
 
-        // --- RE-USABLE: Donut chart rendering function ---
-        function renderDonutChart(selectorId, chartData, title, currencySymbol) {
-            const chartEl = document.querySelector(selectorId);
+        // ==================================================
+        // 2. Donut Charts (with filter logic)
+        // ==================================================
+        renderDonutChart("#incomeDonutChart", allTimeIncomeData, "Income", currencySymbol);
+        renderDonutChart("#expenseDonutChart", allTimeExpenseData, "Expense", currencySymbol);
 
-            // Clear previous chart/loading text
-            chartEl.innerHTML = "";
+        // Income buttons
+        document.querySelectorAll('.filter-btn-income').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn-income').forEach(b => b.classList.remove('filter-btn-active'));
+                btn.classList.add('filter-btn-active');
 
-            if (!chartData || chartData.length === 0) {
-                chartEl.innerHTML = `<p class='text-gray-500 text-center flex items-center justify-center' style='min-height: 380px;'>No ${title.toLowerCase()} data for this period.</p>`;
-                return;
-            }
+                const period = btn.dataset.period;
+                if (period === 'All') {
+                    renderDonutChart("#incomeDonutChart", allTimeIncomeData, "Income", currencySymbol);
+                } else {
+                    fetchCategoryData('Income', period, "#incomeDonutChart");
+                }
+            });
+        });
 
-            // Assumes 'categoryName' and 'amount' from your JSON
-            const labels = chartData.map(d => d.categoryName);
-            const series = chartData.map(d => d.amount);
-            const total = series.reduce((a, b) => a + b, 0);
+        // Expense buttons
+        document.querySelectorAll('.filter-btn-expense').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn-expense').forEach(b => b.classList.remove('filter-btn-active'));
+                btn.classList.add('filter-btn-active');
 
-            const options = {
-                series: series,
-                labels: labels,
-                chart: {
-                    type: 'donut',
-                    height: 380
-                },
-                plotOptions: {
-                    pie: {
-                        donut: {
-                            size: '65%',
-                            labels: {
+                const period = btn.dataset.period;
+                if (period === 'All') {
+                    renderDonutChart("#expenseDonutChart", allTimeExpenseData, "Expense", currencySymbol);
+                } else {
+                    fetchCategoryData('Expense', period, "#expenseDonutChart");
+                }
+            });
+        });
+
+    })();
+
+    async function fetchCategoryData(type, period, chartSelector) {
+        const chartEl = document.querySelector(chartSelector);
+        chartEl.innerHTML = "<p class='text-gray-500 text-center flex items-center justify-center' style='min-height: 380px;'>Loading data...</p>";
+
+        const categoryType = (type === 'Income' ? 1 : 2);
+
+        try {
+            const response = await fetch(`/Dashboard/GetCategoryData?period=${period}&type=${categoryType}`);
+
+            if (!response.ok) throw new Error('Network response was not ok');
+
+            const newData = await response.json();
+            renderDonutChart(chartSelector, newData, type, currencySymbol);
+
+        } catch (error) {
+            console.error('Error fetching chart data:', error);
+            chartEl.innerHTML = "<p class='text-red-500 text-center flex items-center justify-center' style='min-height: 380px;'>Failed to load data.</p>";
+        }
+    }
+
+    function renderDonutChart(selectorId, chartData, title, currencySymbol) {
+        const chartEl = document.querySelector(selectorId);
+        chartEl.innerHTML = "";
+
+        if (!chartData || chartData.length === 0) {
+            chartEl.innerHTML = `<p class='text-gray-500 text-center flex items-center justify-center' style='min-height: 380px;'>No ${title.toLowerCase()} data for this period.</p>`;
+            return;
+        }
+
+        // ==================================================
+        // !! FIX IS HERE !!
+        // ==================================================
+        // Changed from categoryName to CategoryName
+        const labels = chartData.map(d => d.CategoryName);
+        // Changed from amount to Amount
+        const series = chartData.map(d => d.Amount);
+        // ==================================================
+
+        const total = series.reduce((a, b) => a + b, 0);
+
+        const options = {
+            series: series,
+            labels: labels,
+            chart: { type: 'donut', height: 380 },
+            plotOptions: {
+                pie: {
+                    donut: {
+                        size: '65%',
+                        labels: {
+                            show: true,
+                            name: { show: true, fontSize: '16px', color: '#6b7280', offsetY: -10 },
+                            value: {
                                 show: true,
-                                name: {
-                                    show: true,
-                                    fontSize: '16px',
-                                    color: '#6b7280',
-                                    offsetY: -10
-                                },
-                                value: {
-                                    show: true,
-                                    fontSize: '24px',
-                                    fontWeight: 'bold',
-                                    color: '#111827',
-                                    offsetY: 10,
-                                    formatter: function (val) {
-                                        return currencySymbol + parseFloat(val).toLocaleString(undefined, { minimumFractionDigits: 2 });
-                                    }
-                                },
-                                total: {
-                                    show: true,
-                                    showAlways: true,
-                                    label: 'Total ' + title,
-                                    fontSize: '16px',
-                                    fontWeight: '600',
-                                    color: '#6b7280',
-                                    formatter: function (w) {
-                                        return currencySymbol + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
-                                    }
+                                fontSize: '24px',
+                                fontWeight: 'bold',
+                                color: '#111827',
+                                offsetY: 10,
+                                formatter: function (val) {
+                                    return currencySymbol + parseFloat(val).toLocaleString(undefined, { minimumFractionDigits: 2 });
+                                }
+                            },
+                            total: {
+                                show: true,
+                                showAlways: true,
+                                label: 'Total ' + title,
+                                fontSize: '16px',
+                                fontWeight: '600',
+                                color: '#6b7280',
+                                formatter: function () {
+                                    return currencySymbol + total.toLocaleString(undefined, { minimumFractionDigits: 2 });
                                 }
                             }
                         }
                     }
-                },
-                colors: ['#8b5cf6', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#ec4899', '#6b7280', '#14b8a6', '#f97316'],
-                dataLabels: {
-                    enabled: true,
-                    formatter: function (val, opts) {
-                        return val.toFixed(1) + '%';
-                    },
-                    style: {
-                        fontSize: '12px',
-                        fontWeight: 'bold',
-                        colors: ['#fff']
-                    },
-                    dropShadow: {
-                        enabled: true,
-                        top: 1,
-                        left: 1,
-                        blur: 1,
-                        opacity: 0.45
-                    }
-                },
-                legend: {
-                    position: 'bottom',
-                    horizontalAlign: 'center',
-                    fontSize: '14px',
-                    itemMargin: { horizontal: 5, vertical: 5 },
-                },
-                tooltip: {
-                    y: {
-                        formatter: (val) => `${currencySymbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}`
-                    }
-                },
-                responsive: [{
-                    breakpoint: 480,
-                    options: { chart: { width: '100%' }, legend: { position: 'bottom' } }
-                }]
-            };
+                }
+            },
+            colors: ['#8b5cf6', '#10b981', '#3b82f6', '#f59e0b', '#ef4444', '#ec4899', '#6b7280', '#14b8a6', '#f97316'],
+            dataLabels: {
+                enabled: true,
+                formatter: function (val) { return val.toFixed(1) + '%'; },
+                style: { fontSize: '12px', fontWeight: 'bold', colors: ['#fff'] },
+                dropShadow: { enabled: true, top: 1, left: 1, blur: 1, opacity: 0.45 }
+            },
+            legend: { position: 'bottom', horizontalAlign: 'center', fontSize: '14px', itemMargin: { horizontal: 5, vertical: 5 } },
+            tooltip: { y: { formatter: (val) => `${currencySymbol}${val.toLocaleString(undefined, { minimumFractionDigits: 2 })}` } },
+            responsive: [{ breakpoint: 480, options: { chart: { width: '100%' }, legend: { position: 'bottom' } } }]
+        };
 
-            // This is a simple way to clear the old chart.
-            // A more robust way involves destroying the previous ApexCharts instance.
-            chartEl.innerHTML = '';
-            const chart = new ApexCharts(chartEl, options);
-            chart.render();
-        }
-    </script>
+        chartEl.innerHTML = '';
+        const chart = new ApexCharts(chartEl, options);
+        chart.render();
+    }
+</script>
 }

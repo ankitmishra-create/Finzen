@@ -9,7 +9,7 @@
   <ItemGroup>
     <PackageReference Include="mailslurp" Version="17.0.0" />
     <PackageReference Include="mailslurp_netstandard_2x" Version="15.19.22" />
-    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.9" />
+    <PackageReference Include="Microsoft.Extensions.Identity.Core" Version="9.0.10" />
     <PackageReference Include="System.Net.Http" Version="4.3.4" />
     <PackageReference Include="Tailwind.Extensions.AspNetCore" Version="1.1.2" />
   </ItemGroup>

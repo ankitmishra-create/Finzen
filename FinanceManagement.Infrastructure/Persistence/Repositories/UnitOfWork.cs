@@ -14,6 +14,8 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
         public IBudgetRepository Budget { get; private set; }
         public ISavingRepository Saving { get; private set; }
         public ITransactionSavingsOrBudgetsMappingRepository Mapping { get; private set; }
+        public IStocksRepository Stocks { get; private set; }
+        public IStockTransactionRepository  StockTransaction { get; private set; }
 
         public UnitOfWork(ApplicationDbContext db)
         {
@@ -27,6 +29,8 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories
             Budget = new BudgetRepository(_db);
             Saving = new SavingRepository(_db);
             Mapping = new TransactionSavingsOrBudgetsMappingRepository(_db);
+            Stocks = new StockRepository(_db);
+            StockTransaction = new StockTransactionRepository(_db);
         }
         public async Task SaveAsync()
         {

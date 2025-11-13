@@ -117,6 +117,23 @@
                                 <span>Category</span>
                             </a>
                         </li>
+                        
+                        <li>
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Report" ? activeLinkClass : inactiveLinkClass)"
+                               asp-controller="Report" asp-action="Index">
+                                <i class="bi bi-file-earmark-pdf text-lg"></i>
+                                <span>Reports</span>
+                            </a>
+                        </li>
+                        
+                        <li>
+                            <a class="flex items-center gap-3 px-4 py-3 rounded-lg @(currentController == "Investment" ? activeLinkClass : inactiveLinkClass)"
+                               asp-controller="Investment" asp-action="Index">
+                                <i class="bi bi-briefcase text-lg"></i>
+                                <span>Investment</span>
+                            </a>
+                        </li>
+                        
                     </ul>
                 </nav>
 

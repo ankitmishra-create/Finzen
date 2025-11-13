@@ -1,0 +1,332 @@
+@{
+    ViewData["Title"] = "Investment";
+    var today = DateTime.Today.ToString("yyyy-MM-dd");
+}
+
+<div class="bg-white rounded-xl shadow-md overflow-hidden">
+    <!-- Header -->
+    <div class="p-6 border-b border-gray-200 flex items-center justify-between">
+        <div class="flex items-center gap-3">
+            <i class="bi bi-briefcase-fill text-violet-600 text-2xl"></i>
+            <div>
+                <h1 class="text-2xl font-semibold text-gray-900">Stock Investments</h1>
+                <p class="text-sm text-gray-500">Track your stock holdings and transactions</p>
+            </div>
+        </div>
+        <div class="hidden md:flex items-center gap-2 text-sm text-gray-500">
+            <i class="bi bi-shield-check"></i>
+            <span>Data powered by Alpha Vantage</span>
+        </div>
+    </div>
+
+    <!-- Content -->
+    <div class="p-6">
+        <section id="panel-stocks" class="space-y-6">
+            <div class="rounded-xl border border-gray-200">
+                <div class="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
+                    <!-- Add Stock Transaction (POSTs to Investment/Add) -->
+                    <div class="bg-gray-50 rounded-xl p-4 border border-gray-200 lg:order-last">
+                        <h3 class="text-lg font-semibold text-gray-900 mb-3">Add Stock Transaction</h3>
+
+                        <form id="stock-form" asp-controller="Investment" asp-action="Add" method="post">
+                            @Html.AntiForgeryToken()
+                            <fieldset id="stock-form-fieldset" disabled class="space-y-3">
+                                <div class="bg-violet-100 p-3 rounded-lg">
+                                    <label class="block text-xs text-gray-700 mb-1">Selected Stock</label>
+                                    <h4 id="stock-form-display" class="font-semibold text-violet-800">Please search first</h4>
+
+                                    <!-- These hidden fields will bind to your server model -->
+                                    <input type="hidden" id="stock-form-symbol" name="StockSymbol" />
+                                    <input type="hidden" id="stock-form-asset-type" name="AssetType" value="Stock" />
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="stock-form-date" class="block text-xs text-gray-600 mb-1">Date</label>
+                                        <input id="stock-form-date" name="TransactionDate" type="date" max="@today" value="@today" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                    </div>
+                                    <div>
+                                        <label for="stock-form-side" class="block text-xs text-gray-600 mb-1">Side</label>
+                                        <select id="stock-form-side" name="TransactionType" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                            <option value="Buy">Buy</option>
+                                            <option value="Sell">Sell</option>
+                                        </select>
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-2 gap-3">
+                                    <div>
+                                        <label for="stock-form-quantity" class="block text-xs text-gray-600 mb-1">Quantity</label>
+                                        <input id="stock-form-quantity" name="Quantity" type="number" min="1" step="1" placeholder="0" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                    </div>
+                                    <div>
+                                        <label for="stock-form-price" class="block text-xs text-gray-600 mb-1">Price <span id="stock-price-range" class="text-xs text-gray-500 ml-1"></span></label>
+                                        <input id="stock-form-price" name="PricePerUnit" type="number" min="0" step="0.01" placeholder="0.00" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                    </div>
+                                </div>
+
+                                <button type="submit" class="w-full mt-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-700">
+                                    <i class="bi bi-plus-circle"></i>
+                                    <span class="ml-1">Add Transaction</span>
+                                </button>
+
+                                <p class="text-[11px] text-gray-500">Price will be validated against the selected day’s Low–High range upon submission.</p>
+                            </fieldset>
+                        </form>
+                    </div>
+
+                    <!-- Search + Results -->
+                    <div class="lg:col-span-2">
+                        <label for="stock-search" class="block text-sm font-medium text-gray-700 mb-2">Search Stock (India only)</label>
+                        <div class="flex gap-2">
+                            <input id="stock-search" type="text" placeholder="Search by name or symbol (e.g., RELIANCE, HDFC)"
+                                   class="w-full rounded-lg border-gray-300 shadow-sm focus:border-violet-500 focus:ring-violet-500">
+                            <button type="button" id="stock-search-btn" class="px-4 py-2 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-700">
+                                <i class="bi bi-search"></i>
+                                <span class="ml-1">Search</span>
+                            </button>
+                        </div>
+                        <p class="text-xs text-gray-500 mt-2">Results will appear below. Select one to fill the form.</p>
+
+                        <div id="stock-results" class="mt-4 rounded-lg border border-gray-300 p-2 text-sm text-gray-500" style="min-height: 96px;">
+                            <div class="p-3 text-center">
+                                <i class="bi bi-list-ul"></i> Search results go here…
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Placeholder for Holdings Table -->
+            <div class="rounded-xl border border-gray-200">
+                <div class="p-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Current Stock Holdings</h3>
+                </div>
+                <div class="p-4">
+                    <p class="text-gray-600">Your stock holdings table will go here...</p>
+                    <!-- You would render your holdings table here -->
+                </div>
+            </div>
+            
+        </section>
+    </div>
+</div>
+@section Scripts {
+<script>
+document.addEventListener('DOMContentLoaded', () => {
+    const alphaKey = "MNTHKJVOWTBNGMAC";
+
+    // Elements
+    const stockSearchBtn = document.getElementById('stock-search-btn');
+    const stockSearchInput = document.getElementById('stock-search');
+    const stockResults = document.getElementById('stock-results');
+
+    const stockFormFieldset = document.getElementById('stock-form-fieldset');
+    const stockFormDisplay = document.getElementById('stock-form-display');
+    const stockFormSymbol = document.getElementById('stock-form-symbol');
+    const stockPriceInput = document.getElementById('stock-form-price');
+    const stockPriceRange = document.getElementById('stock-price-range');
+    const stockFormDate = document.getElementById('stock-form-date');
+    const stockForm = document.getElementById('stock-form');
+
+    // Cache daily series by symbol to avoid repeated calls
+    const dailyCache = new Map();
+
+    async function searchAlpha(keywords) {
+        const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(keywords)}&apikey=${alphaKey}`;
+        const res = await fetch(url);
+        return res.json();
+    }
+
+    async function getDailyTimeSeries(symbol) {
+        if (dailyCache.has(symbol)) {
+            return dailyCache.get(symbol);
+        }
+        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=${alphaKey}`;
+        const res = await fetch(url);
+        const json = await res.json();
+        // cache only when response looks valid (no Note or Error Message)
+        if (!json['Note'] && !json['Information'] && !json['Error Message']) {
+            dailyCache.set(symbol, json);
+        }
+        return json;
+    }
+
+    function renderMatches(matches, container) {
+        container.innerHTML = '';
+
+        const filtered = (matches || []).filter(m =>
+            // best-effort heuristics for India equities
+            (m['3. type'] && (m['3. type'].toLowerCase().includes('equity') || m['3. type'].toLowerCase().includes('etf'))) ||
+            (m['4. region'] && m['4. region'].toLowerCase().includes('india')) ||
+            (m['2. name'] && m['2. name'].toLowerCase().includes('limited')) ||
+            (m['1. symbol'] && (m['1. symbol'].toLowerCase().endsWith('.bse') || m['1. symbol'].toLowerCase().endsWith('.nse')))
+        );
+
+        if (filtered.length === 0) {
+            container.innerHTML = '<div class="p-3 text-center text-gray-600">No matching results found for India equities.</div>';
+            return;
+        }
+
+        for (const match of filtered) {
+            const symbol = match['1. symbol'];
+            const name = match['2. name'];
+            const region = match['4. region'] || '';
+
+            const btn = document.createElement('button');
+            btn.type = 'button';
+            btn.className = 'w-full text-left p-3 hover:bg-violet-50 rounded-lg flex justify-between items-center';
+            btn.innerHTML = `<div>
+                                <span class="font-semibold text-gray-900">${symbol}</span>
+                                <span class="text-gray-600 ml-2">${name}${region ? ' • ' + region : ''}</span>
+                             </div>
+                             <i class="bi bi-chevron-right text-violet-600"></i>`;
+
+            btn.addEventListener('click', () => onSelectStock(symbol, name));
+            container.appendChild(btn);
+        }
+    }
+
+    async function onSelectStock(symbol, name) {
+        stockFormDisplay.textContent = `${name} (${symbol})`;
+        stockFormSymbol.value = symbol;
+        stockFormFieldset.disabled = false;
+        stockResults.innerHTML = `<div class="p-3 text-center text-gray-600">Selected ${symbol} — fetching price range…</div>`;
+
+        // fetch fresh data for this symbol (delete cache entry first if you want)
+        dailyCache.delete(symbol);
+        await applyRangeForDate(symbol, stockFormDate.value);
+    }
+
+    async function applyRangeForDate(symbol, isoDate) {
+        // clear previous
+        stockPriceInput.removeAttribute('min');
+        stockPriceInput.removeAttribute('max');
+        stockPriceRange.textContent = '';
+
+        if (!isoDate) {
+            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Please select a valid date.</div>`;
+            return;
+        }
+
+        try {
+            stockResults.innerHTML = `<div class="p-3 text-sm text-gray-700">Fetching price range for ${symbol} on ${isoDate}...</div>`;
+            const data = await getDailyTimeSeries(symbol);
+
+            if (!data || data['Error Message'] || data['Note'] || data['Information']) {
+                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">AlphaVantage: ${data && (data['Note'] || data['Information'] || data['Error Message']) ? (data['Note'] || data['Information'] || data['Error Message']) : 'No data available'}</div>`;
+                return;
+            }
+
+            const series = data['Time Series (Daily)'];
+            if (!series) {
+                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">No daily series available for ${symbol}.</div>`;
+                return;
+            }
+
+            const dayData = series[isoDate];
+            if (!dayData) {
+                stockPriceRange.textContent = `(No data for ${isoDate})`;
+                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">No trading data for ${isoDate}. Please select a valid trading day (weekends/holidays are excluded).</div>`;
+                return;
+            }
+
+            const high = parseFloat(dayData['2. high']);
+            const low = parseFloat(dayData['3. low']);
+
+            if (!isFinite(high) || !isFinite(low)) {
+                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Could not parse low/high for ${symbol} on ${isoDate}.</div>`;
+                return;
+            }
+
+            stockPriceInput.setAttribute('min', low.toFixed(2));
+            stockPriceInput.setAttribute('max', high.toFixed(2));
+            stockPriceRange.textContent = `(Range ${low.toFixed(2)} - ${high.toFixed(2)})`;
+
+            stockResults.innerHTML = `<div class="p-3 text-sm text-gray-700">Day's range: <strong>${low.toFixed(2)}</strong> - <strong>${high.toFixed(2)}</strong> (${isoDate})</div>`;
+        } catch (err) {
+            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Error fetching price data: ${err.message}</div>`;
+            stockPriceInput.removeAttribute('min');
+            stockPriceInput.removeAttribute('max');
+            stockPriceRange.textContent = '';
+        }
+    }
+
+    // wire search button
+    stockSearchBtn.addEventListener('click', async () => {
+        const q = stockSearchInput.value.trim();
+        if (!q) {
+            stockResults.innerHTML = '<div class="p-3 text-center text-red-600">Please enter a search term.</div>';
+            return;
+        }
+        stockResults.innerHTML = '<div class="p-3 text-center text-gray-600">Searching...</div>';
+
+        try {
+            const json = await searchAlpha(q);
+            if (json.Note || json.Information) {
+                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">AlphaVantage: ${json.Note || json.Information}</div>`;
+                return;
+            }
+            if (!json.bestMatches || json.bestMatches.length === 0) {
+                stockResults.innerHTML = '<div class="p-3 text-center text-gray-600">No results found.</div>';
+                return;
+            }
+            renderMatches(json.bestMatches, stockResults);
+        } catch (err) {
+            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Search error: ${err.message}</div>`;
+        }
+    });
+
+    // When date changes, re-apply the range for the currently selected symbol (if any)
+    stockFormDate.addEventListener('change', async () => {
+        const symbol = stockFormSymbol.value;
+        if (!symbol) {
+            stockPriceRange.textContent = '';
+            stockPriceInput.removeAttribute('min');
+            stockPriceInput.removeAttribute('max');
+            return;
+        }
+        await applyRangeForDate(symbol, stockFormDate.value);
+    });
+
+    // Prevent submit when no asset selected; also validate price range before letting native form POST
+    stockForm.addEventListener('submit', (e) => {
+        const symbol = stockFormSymbol.value;
+        if (!symbol) {
+            e.preventDefault();
+            alert('Please search and select a stock before adding a transaction.');
+            return;
+        }
+
+        if (!stockPriceInput.hasAttribute('min') || !stockPriceInput.hasAttribute('max')) {
+            e.preventDefault();
+            alert('The selected date does not have a valid price range. Please pick a valid trading day.');
+            return;
+        }
+
+        const priceStr = stockPriceInput.value;
+        const price = parseFloat(priceStr);
+        const min = parseFloat(stockPriceInput.getAttribute('min'));
+        const max = parseFloat(stockPriceInput.getAttribute('max'));
+
+        if (!priceStr || !isFinite(price) || price <= 0) {
+            e.preventDefault();
+            alert('Please enter a valid price.');
+            return;
+        }
+
+        if (isFinite(min) && isFinite(max) && (price < min || price > max)) {
+            e.preventDefault();
+            alert(`Price must be within the selected day’s range: ${min.toFixed(2)} - ${max.toFixed(2)}.`);
+            return;
+        }
+        // allow native POST to controller (anti-forgery token present)
+    });
+
+    // Enter to search
+    stockSearchInput.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') { e.preventDefault(); stockSearchBtn.click(); }
+    });
+});
+</script>
+}

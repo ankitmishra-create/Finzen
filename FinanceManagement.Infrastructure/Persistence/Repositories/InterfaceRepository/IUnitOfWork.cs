@@ -13,7 +13,9 @@ namespace FinanceManagement.Infrastructure.Persistence.Repositories.InterfaceRep
         IBudgetRepository Budget { get; }
         ISavingRepository Saving { get; }
         ITransactionSavingsOrBudgetsMappingRepository Mapping {get;}
-
+        IStocksRepository  Stocks { get; }
+        IStockTransactionRepository StockTransaction { get; }
+        
         Task SaveAsync();
     }
 }

@@ -13,7 +13,7 @@ namespace FinanceManagement.Application.Services
     public class ExternalAuthService : IExternalAuthService
     {
         private readonly IUnitOfWork _unitOfWork;
-        private readonly Guid _defaultCurrencyId = Guid.Parse("b69fabd1-0c5d-42d9-8f98-3b869c0fb631");
+        private readonly Guid _defaultCurrencyId = Guid.Parse("c02f7a58-53de-4570-96cd-28cbb761d1ba");
         private readonly ILogger<ExternalAuthException> _logger;
 
         public ExternalAuthService(IUnitOfWork unitOfWork, ILogger<ExternalAuthException> logger)

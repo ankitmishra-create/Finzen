@@ -1,0 +1,22 @@
+using System.ComponentModel.DataAnnotations;
+using System.ComponentModel.DataAnnotations.Schema;
+using FinanceManagement.Core.Enums;
+
+namespace FinanceManagement.Core.Entities;
+
+public class StockHoldings
+{
+    [Key]
+    public Guid StockHoldingId { get; set; }    =  Guid.NewGuid();
+    
+    public string StockSymbol { get; set; } 
+    
+    public Guid UserId { get; set; }
+    [ForeignKey("UserId")]
+    public User User { get; set; }  
+    public DateTime TransactionDate { get; set; }
+    public int Quantity { get; set; }   
+    public decimal TotalAmount { get; set; }
+    public decimal AveragePricePerUnit { get; set; }
+    public DateTime LastUpdated { get; set; }   
+}
