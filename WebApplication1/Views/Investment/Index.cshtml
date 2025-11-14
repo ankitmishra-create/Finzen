@@ -1,6 +1,24 @@
+@model FinanceManagement.Application.ViewModels.InvestmentTransactionVM
+@using Newtonsoft.Json
+@using FinanceManagement.Core.Enums
+@using FinanceManagement.Core.Entities
+
 @{
-    ViewData["Title"] = "Investment";
-    var today = DateTime.Today.ToString("yyyy-MM-dd");
+ViewData["Title"] = "Investment";
+var today = DateTime.Today.ToString("yyyy-MM-dd");
+
+// Server-provided holdings for quick client-side preview
+var holdingsJson = Html.Raw(JsonConvert.SerializeObject(Model?.StockHoldings ?? new List<StockHoldings>()));
+
+// Optional: server-provided transactions for summary
+var txJson = Html.Raw(JsonConvert.SerializeObject(Model?.StockTransactions ?? new List<StockTransactions>()));
+var totalBuys = Model.StockTransactions?
+    .Where(t => t.TransactionType == TransactionType.Buy)
+    .Sum(t => t.Quantity * t.AmountPerUnit) ?? 0m;
+
+var totalSells = Model.StockTransactions?
+    .Where(t => t.TransactionType == TransactionType.Sell)
+    .Sum(t => t.Quantity * t.AmountPerUnit) ?? 0m;
 }
 
 <div class="bg-white rounded-xl shadow-md overflow-hidden">
@@ -19,8 +37,19 @@
         </div>
     </div>
 
-    <!-- Content -->
     <div class="p-6">
+        <div class="mb-6 grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="bg-blue-50 p-4 rounded-lg border border-blue-200">
+                <label class="block text-sm font-medium text-blue-700">Total Invested (All Buys)</label>
+                <p class="text-2xl font-semibold text-blue-900">@totalBuys.ToString("C")</p>
+            </div>
+
+            <div class="bg-green-50 p-4 rounded-lg border border-green-200">
+                <label class="block text-sm font-medium text-green-700">Total Cashed Out (All Sells)</label>
+                <p class="text-2xl font-semibold text-green-900">@totalSells.ToString("C")</p>
+            </div>
+        </div>
+        
         <section id="panel-stocks" class="space-y-6">
             <div class="rounded-xl border border-gray-200">
                 <div class="p-4 grid grid-cols-1 lg:grid-cols-3 gap-6">
@@ -36,18 +65,20 @@
                                     <h4 id="stock-form-display" class="font-semibold text-violet-800">Please search first</h4>
 
                                     <!-- These hidden fields will bind to your server model -->
-                                    <input type="hidden" id="stock-form-symbol" name="StockSymbol" />
-                                    <input type="hidden" id="stock-form-asset-type" name="AssetType" value="Stock" />
+                                    <input type="hidden" id="stock-form-symbol" name="StockSymbol"/>
+                                    <input type="hidden" id="stock-form-asset-type" name="AssetType" value="Stock"/>
                                 </div>
 
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label for="stock-form-date" class="block text-xs text-gray-600 mb-1">Date</label>
-                                        <input id="stock-form-date" name="TransactionDate" type="date" max="@today" value="@today" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                        <input id="stock-form-date" name="TransactionDate" type="date" max="@today" value="@today"
+                                               class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
                                     </div>
                                     <div>
                                         <label for="stock-form-side" class="block text-xs text-gray-600 mb-1">Side</label>
-                                        <select id="stock-form-side" name="TransactionType" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                        <select id="stock-form-side" name="TransactionType"
+                                                class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
                                             <option value="Buy">Buy</option>
                                             <option value="Sell">Sell</option>
                                         </select>
@@ -57,15 +88,29 @@
                                 <div class="grid grid-cols-2 gap-3">
                                     <div>
                                         <label for="stock-form-quantity" class="block text-xs text-gray-600 mb-1">Quantity</label>
-                                        <input id="stock-form-quantity" name="Quantity" type="number" min="1" step="1" placeholder="0" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                        <input id="stock-form-quantity" name="Quantity" type="number" min="1" step="1" placeholder="0"
+                                               class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
                                     </div>
                                     <div>
-                                        <label for="stock-form-price" class="block text-xs text-gray-600 mb-1">Price <span id="stock-price-range" class="text-xs text-gray-500 ml-1"></span></label>
-                                        <input id="stock-form-price" name="PricePerUnit" type="number" min="0" step="0.01" placeholder="0.00" class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
+                                        <label for="stock-form-price" class="block text-xs text-gray-600 mb-1">
+                                            Price <span id="stock-price-range" class="text-xs text-gray-500 ml-1"></span>
+                                        </label>
+                                        <input id="stock-form-price" name="PricePerUnit" type="number" min="0" step="0.01" placeholder="0.00"
+                                               class="w-full rounded-lg border-gray-300 focus:border-violet-500 focus:ring-violet-500">
                                     </div>
                                 </div>
 
-                                <button type="submit" class="w-full mt-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-700">
+                                <!-- Holdings preview (updates when symbol selected) -->
+                                <div id="holding-preview" class="p-2 border rounded-md bg-white hidden">
+                                    <div class="text-sm text-gray-600">Holdings for <strong id="hp-symbol"></strong></div>
+                                    <div class="mt-2 text-sm">
+                                        <div>Quantity available: <strong id="hp-qty">0</strong></div>
+                                        <div>Average Price: <strong id="hp-avg">-</strong></div>
+                                        <div>Total Value: <strong id="hp-total">-</strong></div>
+                                    </div>
+                                </div>
+
+                                <button type="submit" id="add-transaction-btn" class="w-full mt-2 px-4 py-2 rounded-lg bg-violet-600 text-white font-semibold hover:bg-violet-700">
                                     <i class="bi bi-plus-circle"></i>
                                     <span class="ml-1">Add Transaction</span>
                                 </button>
@@ -96,237 +141,387 @@
                     </div>
                 </div>
             </div>
-            
-            <!-- Placeholder for Holdings Table -->
+
+            <!-- Current Holdings Table -->
             <div class="rounded-xl border border-gray-200">
                 <div class="p-4 border-b border-gray-200">
                     <h3 class="text-lg font-semibold text-gray-900">Current Stock Holdings</h3>
                 </div>
-                <div class="p-4">
-                    <p class="text-gray-600">Your stock holdings table will go here...</p>
-                    <!-- You would render your holdings table here -->
+
+                <div class="p-4 overflow-x-auto">
+                    @if (Model.StockHoldings != null && Model.StockHoldings.Any())
+                    {
+                        <table class="table-auto w-full text-left">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr>
+                                <th class="px-4 py-2">Symbol</th>
+                                <th class="px-4 py-2 text-right">Quantity</th>
+                                <th class="px-4 py-2 text-right">Avg. Price</th>
+                                <th class="px-4 py-2 text-right">Total Value</th>
+                                <th class="px-4 py-2">Last Updated</th>
+                            </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                            @foreach (var holding in Model.StockHoldings)
+                            {
+                                <tr>
+                                    <td class="px-4 py-3 font-semibold text-gray-900">@holding.StockSymbol</td>
+                                    <td class="px-4 py-3 text-right">@holding.Quantity</td>
+                                    <td class="px-4 py-3 text-right">@holding.AveragePricePerUnit.ToString("C")</td>
+                                    <td class="px-4 py-3 text-right">@holding.TotalAmount.ToString("C")</td>
+                                    <td class="px-4 py-3">@holding.LastUpdated.ToString("g")</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-gray-600">You do not have any stock holdings yet.</p>
+                    }
                 </div>
             </div>
-            
+
+            <!-- Transaction History -->
+            <div class="rounded-xl border border-gray-200">
+                <div class="p-4 border-b border-gray-200">
+                    <h3 class="text-lg font-semibold text-gray-900">Transaction History</h3>
+                </div>
+
+                <div class="p-4 overflow-x-auto">
+                    @if (Model.StockTransactions != null && Model.StockTransactions.Any())
+                    {
+                        <table class="table-auto w-full text-left">
+                            <thead class="bg-gray-50 border-b border-gray-200 text-xs text-gray-500 uppercase">
+                            <tr>
+                                <th class="px-4 py-2">Date</th>
+                                <th class="px-4 py-2">Symbol</th>
+                                <th class="px-4 py-2">Type</th>
+                                <th class="px-4 py-2 text-right">Quantity</th>
+                                <th class="px-4 py-2 text-right">Price</th>
+                                <th class="px-4 py-2 text-right">Total Value</th>
+                            </tr>
+                            </thead>
+                            <tbody class="divide-y divide-gray-100 text-sm">
+                            @foreach (var tx in Model.StockTransactions.OrderByDescending(t => t.TransactionDate))
+                            {
+                                bool isBuy = tx.TransactionType == TransactionType.Buy;
+                                <tr>
+                                    <td class="px-4 py-3">@tx.TransactionDate.ToString("d")</td>
+                                    <td class="px-4 py-3 font-semibold text-gray-900">@tx.StockSymbol</td>
+                                    <td class="px-4 py-3">
+                                        <span class="px-2 py-1 rounded-full text-xs font-medium @(isBuy ? "bg-green-100 text-green-800" : "bg-red-100 text-red-800")">
+                                            @(isBuy ? "BUY" : "SELL")
+                                        </span>
+                                    </td>
+                                    <td class="px-4 py-3 text-right">@tx.Quantity</td>
+                                    <td class="px-4 py-3 text-right">@tx.AmountPerUnit.ToString("C")</td>
+                                    <td class="px-4 py-3 text-right">@((tx.Quantity * tx.AmountPerUnit).ToString("C"))</td>
+                                </tr>
+                            }
+                            </tbody>
+                        </table>
+                    }
+                    else
+                    {
+                        <p class="text-gray-600">You do not have any transactions yet.</p>
+                    }
+                </div>
+            </div>
+
         </section>
     </div>
 </div>
+
 @section Scripts {
 <script>
-document.addEventListener('DOMContentLoaded', () => {
-    const alphaKey = "MNTHKJVOWTBNGMAC";
+    document.addEventListener('DOMContentLoaded', () => {
+        // ---------- CONFIG ----------
+        const alphaKey = "MNTHKJVOWTBNGMAC"; // your key (you already used client-side earlier)
+        // ---------- ELEMENTS ----------
+        const stockSearchBtn = document.getElementById('stock-search-btn');
+        const stockSearchInput = document.getElementById('stock-search');
+        const stockResults = document.getElementById('stock-results');
 
-    // Elements
-    const stockSearchBtn = document.getElementById('stock-search-btn');
-    const stockSearchInput = document.getElementById('stock-search');
-    const stockResults = document.getElementById('stock-results');
+        const stockFormFieldset = document.getElementById('stock-form-fieldset');
+        const stockFormDisplay = document.getElementById('stock-form-display');
+        const stockFormSymbol = document.getElementById('stock-form-symbol');
+        const stockPriceInput = document.getElementById('stock-form-price');
+        const stockPriceRange = document.getElementById('stock-price-range');
+        const stockFormDate = document.getElementById('stock-form-date');
+        const stockForm = document.getElementById('stock-form');
+        const stockSide = document.getElementById('stock-form-side');
+        const stockQty = document.getElementById('stock-form-quantity');
 
-    const stockFormFieldset = document.getElementById('stock-form-fieldset');
-    const stockFormDisplay = document.getElementById('stock-form-display');
-    const stockFormSymbol = document.getElementById('stock-form-symbol');
-    const stockPriceInput = document.getElementById('stock-form-price');
-    const stockPriceRange = document.getElementById('stock-price-range');
-    const stockFormDate = document.getElementById('stock-form-date');
-    const stockForm = document.getElementById('stock-form');
+        // holdings preview elements
+        const holdingsData = @holdingsJson; // array of holdings from server
+        const holdingPreview = document.getElementById('holding-preview');
+        const hpSymbol = document.getElementById('hp-symbol');
+        const hpQty = document.getElementById('hp-qty');
+        const hpAvg = document.getElementById('hp-avg');
+        const hpTotal = document.getElementById('hp-total');
 
-    // Cache daily series by symbol to avoid repeated calls
-    const dailyCache = new Map();
+        // cache for daily series
+        const dailyCache = new Map();
 
-    async function searchAlpha(keywords) {
-        const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(keywords)}&apikey=${alphaKey}`;
-        const res = await fetch(url);
-        return res.json();
-    }
-
-    async function getDailyTimeSeries(symbol) {
-        if (dailyCache.has(symbol)) {
-            return dailyCache.get(symbol);
-        }
-        const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=${alphaKey}`;
-        const res = await fetch(url);
-        const json = await res.json();
-        // cache only when response looks valid (no Note or Error Message)
-        if (!json['Note'] && !json['Information'] && !json['Error Message']) {
-            dailyCache.set(symbol, json);
-        }
-        return json;
-    }
-
-    function renderMatches(matches, container) {
-        container.innerHTML = '';
-
-        const filtered = (matches || []).filter(m =>
-            // best-effort heuristics for India equities
-            (m['3. type'] && (m['3. type'].toLowerCase().includes('equity') || m['3. type'].toLowerCase().includes('etf'))) ||
-            (m['4. region'] && m['4. region'].toLowerCase().includes('india')) ||
-            (m['2. name'] && m['2. name'].toLowerCase().includes('limited')) ||
-            (m['1. symbol'] && (m['1. symbol'].toLowerCase().endsWith('.bse') || m['1. symbol'].toLowerCase().endsWith('.nse')))
-        );
-
-        if (filtered.length === 0) {
-            container.innerHTML = '<div class="p-3 text-center text-gray-600">No matching results found for India equities.</div>';
-            return;
+        // ---------- HELPERS ----------
+        function showResultsMessage(msg, level = 'info') {
+            // level: 'info'|'error'
+            stockResults.innerHTML = `<div class="p-3 text-center ${level === 'error' ? 'text-red-600' : 'text-gray-600'}">${msg}</div>`;
         }
 
-        for (const match of filtered) {
-            const symbol = match['1. symbol'];
-            const name = match['2. name'];
-            const region = match['4. region'] || '';
+        async function searchAlpha(keywords) {
+            const url = `https://www.alphavantage.co/query?function=SYMBOL_SEARCH&keywords=${encodeURIComponent(keywords)}&apikey=${alphaKey}`;
+            const res = await fetch(url);
+            return res.json();
+        }
 
-            const btn = document.createElement('button');
-            btn.type = 'button';
-            btn.className = 'w-full text-left p-3 hover:bg-violet-50 rounded-lg flex justify-between items-center';
-            btn.innerHTML = `<div>
+        async function getDailyTimeSeries(symbol) {
+            if (dailyCache.has(symbol)) return dailyCache.get(symbol);
+            const url = `https://www.alphavantage.co/query?function=TIME_SERIES_DAILY&symbol=${encodeURIComponent(symbol)}&apikey=${alphaKey}`;
+            const res = await fetch(url);
+            const json = await res.json();
+            if (!json['Note'] && !json['Information'] && !json['Error Message']) {
+                dailyCache.set(symbol, json);
+            }
+            return json;
+        }
+
+        function renderMatches(matches) {
+            stockResults.innerHTML = '';
+            if (!matches || matches.length === 0) {
+                showResultsMessage('No results found.');
+                return;
+            }
+
+            // Filter to India-ish equities (best-effort)
+            const filtered = matches.filter(m =>
+                (m['3. type'] && (m['3. type'].toLowerCase().includes('equity') || m['3. type'].toLowerCase().includes('etf'))) ||
+                (m['4. region'] && m['4. region'].toLowerCase().includes('india')) ||
+                (m['2. name'] && m['2. name'].toLowerCase().includes('limited')) ||
+                (m['1. symbol'] && (m['1. symbol'].toLowerCase().endsWith('.bse') || m['1. symbol'].toLowerCase().endsWith('.nse')))
+            );
+
+            const use = filtered.length ? filtered : matches; // if nothing matched the filter, show original results
+
+            stockResults.innerHTML = '';
+            use.forEach(match => {
+                const symbol = match['1. symbol'];
+                const name = match['2. name'];
+                const region = match['4. region'] || '';
+
+                const btn = document.createElement('button');
+                btn.type = 'button';
+                btn.className = 'w-full text-left p-3 hover:bg-violet-50 rounded-lg flex justify-between items-center';
+                btn.innerHTML = `<div>
                                 <span class="font-semibold text-gray-900">${symbol}</span>
                                 <span class="text-gray-600 ml-2">${name}${region ? ' • ' + region : ''}</span>
                              </div>
                              <i class="bi bi-chevron-right text-violet-600"></i>`;
 
-            btn.addEventListener('click', () => onSelectStock(symbol, name));
-            container.appendChild(btn);
-        }
-    }
-
-    async function onSelectStock(symbol, name) {
-        stockFormDisplay.textContent = `${name} (${symbol})`;
-        stockFormSymbol.value = symbol;
-        stockFormFieldset.disabled = false;
-        stockResults.innerHTML = `<div class="p-3 text-center text-gray-600">Selected ${symbol} — fetching price range…</div>`;
-
-        // fetch fresh data for this symbol (delete cache entry first if you want)
-        dailyCache.delete(symbol);
-        await applyRangeForDate(symbol, stockFormDate.value);
-    }
-
-    async function applyRangeForDate(symbol, isoDate) {
-        // clear previous
-        stockPriceInput.removeAttribute('min');
-        stockPriceInput.removeAttribute('max');
-        stockPriceRange.textContent = '';
-
-        if (!isoDate) {
-            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Please select a valid date.</div>`;
-            return;
+                btn.addEventListener('click', () => onSelectStock(symbol, name));
+                stockResults.appendChild(btn);
+            });
         }
 
-        try {
-            stockResults.innerHTML = `<div class="p-3 text-sm text-gray-700">Fetching price range for ${symbol} on ${isoDate}...</div>`;
-            const data = await getDailyTimeSeries(symbol);
-
-            if (!data || data['Error Message'] || data['Note'] || data['Information']) {
-                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">AlphaVantage: ${data && (data['Note'] || data['Information'] || data['Error Message']) ? (data['Note'] || data['Information'] || data['Error Message']) : 'No data available'}</div>`;
+        // populate holdings preview using holdingsData (server-provided)
+        function updateHoldingPreviewFor(symbol) {
+            if (!symbol) {
+                holdingPreview.classList.add('hidden');
                 return;
             }
-
-            const series = data['Time Series (Daily)'];
-            if (!series) {
-                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">No daily series available for ${symbol}.</div>`;
+            const h = (holdingsData || []).find(x => (x.StockSymbol || '').toString().toLowerCase() === symbol.toString().toLowerCase());
+            if (!h) {
+                // not held
+                hpSymbol.textContent = symbol;
+                hpQty.textContent = '0';
+                hpAvg.textContent = '-';
+                hpTotal.textContent = '-';
+                holdingPreview.classList.remove('hidden');
                 return;
             }
+            hpSymbol.textContent = h.StockSymbol;
+            hpQty.textContent = h.Quantity;
+            hpAvg.textContent = (h.AveragePricePerUnit || 0).toLocaleString(undefined, { style: 'currency', currency: 'INR' }).replace('INR', '').trim();
+            hpTotal.textContent = (h.TotalAmount || 0).toLocaleString(undefined, { style: 'currency', currency: 'INR' }).replace('INR', '').trim();
+            holdingPreview.classList.remove('hidden');
+        }
 
-            const dayData = series[isoDate];
-            if (!dayData) {
-                stockPriceRange.textContent = `(No data for ${isoDate})`;
-                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">No trading data for ${isoDate}. Please select a valid trading day (weekends/holidays are excluded).</div>`;
-                return;
-            }
+        // select a stock from results
+        async function onSelectStock(symbol, name) {
+            stockFormDisplay.textContent = `${name} (${symbol})`;
+            stockFormSymbol.value = symbol;
+            stockFormFieldset.disabled = false;
+            stockResults.innerHTML = `<div class="p-3 text-center text-gray-600">Selected ${symbol} — fetching price range…</div>`;
 
-            const high = parseFloat(dayData['2. high']);
-            const low = parseFloat(dayData['3. low']);
+            // update holdings preview
+            updateHoldingPreviewFor(symbol);
 
-            if (!isFinite(high) || !isFinite(low)) {
-                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Could not parse low/high for ${symbol} on ${isoDate}.</div>`;
-                return;
-            }
+            // fetch and apply range for selected date
+            dailyCache.delete(symbol); // ensure fresh for this session if required
+            await applyRangeForDate(symbol, stockFormDate.value);
+        }
 
-            stockPriceInput.setAttribute('min', low.toFixed(2));
-            stockPriceInput.setAttribute('max', high.toFixed(2));
-            stockPriceRange.textContent = `(Range ${low.toFixed(2)} - ${high.toFixed(2)})`;
-
-            stockResults.innerHTML = `<div class="p-3 text-sm text-gray-700">Day's range: <strong>${low.toFixed(2)}</strong> - <strong>${high.toFixed(2)}</strong> (${isoDate})</div>`;
-        } catch (err) {
-            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Error fetching price data: ${err.message}</div>`;
+        // apply price range for exact isoDate (yyyy-MM-dd)
+        async function applyRangeForDate(symbol, isoDate) {
+            // clear UI
             stockPriceInput.removeAttribute('min');
             stockPriceInput.removeAttribute('max');
             stockPriceRange.textContent = '';
-        }
-    }
-
-    // wire search button
-    stockSearchBtn.addEventListener('click', async () => {
-        const q = stockSearchInput.value.trim();
-        if (!q) {
-            stockResults.innerHTML = '<div class="p-3 text-center text-red-600">Please enter a search term.</div>';
-            return;
-        }
-        stockResults.innerHTML = '<div class="p-3 text-center text-gray-600">Searching...</div>';
-
-        try {
-            const json = await searchAlpha(q);
-            if (json.Note || json.Information) {
-                stockResults.innerHTML = `<div class="p-3 text-center text-red-600">AlphaVantage: ${json.Note || json.Information}</div>`;
+            if (!symbol) {
+                showResultsMessage('Select a stock first.');
                 return;
             }
-            if (!json.bestMatches || json.bestMatches.length === 0) {
-                stockResults.innerHTML = '<div class="p-3 text-center text-gray-600">No results found.</div>';
+            if (!isoDate) {
+                showResultsMessage('Please select a valid date.');
                 return;
             }
-            renderMatches(json.bestMatches, stockResults);
-        } catch (err) {
-            stockResults.innerHTML = `<div class="p-3 text-center text-red-600">Search error: ${err.message}</div>`;
+
+            try {
+                showResultsMessage(`Fetching price range for ${symbol} on ${isoDate}...`);
+                const data = await getDailyTimeSeries(symbol);
+
+                if (!data || data['Error Message'] || data['Note'] || data['Information']) {
+                    showResultsMessage(data && (data['Note'] || data['Information'] || data['Error Message']) ? (data['Note'] || data['Information'] || data['Error Message']) : 'No data available', 'error');
+                    return;
+                }
+
+                const series = data['Time Series (Daily)'];
+                if (!series) {
+                    showResultsMessage('No daily series available for this symbol.', 'error');
+                    return;
+                }
+
+                const dayData = series[isoDate];
+                if (!dayData) {
+                    stockPriceRange.textContent = `(No data for ${isoDate})`;
+                    showResultsMessage(`No trading data for ${isoDate}. Select a trading day.`, 'error');
+                    return;
+                }
+
+                const high = parseFloat(dayData['2. high']);
+                const low = parseFloat(dayData['3. low']);
+                if (!isFinite(high) || !isFinite(low)) {
+                    showResultsMessage('Could not parse low/high for selected date.', 'error');
+                    return;
+                }
+
+                stockPriceInput.setAttribute('min', low.toFixed(2));
+                stockPriceInput.setAttribute('max', high.toFixed(2));
+                stockPriceRange.textContent = `(Range ${low.toFixed(2)} - ${high.toFixed(2)})`;
+
+                stockResults.innerHTML = `<div class="p-3 text-sm text-gray-700">Day's range: <strong>${low.toFixed(2)}</strong> - <strong>${high.toFixed(2)}</strong> (${isoDate})</div>`;
+            } catch (err) {
+                showResultsMessage(`Error fetching price data: ${err.message}`, 'error');
+                stockPriceInput.removeAttribute('min');
+                stockPriceInput.removeAttribute('max');
+                stockPriceRange.textContent = '';
+            }
         }
+
+        // ---------- EVENTS ----------
+        stockSearchBtn.addEventListener('click', async () => {
+            const q = stockSearchInput.value.trim();
+            if (!q) {
+                showResultsMessage('Please enter a search term.', 'error');
+                return;
+            }
+            showResultsMessage('Searching...');
+            try {
+                const json = await searchAlpha(q);
+                if (!json) {
+                    showResultsMessage('No results returned.', 'error');
+                    return;
+                }
+                if (json.Note || json.Information) {
+                    showResultsMessage(json.Note || json.Information, 'error');
+                    return;
+                }
+                const matches = json.bestMatches || [];
+                renderMatches(matches);
+            } catch (err) {
+                showResultsMessage(`Search error: ${err.message}`, 'error');
+            }
+        });
+
+        // Enter key triggers search
+        stockSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Enter') { e.preventDefault(); stockSearchBtn.click(); }
+        });
+
+        // When date changes, re-apply range for selected symbol
+        stockFormDate.addEventListener('change', async () => {
+            const symbol = stockFormSymbol.value;
+            if (!symbol) {
+                // no symbol selected yet; do nothing
+                stockPriceRange.textContent = '';
+                stockPriceInput.removeAttribute('min');
+                stockPriceInput.removeAttribute('max');
+                return;
+            }
+            await applyRangeForDate(symbol, stockFormDate.value);
+        });
+
+        // Validate on submit (also enforce sell-quantity check against holdings)
+        stockForm.addEventListener('submit', (e) => {
+            const symbol = stockFormSymbol.value;
+            const qtyStr = stockQty.value;
+            const qty = parseInt(qtyStr, 10);
+            const side = stockSide.value; // "Buy" or "Sell"
+
+            if (!symbol) {
+                e.preventDefault();
+                alert('Please search and select a stock before adding a transaction.');
+                return;
+            }
+
+            // ensure price min/max exist and price within range
+            if (!stockPriceInput.hasAttribute('min') || !stockPriceInput.hasAttribute('max')) {
+                e.preventDefault();
+                alert('Selected date does not have valid price data. Pick a trading day or change date.');
+                return;
+            }
+            const priceStr = stockPriceInput.value;
+            const price = parseFloat(priceStr);
+            const min = parseFloat(stockPriceInput.getAttribute('min'));
+            const max = parseFloat(stockPriceInput.getAttribute('max'));
+            if (!priceStr || !isFinite(price) || price <= 0) {
+                e.preventDefault();
+                alert('Please enter a valid price.');
+                return;
+            }
+            if (isFinite(min) && isFinite(max) && (price < min || price > max)) {
+                e.preventDefault();
+                alert(`Price must be within the selected day’s range: ${min.toFixed(2)} - ${max.toFixed(2)}.`);
+                return;
+            }
+
+            // SELL-specific: check holdings quantity
+            if (side === 'Sell') {
+                const holding = (holdingsData || []).find(x => (x.StockSymbol || '').toString().toLowerCase() === symbol.toString().toLowerCase());
+                const available = holding ? (holding.Quantity || 0) : 0;
+                if (!qty || qty <= 0) {
+                    e.preventDefault();
+                    alert('Please enter a valid quantity to sell.');
+                    return;
+                }
+                if (qty > available) {
+                    e.preventDefault();
+                    alert(`Insufficient holdings. You have ${available} units of ${symbol} available to sell.`);
+                    return;
+                }
+            }
+
+            // if we reach here, allow native POST to controller (antiforgery token is included)
+        });
+
+        // Initialize: keep default UI behaviour (no selection)
+        (function init() {
+            // nothing selected by default; keep fieldset disabled
+            stockFormFieldset.disabled = true;
+            holdingPreview.classList.add('hidden');
+        })();
+
     });
-
-    // When date changes, re-apply the range for the currently selected symbol (if any)
-    stockFormDate.addEventListener('change', async () => {
-        const symbol = stockFormSymbol.value;
-        if (!symbol) {
-            stockPriceRange.textContent = '';
-            stockPriceInput.removeAttribute('min');
-            stockPriceInput.removeAttribute('max');
-            return;
-        }
-        await applyRangeForDate(symbol, stockFormDate.value);
-    });
-
-    // Prevent submit when no asset selected; also validate price range before letting native form POST
-    stockForm.addEventListener('submit', (e) => {
-        const symbol = stockFormSymbol.value;
-        if (!symbol) {
-            e.preventDefault();
-            alert('Please search and select a stock before adding a transaction.');
-            return;
-        }
-
-        if (!stockPriceInput.hasAttribute('min') || !stockPriceInput.hasAttribute('max')) {
-            e.preventDefault();
-            alert('The selected date does not have a valid price range. Please pick a valid trading day.');
-            return;
-        }
-
-        const priceStr = stockPriceInput.value;
-        const price = parseFloat(priceStr);
-        const min = parseFloat(stockPriceInput.getAttribute('min'));
-        const max = parseFloat(stockPriceInput.getAttribute('max'));
-
-        if (!priceStr || !isFinite(price) || price <= 0) {
-            e.preventDefault();
-            alert('Please enter a valid price.');
-            return;
-        }
-
-        if (isFinite(min) && isFinite(max) && (price < min || price > max)) {
-            e.preventDefault();
-            alert(`Price must be within the selected day’s range: ${min.toFixed(2)} - ${max.toFixed(2)}.`);
-            return;
-        }
-        // allow native POST to controller (anti-forgery token present)
-    });
-
-    // Enter to search
-    stockSearchInput.addEventListener('keydown', (e) => {
-        if (e.key === 'Enter') { e.preventDefault(); stockSearchBtn.click(); }
-    });
-});
 </script>
 }

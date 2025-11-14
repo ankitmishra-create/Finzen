@@ -23,6 +23,24 @@ public class InvestmentService : IInvestmentService
         _logger = logger;
     }
 
+    public async Task<InvestmentTransactionVM> PrepareView()
+    {
+        var userId = _loggedInUser.CurrentLoggedInUser();
+        if (userId == null)
+        {
+            _logger.LogError("PrepareView user not found {userId}",userId);
+            throw new UserNotFoundException($"AddInvestment user not found {userId}");
+        }
+        var allHolding = await _unitOfWork.Stocks.GetAllAsync(s => s.UserId == userId);
+        var allTransactions = await _unitOfWork.StockTransaction.GetAllAsync(s => s.UserId == userId);  
+        InvestmentTransactionVM investmentTransactionVm = new InvestmentTransactionVM()
+        {
+            StockHoldings = allHolding,
+            StockTransactions = allTransactions
+        };
+        return investmentTransactionVm;
+    }
+    
     public async Task<InvestmentTransactionVM> AddInvestment(InvestmentTransactionVM investmentTransactionVm)
     {
         var userId = _loggedInUser.CurrentLoggedInUser();
@@ -103,8 +121,6 @@ public class InvestmentService : IInvestmentService
             };
             await _unitOfWork.StockTransaction.AddAsync(StockTransaction);
         }
-        var allHoldings = await _unitOfWork.Stocks.GetAllAsync(s => s.UserId == userId);
-        investmentTransactionVm.StockHoldings = allHoldings;
         try
         {
             await _unitOfWork.SaveAsync();
@@ -112,14 +128,13 @@ public class InvestmentService : IInvestmentService
         catch (DbUpdateException ex)
         {
             _logger.LogError(ex, "Error while updating stock transaction {userId}", userId);
-            throw ex;
+            throw new DbUpdateException($"Error while updating stock transaction {userId}");
         }
         catch (Exception ex)
         {
             _logger.LogError(ex, "Error while updating stock transaction {userId}", userId);
             throw ex;
         }
-        
         return investmentTransactionVm;
     }
     

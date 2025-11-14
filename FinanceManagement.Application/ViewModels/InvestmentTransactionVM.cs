@@ -20,4 +20,5 @@ public class InvestmentTransactionVM
     [Required]
     public decimal PricePerUnit { get; set; } 
     public List<StockHoldings> StockHoldings { get; set; }
+    public List<StockTransactions> StockTransactions { get; set; }
 }

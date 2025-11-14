@@ -1,3 +1,4 @@
+using FinanceManagement.Application.Exceptions;
 using FinanceManagement.Application.Interfaces;
 using FinanceManagement.Application.ViewModels;
 using Microsoft.AspNetCore.Mvc;
@@ -13,9 +14,23 @@ public class InvestmentController : Controller
         _investmentService = investmentService;
         _logger = logger;
     }
-    public IActionResult Index()
+    public async Task<IActionResult> Index()
     {
-        return View();
+        try
+        {
+            var investmentTransactionVm = await _investmentService.PrepareView();
+            return View(investmentTransactionVm);
+        }
+        catch (UserNotFoundException ex)
+        {
+            _logger.LogError(ex,"User not found");
+            return View("Error");
+        }
+        catch (Exception ex)
+        {
+            _logger.LogError(ex,"Unexpected error"); 
+            return View("Error");
+        }
     }
 
     public async Task<IActionResult> Add(InvestmentTransactionVM investmentTransactionVm)
@@ -23,7 +38,7 @@ public class InvestmentController : Controller
         try
         {
             var investment = await _investmentService.AddInvestment(investmentTransactionVm);
-            return View();
+            return RedirectToAction("Index");
         }
         catch (Exception e)
         {
